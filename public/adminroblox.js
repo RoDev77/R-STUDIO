@@ -201,9 +201,16 @@ async function refreshLogs() {
 }
 
 /* ================= GLOBAL ================= */
-window.revokeLicense = revokeLicense;
+window.loadLicenses = loadLicenses;
+window.testConnection = testConnection;
 window.refreshLogs = refreshLogs;
+window.revokeLicense = revokeLicense;
 
+
+// ================= START =================
+checkServerStatus();
+loadLicenses();
+refreshLogs();
 /* ================= AUTO REFRESH ================= */
 setInterval(checkServerStatus, 30000);
 setInterval(refreshLogs, 5000);
