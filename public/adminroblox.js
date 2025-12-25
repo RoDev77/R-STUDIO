@@ -1,14 +1,21 @@
-// ================= CONFIG =================
+/* ================= FIREBASE ================= */
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+/* ================= CONFIG ================= */
 const API_BASE = "https://api.rstudiolab.online/api";
 
-// ================= STATE =================
-let logs = [];
+/* ================= STATE ================= */
 let currentUser = null;
+let logs = [];
 
-// ================= INIT =================
+/* ================= INIT ================= */
 document.getElementById("apiEndpoint").textContent = API_BASE;
 
-// ================= UTIL =================
+/* ================= UTIL ================= */
 function showNotification(message, type = "success") {
   const n = document.getElementById("notification");
   n.textContent = message;
@@ -16,53 +23,38 @@ function showNotification(message, type = "success") {
   setTimeout(() => n.classList.remove("show"), 3000);
 }
 
-// ================= USER =================
-async function loadUser() {
-  try {
-    const res = await fetch(`${API_BASE}/me`);
-    const data = await res.json();
-    currentUser = data.user;
-  } catch {
-    showNotification("Failed load user", "error");
-  }
-}
+/* ================= AUTH ================= */
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
 
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) {
+    showNotification("User data not found", "error");
+    return;
+  }
+
+  const data = snap.data();
+
+  currentUser = {
+    uid: user.uid,
+    role: data.role || "member",
+    isVIP: data.isVIP === true
+  };
+
+  console.log("👤 Logged as:", currentUser);
+
+  checkServerStatus();
+  loadLicenses();
+  refreshLogs();
+});
+
+/* ================= PERMISSION ================= */
 function canRevoke() {
   if (!currentUser) return false;
   return currentUser.role === "admin" || currentUser.role === "owner";
 }
 
-// ================= LOGS =================
-function renderLogs() {
-  const el = document.getElementById("logContainer");
-  if (!logs || logs.length === 0) {
-    el.innerHTML = "<i>No connection logs</i>";
-    return;
-  }
-
-  el.innerHTML = logs
-    .map(
-      l => `
-      <div class="log-entry ${l.valid ? "success" : "error"}">
-        [${new Date(l.time).toLocaleTimeString()}]
-        ${l.licenseId} — ${l.valid ? "VALID" : "INVALID"}
-      </div>`
-    )
-    .join("");
-}
-
-async function refreshLogs() {
-  try {
-    const res = await fetch(`${API_BASE}/logs`);
-    const data = await res.json();
-    logs = data.logs || [];
-    renderLogs();
-  } catch {
-    showNotification("Failed load logs", "error");
-  }
-}
-
-// ================= SERVER STATUS =================
+/* ================= SERVER STATUS ================= */
 async function checkServerStatus() {
   const el = document.getElementById("serverStatus");
   try {
@@ -76,7 +68,7 @@ async function checkServerStatus() {
   }
 }
 
-// ================= LOAD LICENSES =================
+/* ================= LICENSES ================= */
 async function loadLicenses() {
   try {
     const res = await fetch(`${API_BASE}/licenses`);
@@ -94,19 +86,16 @@ async function loadLicenses() {
       l => l.expiresAt !== null && l.expiresAt <= now
     ).length;
 
-    licenseList.innerHTML = licenses
-      .map(l => {
-        let badge = "active";
-        if (l.revoked) badge = "revoked";
-        else if (l.expiresAt === null) badge = "unlimited";
-        else if (l.expiresAt <= now) badge = "expired";
+    licenseList.innerHTML = licenses.map(l => {
+      let badge = "active";
+      if (l.revoked) badge = "revoked";
+      else if (l.expiresAt === null) badge = "unlimited";
+      else if (l.expiresAt <= now) badge = "expired";
 
-        return `
-<div class="license-item ${badge === "expired" ? "expired" : ""}">
-  <div style="display:flex;justify-content:space-between">
-    <b>${l.owner}</b>
-    <span class="badge ${badge}">${badge.toUpperCase()}</span>
-  </div>
+      return `
+<div class="license-item">
+  <b>${l.owner}</b>
+  <span class="badge ${badge}">${badge.toUpperCase()}</span>
   <p>ID: ${l.licenseId}</p>
   <p>Game: ${l.gameId}</p>
   <p>Place: ${l.placeId}</p>
@@ -117,35 +106,35 @@ async function loadLicenses() {
   ${
     canRevoke() && !l.revoked
       ? `<button class="btn btn-danger btn-sm"
-           onclick="revokeLicense('${l.licenseId}')">
-           Revoke
-         </button>`
+          onclick="revokeLicense('${l.licenseId}')">Revoke</button>`
       : ""
   }
 </div>`;
-      })
-      .join("");
+    }).join("");
+
   } catch {
     showNotification("Failed load licenses", "error");
   }
 }
 
-// ================= REVOKE =================
+/* ================= REVOKE ================= */
 async function revokeLicense(licenseId) {
   if (!confirm("Revoke license?")) return;
 
   try {
+    const token = await auth.currentUser.getIdToken();
+
     const res = await fetch(`${API_BASE}/revoke-license`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        licenseId,
-        uid: currentUser.uid,
-      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ licenseId })
     });
 
     const data = await res.json();
-    if (!data.success) throw new Error("No permission");
+    if (!data.success) throw new Error();
 
     showNotification("License revoked");
     loadLicenses();
@@ -154,50 +143,31 @@ async function revokeLicense(licenseId) {
   }
 }
 
-// ================= VERIFY =================
-async function testConnection() {
-  const licenseId = prompt("Masukkan License ID");
-  if (!licenseId) return;
-
-  const universeId = document.getElementById("testGameId").value;
-  const placeId = document.getElementById("testPlaceId").value;
-
+/* ================= LOGS ================= */
+async function refreshLogs() {
   try {
-    const res = await fetch(
-      `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
-    );
-
+    const res = await fetch(`${API_BASE}/logs`);
     const data = await res.json();
-    if (!data.valid) throw new Error();
+    logs = data.logs || [];
 
-    testResult.innerHTML = `
-<div style="background:#10b981;color:white;padding:12px;border-radius:8px">
-✅ VALID<br>
-Owner: ${data.owner}<br>
-Game ID: ${data.gameId}<br>
-Universe ID: ${data.universeId}
-</div>`;
+    logContainer.innerHTML = logs.map(l => `
+      <div class="log-entry ${l.valid ? "success" : "error"}">
+        [${new Date(l.time).toLocaleTimeString()}]
+        ${l.licenseId} — ${l.valid ? "VALID" : "INVALID"}
+      </div>
+    `).join("");
+
   } catch {
-    testResult.innerHTML = `
-<div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
-❌ INVALID
-</div>`;
+    showNotification("Failed load logs", "error");
   }
 }
 
-// ================= GLOBAL =================
-window.loadLicenses = loadLicenses;
-window.refreshLogs = refreshLogs;
+/* ================= GLOBAL ================= */
 window.revokeLicense = revokeLicense;
-window.testConnection = testConnection;
+window.refreshLogs = refreshLogs;
 
-// ================= START =================
-(async () => {
-  console.log("✅ License Manager ready");
-  await loadUser();
-  checkServerStatus();
-  loadLicenses();
-  refreshLogs();
-  setInterval(checkServerStatus, 30000);
-  setInterval(refreshLogs, 5000);
-})();
+/* ================= AUTO REFRESH ================= */
+setInterval(checkServerStatus, 30000);
+setInterval(refreshLogs, 5000);
+
+console.log("✅ License Manager ready");
