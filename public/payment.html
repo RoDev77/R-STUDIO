@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Payment</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="./images/RSLogo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
+<link rel="apple-touch-icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:Inter}
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  background:#fff;
+  width:100%;
+  max-width:900px;
+  padding:36px;
+  border-radius:28px;
+  box-shadow:0 30px 70px rgba(0,0,0,.25);
+  animation:fade .4s ease;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1}
+}
+
+.header{
+  text-align:center;
+  margin-bottom:28px;
+}
+.header h1{margin:0;font-size:30px}
+.header p{color:#555}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:26px;
+}
+
+@media(max-width:760px){
+  .grid{grid-template-columns:1fr}
+}
+
+.qris-box{
+  background:#f8fafc;
+  padding:26px;
+  border-radius:20px;
+  border:2px dashed #c7d2fe;
+  text-align:center;
+}
+
+.qris-box img{
+  width:100%;
+  max-width:260px;
+  border-radius:16px;
+  margin:18px 0;
+}
+
+.amount{
+  font-size:26px;
+  font-weight:900;
+  color:#4338ca;
+}
+
+.unique{
+  font-size:14px;
+  font-weight:700;
+  color:#555;
+}
+
+.form{
+  background:#f9fafb;
+  padding:26px;
+  border-radius:20px;
+}
+
+label{
+  font-weight:700;
+  font-size:13px;
+  margin-bottom:6px;
+  display:block;
+}
+
+input[type="file"]{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:2px dashed #d1d5db;
+  background:#fff;
+}
+
+input[readonly]{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:2px solid #e5e7eb;
+  background:#f3f4f6;
+  font-weight:700;
+}
+
+button{
+  margin-top:18px;
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+  background:linear-gradient(135deg,#facc15,#f59e0b);
+  color:#78350f;
+}
+
+.note{
+  margin-top:14px;
+  font-size:12px;
+  color:#666;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <div class="header">
+    <h1>💎 Pembayaran VIP</h1>
+    <p>Silakan lakukan pembayaran melalui QRIS</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- QRIS -->
+    <div class="qris-box">
+      <h3>📲 Scan QRIS</h3>
+      <h3>RodiFx</h3>
+      <img src="./images/Qris.jpeg" alt="QRIS R Studio">
+
+      <div class="amount" id="totalText">Rp 25.000</div>
+      <div class="unique">Kode unik: <span id="uniqueCode">---</span></div>
+    </div>
+
+    <!-- FORM -->
+    <div class="form">
+
+      <label>ID Transaksi</label>
+      <input type="text" id="trxId" readonly>
+
+      <label style="margin-top:16px">Upload Bukti Transfer</label>
+      <input type="file" id="proof" accept="image/*">
+
+      <button id="sendBtn">📤 Kirim ke Admin</button>
+
+      <div class="note">
+        Pastikan nominal sesuai hingga 3 digit terakhir.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ===== FIREBASE ===== -->
+<script type="module">
+import { checkMaintenance } from "./firebase.js";
+await checkMaintenance();
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1451774473304019155/d8fPUwbglwMxSOCqQ_37tIS2HxOgcDCY78bql3oBM_Ps2lTfY3TxVgcuTw5uk7x0RJ76";
+
+let currentUser;
+let uniqueCode;
+let transactionId;
+
+async function getVIPSession(uid){
+  const ref = doc(db, "vip_sessions", uid);
+  const snap = await getDoc(ref);
+  const now = Date.now();
+
+  if (snap.exists()) {
+    const d = snap.data();
+    if (d.expiresAt.toMillis() > now) {
+      return d;
+    }
+
+    // 🔁 UPDATE SAJA
+    const newData = {
+      uniqueCode: Math.floor(7 + Math.random() * 77),
+      transactionId: "RS-VIP-" +
+        Math.random().toString(36).substring(2,8).toUpperCase(),
+      expiresAt: Timestamp.fromMillis(now + 86400000),
+      createdAt: serverTimestamp()
+    };
+
+    await updateDoc(ref, newData);
+    return newData;
+  }
+
+  // 🆕 CREATE
+  const data = {
+    uniqueCode: Math.floor(7 + Math.random() * 77),
+    transactionId: "RS-VIP-" +
+      Math.random().toString(36).substring(2,8).toUpperCase(),
+    expiresAt: Timestamp.fromMillis(now + 86400000),
+    createdAt: serverTimestamp()
+  };
+
+  await setDoc(ref, data);
+  return data;
+}
+
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
+
+  currentUser = user;
+
+  const vip = await getVIPSession(user.uid);
+
+  uniqueCode = vip.uniqueCode;
+  transactionId = vip.transactionId;
+
+  document.getElementById("uniqueCode").textContent = uniqueCode;
+  document.getElementById("totalText").textContent =
+    `Rp ${(25000 + uniqueCode).toLocaleString("id-ID")}`;
+
+  document.getElementById("trxId").value = transactionId;
+});
+
+/* === SEND === */
+document.getElementById("sendBtn").onclick = async ()=>{
+  const file = document.getElementById("proof").files[0];
+  if(!file) return alert("Upload bukti transfer!");
+
+  const reader = new FileReader();
+
+  reader.onload = async () => {
+
+  const formData = new FormData();
+  formData.append("file", file, "bukti.jpg");
+
+  formData.append("payload_json", JSON.stringify({
+    username: "Verifikasi VIP",
+    embeds: [{
+      title: "💎 Pembayaran VIP Masuk",
+      color: 0xfacc15,
+      fields: [
+        { name: "👤 Nama", value: currentUser.displayName || "Member VIP", inline: true },
+        { name: "📧 Email", value: currentUser.email, inline: true },
+        { name: "💰 Total", value: `Rp ${(25000 + uniqueCode).toLocaleString("id-ID")}`, inline: true },
+        { name: "🆔 ID Transaksi", value: transactionId }
+      ],
+      image: { url: "attachment://bukti.jpg" },
+      footer: { text: "R STUDIO • Manual Verification" },
+      timestamp: new Date()
+    }]
+  }));
+
+  await fetch(WEBHOOK_URL, {
+    method: "POST",
+    body: formData
+  });
+
+  // simpan ke firestore
+await addDoc(collection(db, "vip_requests"), {
+  uid: currentUser.uid,
+  email: currentUser.email,
+  amount: 25000 + uniqueCode,
+  uniqueCode,
+  transactionId,
+  status: "pending",
+  createdAt: serverTimestamp()
+});
+
+  alert("✅ Bukti dikirim ke admin");
+  location.href = "https://rstudiolab.online/";
+};
+
+
+  reader.readAsDataURL(file);
+};
+
+</script>
+
+</body>
+</html>

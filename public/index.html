@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="home.css">
+<link rel="icon" type="image/png" href="./images/RSLogo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
+<link rel="apple-touch-icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="brand">
+    <h2>R STUDIO</h2>
+    <span>Learn Roblox Studio Development</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:16px">
+
+    <!-- BERLANGGANAN -->
+    <a href="subscribe.html" class="subscribe-btn">
+      💎 Berlangganan
+    </a>
+
+    <!-- PROFILE -->
+    <div class="profile">
+      <div class="avatar" id="avatar">
+        <img id="avatarImg" style="display:none">
+        <span id="avatarText">R</span>
+      </div>
+
+      <div class="dropdown" id="dropdown">
+        <a href="profile.html">👤 Profile</a>
+        <a href="admin.html" id="adminMenu" style="display:none">🛠 Admin Panel</a>
+        <a href="login.html" id="logoutBtn">🚪 Logout</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+
+  <div class="hero">
+    <h1>Welcome to R STUDIO 🚀</h1>
+    <p>Creative dashboard for Roblox developers & creators</p>
+    <div class="status" id="roleBadge">👤 Member</div>
+  </div>
+
+  <div class="section">
+    <h3>🎬 Video Library</h3>
+    <p>Tutorial & konten eksklusif R Studio</p>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="thumb">
+          <img
+            src="./images/carrythumb.png"
+            alt="Carry System V1"
+          />
+        </div>
+
+        <h4>Carry System V1</h4>
+        <div class="badge">VIP MODEL</div>
+        <button
+          type="button"
+          class="download vip-download"
+          data-file="CarrySystemV1Byrodiii">
+          ⬇ Download File ⬇
+        </button>
+      </div>
+
+
+      <div class="card">
+          <iframe 
+            src="https://www.youtube.com/embed/pcWO2OjrPMk"
+            title="Confession Wall System"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+
+        <h4>Confession Wall System V1</h4>
+        <div class="badge">FREE MODEL</div>
+        <a class="download" href="https://create.roblox.com/store/asset/109183734627151" target="_blank">
+          ⬇ Download File ⬇
+        </a>
+      </div>
+
+      <div class="card">
+          <iframe 
+            src="https://www.youtube.com/embed/Tnn-pOS2-vo"
+            title="Summit Kit V1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+
+        <h4>Summit Kit V1</h4>
+        <div class="badge">FREE MODEL</div>
+        <a class="download" href="https://create.roblox.com/store/asset/135286176326484" target="_blank">
+          ⬇ Download File ⬇
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { auth, db, checkMaintenance } from "./firebase.js";
+import { onAuthStateChanged, getAuth, signOut } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const avatar = document.getElementById("avatar");
+const avatarImg = document.getElementById("avatarImg");
+const avatarText = document.getElementById("avatarText");
+const dropdown = document.getElementById("dropdown");
+const adminMenu = document.getElementById("adminMenu");
+const roleBadge = document.getElementById("roleBadge");
+const subscribeBtn = document.querySelector(".subscribe-btn");
+const vipButtons = document.querySelectorAll(".vip-download");
+
+let HAS_VIP_ACCESS = false;
+
+vipButtons.forEach(btn => {
+  btn.onclick = async () => {
+
+    // ⛔ STOP SEBELUM FETCH
+    if (!HAS_VIP_ACCESS) {
+      alert("💎 Konten VIP — Silakan berlangganan dulu");
+      return;
+    }
+
+    try {
+      const user = getAuth().currentUser;
+      
+      const token = await user.getIdToken();
+
+      const res = await fetch("/api/download", {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      });
+
+      if (!res.ok) {
+        alert("Gagal download");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "CarrySystemV1Byrodiii.rbxm";
+      a.click();
+
+      URL.revokeObjectURL(url);
+
+    } catch (e) {
+      alert("Server error");
+    }
+  };
+});
+
+
+avatar.onclick = () => {
+  dropdown.style.display =
+    dropdown.style.display === "block" ? "none" : "block";
+};
+
+// DEFAULT (SEBELUM AUTH)
+subscribeBtn.style.display = "inline-flex";
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
+
+  await checkMaintenance();
+  
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()) return;
+
+  const data = snap.data();
+  const role = data.role || "member";
+  const isVIP = data.isVIP === true;
+
+  const hasVIPAccess =
+    isVIP || role === "admin" || role === "owner";
+  
+  HAS_VIP_ACCESS = hasVIPAccess;
+
+  // BADGE
+  roleBadge.textContent =
+    role === "owner" ? "👑 Owner" :
+    role === "admin" ? "🛠 Admin" :
+    hasVIPAccess ? "💎 VIP" :
+    "👤 Member";
+
+  // ADMIN MENU
+  adminMenu.style.display =
+    role === "admin" || role === "owner"
+      ? "block"
+      : "none";
+
+  // ===== AVATAR SYNC =====
+  if (data.photoBase64) {
+    avatarImg.src = data.photoBase64;
+    avatarImg.style.display = "block";
+    avatarText.style.display = "none";
+  } else {
+    avatarText.textContent =
+      (user.displayName || user.email)[0].toUpperCase();
+    avatarImg.style.display = "none";
+    avatarText.style.display = "block";
+  }
+
+  // SUBSCRIBE BUTTON RULE
+  let showSubscribe = true;
+
+  if (isVIP) showSubscribe = false;
+  if (role === "admin" && isVIP) showSubscribe = false;
+  if (role === "owner") showSubscribe = true;
+
+  subscribeBtn.style.display =
+    showSubscribe ? "inline-flex" : "none";
+
+  });
+
+
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  location.href = "login.html";
+};
+</script>
+
+
+
+</body>
+</html>

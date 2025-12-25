@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <link rel="stylesheet" href="register.css">
+  <link rel="icon" type="image/png" href="./images/RSLogo.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
+  <link rel="apple-touch-icon" href="./images/RSLogo.png">
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>✨ Register</h1>
+      <p>Create a new Account</p>
+    </div>
+
+    <form id="registerForm" class="auth-form">
+        <!-- ANTI BOT (HIDDEN FIELD) -->
+      <input type="text" name="company" tabindex="-1" autocomplete="off" style="display:none">
+      <div class="field">
+        <!-- <input type="text" name="company" style="display:none"> -->
+        <input id="nameInput" type="text" required />
+        <label>Nama Lengkap</label>
+      </div>
+
+      <div class="field">
+        <input id="emailInput" type="email" required />
+        <label>Email</label>
+      </div>
+
+      <div class="field password-field">
+        <input id="passwordInput" type="password" required />
+        <label>Password</label>
+
+        <span id="togglePassword">👁️</span>
+      </div>
+
+      <div class="strength">
+        <div class="bar"></div>
+      </div>
+
+      <button type="submit" class="submit">
+        Create Account
+      </button>
+
+    </form>
+
+    <div class="auth-footer">
+      Sudah punya akun? <a href="login.html">Login</a>
+    </div>
+  </div>
+
+  <script type="module" src="register.js"></script>
+</body>
+</html>

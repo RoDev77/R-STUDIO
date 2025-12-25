@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Reset Password — R Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:Inter}
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+}
+
+.card{
+  width:100%;
+  max-width:420px;
+  padding:36px;
+  border-radius:26px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 40px 80px rgba(0,0,0,.3);
+  animation:fade .4s ease;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1}
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  margin-bottom:20px;
+}
+.brand img{width:46px;height:46px}
+.brand h1{margin:0;font-size:26px;font-weight:800}
+
+p{
+  text-align:center;
+  color:#6b7280;
+  font-size:14px;
+  margin-bottom:26px;
+}
+
+label{
+  font-size:13px;
+  font-weight:700;
+  display:block;
+  margin-bottom:6px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  font-size:14px;
+}
+input:focus{
+  outline:none;
+  border-color:#6366f1;
+}
+
+button{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  font-weight:900;
+  cursor:pointer;
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  color:white;
+}
+
+button:disabled{opacity:.7}
+
+.msg{
+  margin-top:16px;
+  text-align:center;
+  font-size:13px;
+  display:none;
+}
+.success{color:#16a34a}
+.error{color:#dc2626}
+
+.footer{
+  margin-top:22px;
+  text-align:center;
+  font-size:14px;
+}
+.footer a{
+  color:#6366f1;
+  font-weight:700;
+  text-decoration:none;
+}
+.footer a:hover{text-decoration:underline}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="brand">
+    <img src="./images/RSLogo.png">
+    <h1>R STUDIO</h1>
+  </div>
+
+  <p>Buat password baru untuk akun kamu</p>
+
+  <form id="resetForm">
+    <label>Password Baru</label>
+    <input type="password" id="password" placeholder="Minimal 6 karakter" required>
+
+    <button id="btn">🔐 Simpan Password</button>
+
+    <div id="success" class="msg success"></div>
+    <div id="error" class="msg error"></div>
+  </form>
+
+  <div class="footer">
+    <a href="login.html">← Kembali ke Login</a>
+  </div>
+</div>
+
+<script type="module">
+import { auth } from "./firebase.js";
+import {
+  verifyPasswordResetCode,
+  confirmPasswordReset
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+const params = new URLSearchParams(window.location.search);
+const oobCode = params.get("oobCode");
+
+const form = document.getElementById("resetForm");
+const pwd = document.getElementById("password");
+const btn = document.getElementById("btn");
+const success = document.getElementById("success");
+const error = document.getElementById("error");
+
+if (!oobCode) {
+  error.textContent = "Link reset tidak valid";
+  error.style.display = "block";
+  form.style.display = "none";
+}
+
+form.onsubmit = async e => {
+  e.preventDefault();
+
+  success.style.display = error.style.display = "none";
+  btn.disabled = true;
+  btn.textContent = "Memproses...";
+
+  try {
+    await verifyPasswordResetCode(auth, oobCode);
+    await confirmPasswordReset(auth, oobCode, pwd.value);
+
+    success.textContent = "✅ Password berhasil diubah. Redirect...";
+    success.style.display = "block";
+
+    setTimeout(()=>location.href="login.html",2000);
+
+  } catch (err) {
+    error.textContent = "Link reset expired / tidak valid";
+    error.style.display = "block";
+  }
+
+  btn.disabled = false;
+  btn.textContent = "🔐 Simpan Password";
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<title>Purchase VIP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/png" href="./images/RSLogo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
+<link rel="apple-touch-icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#111;
+}
+
+.card{
+  background:#fff;
+  width:100%;
+  max-width:460px;
+  padding:36px;
+  border-radius:24px;
+  box-shadow:0 30px 60px rgba(0,0,0,.25);
+  animation:pop .4s ease;
+}
+
+@keyframes pop{
+  from{opacity:0;transform:scale(.95)}
+  to{opacity:1}
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 16px;
+  border-radius:999px;
+  font-weight:800;
+  margin-bottom:18px;
+  font-size:14px;
+}
+
+.badge.member{background:#fee2e2;color:#991b1b}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.vip{background:#dbeafe;color:#1d4ed8}
+
+h1{
+  margin:0 0 8px;
+  font-size:30px;
+}
+
+p{
+  color:#555;
+  line-height:1.6;
+}
+
+.plan{
+  margin-top:26px;
+  padding:26px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#a78bfa,#6366f1);
+  color:#fff;
+}
+
+.plan h2{
+  margin:0 0 8px;
+}
+
+.price{
+  font-size:34px;
+  font-weight:900;
+  margin:12px 0;
+}
+
+ul{
+  padding-left:18px;
+  margin:18px 0 24px;
+}
+
+li{
+  margin-bottom:10px;
+  font-weight:600;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(135deg,#facc15,#f59e0b);
+  color:#78350f;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.note{
+  margin-top:18px;
+  font-size:13px;
+  color:#666;
+  text-align:center;
+}
+
+.back{
+  margin-top:24px;
+  text-align:center;
+}
+
+.back a{
+  text-decoration:none;
+  font-weight:700;
+  color:#6366f1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <!-- STATUS -->
+  <div class="badge member" id="statusBadge">👤 Member</div>
+
+  <h1>Berlangganan VIP 💎</h1>
+  <p>Dapatkan akses penuh ke semua konten premium dan fitur eksklusif R Studio.</p>
+
+  <div class="plan">
+    <h2>VIP FOR ALL</h2>
+    <div class="price">Rp 25.000</div>
+
+    <ul>
+      <li>✔ Dapatkan Assets Lebih Awal</li>
+      <li>✔ Asset Roblox eksklusif</li>
+      <li>✔ Semua video premium</li>
+      <li>✔ Badge VIP</li>
+      <li>✔ 5 License</li>
+      <li>✔ Lifetime</li>
+    </ul>
+
+    <button id="vipBtn">Upgrade ke VIP</button>
+  </div>
+
+  <div class="note">
+    Pembayaran diverifikasi manual oleh admin.
+  </div>
+
+  <div class="back">
+    <a href="https://rstudiolab.online/">← Kembali ke Dashboard</a>
+  </div>
+
+</div>
+
+<!-- ===== FIREBASE ===== -->
+<script type="module">
+import { checkMaintenance } from "./firebase.js";
+await checkMaintenance();
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const badge = document.getElementById("statusBadge");
+const btn = document.getElementById("vipBtn");
+
+/* ⬇️ LANGSUNG KE PAYMENT */
+vipBtn.onclick = ()=>{
+    location.href = "payment.html";
+};
+</script>
+
+</body>
+</html>

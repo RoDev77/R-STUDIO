@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="./images/RSLogo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
+<link rel="apple-touch-icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:Inter}
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  background:#fff;
+  width:100%;
+  max-width:520px;
+  padding:32px;
+  border-radius:24px;
+  box-shadow:0 30px 70px rgba(0,0,0,.25);
+}
+h1{margin:0 0 20px}
+.avatar{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:#e5e7eb;
+  margin:auto;
+  overflow:hidden;
+  cursor:pointer;
+}
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+label{
+  font-weight:700;
+  font-size:13px;
+  margin-top:14px;
+  display:block;
+}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:2px solid #e5e7eb;
+}
+input[readonly]{
+  background:#f3f4f6;
+}
+button{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(135deg,#facc15,#f59e0b);
+}
+hr{
+  margin:26px 0;
+  border:none;
+  border-top:1px solid #e5e7eb;
+}
+.small{font-size:12px;color:#555}
+
+/* ===== NAVBAR ===== */
+.navbar{
+  height:64px;
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(135deg,#6d7cf2,#7c5cf4);
+  color:white;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:99;
+}
+
+.brand h2{
+  margin:0;
+  font-size:20px;
+  font-weight:800;
+}
+.brand span{
+  font-size:12px;
+  opacity:.85;
+}
+
+.profile-nav{
+  position:relative;
+}
+
+.avatar-nav{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#fff;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.avatar-nav img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.dropdown{
+  position:absolute;
+  right:0;
+  top:52px;
+  width:180px;
+  background:white;
+  border-radius:14px;
+  box-shadow:0 25px 50px rgba(0,0,0,.15);
+  overflow:hidden;
+  display:none;
+}
+
+.dropdown a{
+  display:block;
+  padding:14px 16px;
+  font-size:14px;
+  text-decoration:none;
+  color:#111827;
+}
+.dropdown a:hover{
+  background:#f3f4f6;
+}
+
+/* kasih jarak karena navbar fixed */
+body{
+  padding-top:90px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="navbar">
+  <div class="brand">
+    <h2>R STUDIO</h2>
+    <span>Creative Dashboard</span>
+  </div>
+
+  <div class="profile-nav">
+    <div class="avatar-nav" id="navAvatar">
+      <img id="navAvatarImg">
+    </div>
+
+    <div class="dropdown" id="dropdown">
+      <a href="https://rstudiolab.online/">🚀 Home</a>
+      <a href="admin.html" id="adminMenu" style="display:none">🛠 Admin Panel</a>
+      <a href="#" id="logoutBtn">🚪 Logout</a>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h1>👤 Profile</h1>
+
+  <!-- FOTO -->
+  <input type="file" id="photoInput" accept="image/*" hidden>
+  <div class="avatar" id="avatar">
+    <img id="avatarImg">
+  </div>
+  <div class="small" style="text-align:center;margin-top:6px">
+    Klik foto untuk mengganti
+  </div>
+
+  <!-- INFO -->
+  <label>Nama</label>
+  <input id="name">
+
+  <label>Email</label>
+  <input id="email" readonly>
+
+  <label>Role</label>
+  <input id="role" readonly>
+
+  <button id="saveProfile">💾 Simpan Profile</button>
+
+  <hr>
+
+  <h3>🔒 Ganti Password</h3>
+
+  <label>Password Lama</label>
+  <input type="password" id="oldPass">
+
+  <label>Password Baru</label>
+  <input type="password" id="newPass">
+
+  <label>Confirm Password Baru</label>
+  <input type="password" id="confirmPass">
+
+  <button id="changePass">🔁 Update Password</button>
+</div>
+
+<script type="module">
+import { checkMaintenance } from "./firebase.js";
+await checkMaintenance();
+import { auth, db } from "./firebase.js";
+import {
+  onAuthStateChanged,
+  updateProfile,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import {
+  doc,
+  getDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+import { signOut } from
+"https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+const avatar = document.getElementById("avatar");
+const avatarImg = document.getElementById("avatarImg");
+const photoInput = document.getElementById("photoInput");
+
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const roleInput = document.getElementById("role");
+
+const oldPassInput = document.getElementById("oldPass");
+const newPassInput = document.getElementById("newPass");
+const confirmPassInput = document.getElementById("confirmPass");
+
+let currentUser;
+
+/* ================= LOAD PROFILE ================= */
+const navAvatar = document.getElementById("navAvatar");
+const navAvatarImg = document.getElementById("navAvatarImg");
+const dropdown = document.getElementById("dropdown");
+const adminMenu = document.getElementById("adminMenu");
+
+navAvatar.onclick = ()=>{
+  dropdown.style.display =
+    dropdown.style.display === "block" ? "none" : "block";
+};
+
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+  currentUser = user;
+
+  emailInput.value = user.email;
+  nameInput.value = user.displayName || "";
+
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if(snap.exists()){
+    const data = snap.data();
+
+    roleInput.value = data.role || "member";
+
+    const photo =
+      data.photoBase64 ||
+      "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+    avatarImg.src = photo;
+    navAvatarImg.src = photo;
+
+    // ADMIN MENU
+    if(data.role === "admin" || data.role === "owner"){
+      adminMenu.style.display = "block";
+    }
+  }
+});
+
+// LOGOUT
+document.getElementById("logoutBtn").onclick = async ()=>{
+  await signOut(auth);
+  location.href="login.html";
+};
+
+/* ================= FOTO PROFILE (BASE64) ================= */
+avatar.onclick = ()=> photoInput.click();
+
+photoInput.onchange = ()=>{
+  const file = photoInput.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    const base64 = reader.result;
+
+    await updateDoc(doc(db,"users",currentUser.uid),{
+      photoBase64: base64
+    });
+
+    avatarImg.src = base64;
+    alert("✅ Foto profile diperbarui");
+  };
+
+  reader.readAsDataURL(file);
+};
+
+/* ================= SIMPAN NAMA ================= */
+document.getElementById("saveProfile").onclick = async ()=>{
+  await updateProfile(currentUser,{
+    displayName: nameInput.value
+  });
+
+  await updateDoc(doc(db,"users",currentUser.uid),{
+    name: nameInput.value
+  });
+
+  alert("✅ Profile diperbarui");
+};
+
+/* ================= GANTI PASSWORD ================= */
+document.getElementById("changePass").onclick = async ()=>{
+  const oldPass = oldPassInput.value;
+  const newPass = newPassInput.value;
+  const confirm = confirmPassInput.value;
+
+  if(newPass !== confirm)
+    return alert("Password baru tidak cocok");
+
+  const cred = EmailAuthProvider.credential(
+    currentUser.email,
+    oldPass
+  );
+
+  await reauthenticateWithCredential(currentUser,cred);
+  await updatePassword(currentUser,newPass);
+
+  alert("🔐 Password berhasil diubah");
+};
+</script>
+
+
+
+</body>
+</html>
