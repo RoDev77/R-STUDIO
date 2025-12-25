@@ -87,7 +87,7 @@ async function checkServerStatus() {
   const el = document.getElementById("serverStatus");
 
   try {
-    const res = await fetch(`${API_BASE}/health`);
+    const res = await fetch(`${API_BASE}/meta?type=health`);
     if (!res.ok) throw new Error();
 
     const data = await res.json();
