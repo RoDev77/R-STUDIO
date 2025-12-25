@@ -79,7 +79,7 @@ Expires At : ${
       loadLicenses();
     } catch (err) {
       showNotification(err.message, "error");
-      
+
     }
   });
 
@@ -230,7 +230,10 @@ window.revokeLicense = revokeLicense;
 console.log("✅ License Manager ready");
 checkServerStatus();
 loadLicenses();
+refreshLogs();
 
 // optional: auto refresh tiap 30 detik
 setInterval(checkServerStatus, 30000);
+// auto refresh logs tiap 5 detik
+setInterval(refreshLogs, 5000);
 
