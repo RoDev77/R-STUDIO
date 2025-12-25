@@ -35,13 +35,7 @@ onAuthStateChanged(auth, async user => {
 
   const data = snap.data();
 
-  currentUser = {
-    uid: user.uid,
-    role: data.role || "member",
-    isVIP: data.isVIP === true
-  };
-
-  console.log("👤 Logged as:", currentUser);
+  const user = getAuth().currentUser;
 
   checkServerStatus();
   loadLicenses();
@@ -50,8 +44,8 @@ onAuthStateChanged(auth, async user => {
 
 /* ================= PERMISSION ================= */
 function canRevoke() {
-  if (!currentUser) return false;
-  return currentUser.role === "admin" || currentUser.role === "owner";
+  if (!user) return false;
+  return user.role === "admin" || user.role === "owner";
 }
 
 /* ================= SERVER STATUS ================= */
@@ -122,7 +116,7 @@ async function revokeLicense(licenseId) {
   if (!confirm("Revoke license?")) return;
 
   try {
-    const token = await auth.currentUser.getIdToken();
+    const token = await auth.user.getIdToken();
 
     const res = await fetch(`${API_BASE}/revoke-license`, {
       method: "POST",
