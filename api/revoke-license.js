@@ -1,40 +1,45 @@
 import { cors } from "./_cors.js";
 import { getFirestore } from "./lib/firebase.js";
+import { getAuth } from "firebase-admin/auth";
+import "./lib/firebaseAdmin.js"; // init admin sdk
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "POST")
+    return res.status(405).json({ success: false });
 
   try {
-    const { licenseId, uid } = req.body || {};
-    if (!licenseId || !uid) {
-      return res.status(400).json({ success: false, error: "Missing data" });
-    }
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ success: false });
+
+    // 🔐 VERIFY TOKEN
+    const decoded = await getAuth().verifyIdToken(token);
+    const uid = decoded.uid;
 
     const db = getFirestore();
-
-    // 🔐 ambil user
     const userSnap = await db.collection("users").doc(uid).get();
     if (!userSnap.exists) {
-      return res.status(403).json({ success: false, error: "User not found" });
+      return res.status(403).json({ success: false });
     }
 
-    const user = userSnap.data();
+    const role = userSnap.data().role;
+    if (!["admin", "owner"].includes(role)) {
+      return res.status(403).json({ success: false });
+    }
 
-    // 🚫 BLOK MEMBER & VIP
-    if (!["admin", "owner"].includes(user.role)) {
-      return res.status(403).json({ success: false, error: "No permission" });
+    const { licenseId } = req.body;
+    if (!licenseId) {
+      return res.status(400).json({ success: false });
     }
 
     await db.collection("licenses").doc(licenseId).update({
       revoked: true,
       revokedAt: Date.now(),
-      revokedBy: uid,
+      revokedBy: uid
     });
 
     return res.json({ success: true });
+
   } catch (err) {
     console.error("REVOKE ERROR:", err);
     return res.status(500).json({ success: false });

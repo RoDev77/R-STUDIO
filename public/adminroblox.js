@@ -112,6 +112,45 @@ async function loadLicenses() {
   }
 }
 
+// ================= VERIFY =================
+async function testConnection() {
+  const licenseId = prompt("Masukkan License ID");
+  if (!licenseId) return;
+
+  const universeId = document.getElementById("testGameId").value;
+  const placeId = document.getElementById("testPlaceId").value;
+
+  if (!universeId) {
+    showNotification("Universe ID kosong", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
+    );
+
+    const data = await res.json();
+
+    if (!data.valid) {
+      throw new Error(data.reason || "INVALID");
+    }
+
+    testResult.innerHTML = `
+<div style="background:#10b981;color:white;padding:12px;border-radius:8px">
+✅ VALID<br>
+Owner: ${data.owner}<br>
+Game ID: ${data.gameId}<br>
+Universe ID: ${data.universeId}
+</div>`;
+  } catch (err) {
+    testResult.innerHTML = `
+<div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
+❌ INVALID
+</div>`;
+  }
+}
+
 /* ================= REVOKE ================= */
 async function revokeLicense(licenseId) {
   if (!canRevoke()) {
