@@ -1,3 +1,4 @@
+// adminroblox.js
 // ================= CONFIG =================
 const API_BASE = "https://api.rstudiolab.online/api";
 const ADMIN_SECRET = "rstudioselaludihati";
@@ -74,11 +75,11 @@ Expires At : ${
 
       document.getElementById("newLicenseInfo").style.display = "block";
       showNotification("✅ License created");
-      addLog("License created", "success");
+
       loadLicenses();
     } catch (err) {
       showNotification(err.message, "error");
-      addLog(err.message, "error");
+      
     }
   });
 
