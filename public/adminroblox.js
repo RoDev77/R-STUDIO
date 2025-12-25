@@ -55,19 +55,22 @@ document
   .addEventListener("submit", async e => {
     e.preventDefault();
 
-    const payload = {
-      gameId: Number(gameId.value),
-      placeId: Number(placeId.value),
-      owner: owner.value,
-      duration: Number(duration.value),
-    };
-
     try {
+      const token = await currentUser.getIdToken();
+
+      const payload = {
+        gameId: Number(gameId.value),
+        placeId: Number(placeId.value),
+        owner: owner.value,
+        duration: Number(duration.value),
+      };
+      
+
       const res = await fetch(`${API_BASE}/create-license`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: ADMIN_SECRET,
+          Authorization: "Bearer " + token
         },
         body: JSON.stringify(payload),
       });
@@ -75,7 +78,7 @@ document
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "FAILED");
 
-      document.getElementById("licenseKeyDisplay").textContent = `
+      licenseKeyDisplay.textContent = `
 License ID : ${data.licenseId}
 Owner      : ${data.owner}
 Game ID    : ${data.gameId}
@@ -87,7 +90,7 @@ Expires At : ${
       }
 `;
 
-      document.getElementById("newLicenseInfo").style.display = "block";
+      newLicenseInfo.style.display = "block";
       showNotification("✅ License created");
 
       loadLicenses();
@@ -95,8 +98,8 @@ Expires At : ${
       showNotification(err.message, "error");
 
     }
-  });
-  
+  })
+
 /* ================= SERVER STATUS ================= */
 async function checkServerStatus() {
   const el = document.getElementById("serverStatus");

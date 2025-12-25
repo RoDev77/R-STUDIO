@@ -1,7 +1,6 @@
 import { cors } from "./_cors.js";
 import { getFirestore } from "./lib/firebase.js";
-import { getAuth } from "firebase-admin/auth";
-import "./lib/firebaseAdmin.js"; // init admin sdk
+import admin from "firebase-admin";
 
 export default async function handler(req, res) {
   if (cors(req, res)) return;
@@ -9,39 +8,34 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false });
 
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ success: false });
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer "))
+      return res.status(401).json({ success: false });
 
-    // 🔐 VERIFY TOKEN
-    const decoded = await getAuth().verifyIdToken(token);
-    const uid = decoded.uid;
+    const idToken = authHeader.replace("Bearer ", "");
+    const decoded = await admin.auth().verifyIdToken(idToken);
 
     const db = getFirestore();
-    const userSnap = await db.collection("users").doc(uid).get();
-    if (!userSnap.exists) {
+    const userSnap = await db.collection("users").doc(decoded.uid).get();
+
+    if (!userSnap.exists)
       return res.status(403).json({ success: false });
-    }
 
     const role = userSnap.data().role;
-    if (!["admin", "owner"].includes(role)) {
+    if (role !== "admin" && role !== "owner")
       return res.status(403).json({ success: false });
-    }
 
     const { licenseId } = req.body;
-    if (!licenseId) {
+    if (!licenseId)
       return res.status(400).json({ success: false });
-    }
 
     await db.collection("licenses").doc(licenseId).update({
-      revoked: true,
-      revokedAt: Date.now(),
-      revokedBy: uid
+      revoked: true
     });
 
     return res.json({ success: true });
-
-  } catch (err) {
-    console.error("REVOKE ERROR:", err);
+  } catch (e) {
+    console.error(e);
     return res.status(500).json({ success: false });
   }
 }
