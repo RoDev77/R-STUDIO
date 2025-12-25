@@ -9,7 +9,8 @@ import { doc, getDoc } from
 const API_BASE = "https://api.rstudiolab.online/api";
 
 /* ================= STATE ================= */
-let currentUser = null;
+let currentUser = null;     // firebase auth user
+let currentRole = "member"; // role dari Firestore
 let logs = [];
 
 /* ================= INIT ================= */
@@ -27,6 +28,8 @@ function showNotification(message, type = "success") {
 onAuthStateChanged(auth, async user => {
   if (!user) return location.href = "login.html";
 
+  currentUser = user;
+
   const snap = await getDoc(doc(db, "users", user.uid));
   if (!snap.exists()) {
     showNotification("User data not found", "error");
@@ -34,8 +37,7 @@ onAuthStateChanged(auth, async user => {
   }
 
   const data = snap.data();
-
-  const userid = getAuth().currentUser;
+  currentRole = data.role || "member";
 
   checkServerStatus();
   loadLicenses();
@@ -44,8 +46,7 @@ onAuthStateChanged(auth, async user => {
 
 /* ================= PERMISSION ================= */
 function canRevoke() {
-  if (!userid) return false;
-  return userid.role === "admin" || userid.role === "owner";
+  return currentRole === "admin" || currentRole === "owner";
 }
 
 /* ================= SERVER STATUS ================= */
@@ -113,10 +114,14 @@ async function loadLicenses() {
 
 /* ================= REVOKE ================= */
 async function revokeLicense(licenseId) {
+  if (!canRevoke()) {
+    return showNotification("No permission", "error");
+  }
+
   if (!confirm("Revoke license?")) return;
 
   try {
-    const token = await auth.userid.getIdToken();
+    const token = await currentUser.getIdToken();
 
     const res = await fetch(`${API_BASE}/revoke-license`, {
       method: "POST",
@@ -133,7 +138,7 @@ async function revokeLicense(licenseId) {
     showNotification("License revoked");
     loadLicenses();
   } catch {
-    showNotification("No permission", "error");
+    showNotification("Revoke failed", "error");
   }
 }
 
@@ -142,8 +147,8 @@ async function refreshLogs() {
   try {
     const res = await fetch(`${API_BASE}/logs`);
     const data = await res.json();
-    logs = data.logs || [];
 
+    logs = data.logs || [];
     logContainer.innerHTML = logs.map(l => `
       <div class="log-entry ${l.valid ? "success" : "error"}">
         [${new Date(l.time).toLocaleTimeString()}]
