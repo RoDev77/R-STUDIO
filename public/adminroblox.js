@@ -49,6 +49,54 @@ function canRevoke() {
   return currentRole === "admin" || currentRole === "owner";
 }
 
+// ================= CREATE LICENSE =================
+document
+  .getElementById("createLicenseForm")
+  .addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const payload = {
+      gameId: Number(gameId.value),
+      placeId: Number(placeId.value),
+      owner: owner.value,
+      duration: Number(duration.value),
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/create-license`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: ADMIN_SECRET,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "FAILED");
+
+      document.getElementById("licenseKeyDisplay").textContent = `
+License ID : ${data.licenseId}
+Owner      : ${data.owner}
+Game ID    : ${data.gameId}
+Place ID   : ${data.placeId}
+Expires At : ${
+        data.expiresAt
+          ? new Date(data.expiresAt).toLocaleDateString()
+          : "♾️ Unlimited"
+      }
+`;
+
+      document.getElementById("newLicenseInfo").style.display = "block";
+      showNotification("✅ License created");
+
+      loadLicenses();
+    } catch (err) {
+      showNotification(err.message, "error");
+
+    }
+  });
+  
 /* ================= SERVER STATUS ================= */
 async function checkServerStatus() {
   const el = document.getElementById("serverStatus");
