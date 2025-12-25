@@ -8,7 +8,7 @@ export default function handler(req, res) {
   if (type === "copyright") {
     return res.json({
       success: true,
-      text: "© R STUDIO"
+      text: "© rstudiolab.online"
     });
   }
 
