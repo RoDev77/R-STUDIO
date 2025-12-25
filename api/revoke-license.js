@@ -2,33 +2,41 @@ import { cors } from "./_cors.js";
 import { getFirestore } from "./lib/firebase.js";
 
 export default async function handler(req, res) {
-  // ✅ PRE-FLIGHT HARUS PALING ATAS
   if (cors(req, res)) return;
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 🔐 AUTH
-  if (req.headers.authorization !== process.env.SUPER_ADMIN_SECRET) {
-    return res.status(401).json({ success: false });
-  }
-
   try {
-    const { licenseId } = req.body || {};
-    if (!licenseId) {
-      return res.status(400).json({ success: false, error: "Missing licenseId" });
+    const { licenseId, uid } = req.body || {};
+    if (!licenseId || !uid) {
+      return res.status(400).json({ success: false, error: "Missing data" });
     }
 
-    const db = getFirestore(); // 🔑 WAJIB
-    await db
-      .collection("licenses")
-      .doc(licenseId)
-      .update({ revoked: true });
+    const db = getFirestore();
+
+    // 🔐 ambil user
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (!userSnap.exists) {
+      return res.status(403).json({ success: false, error: "User not found" });
+    }
+
+    const user = userSnap.data();
+
+    // 🚫 BLOK MEMBER & VIP
+    if (!["admin", "owner"].includes(user.role)) {
+      return res.status(403).json({ success: false, error: "No permission" });
+    }
+
+    await db.collection("licenses").doc(licenseId).update({
+      revoked: true,
+      revokedAt: Date.now(),
+      revokedBy: uid,
+    });
 
     return res.json({ success: true });
   } catch (err) {
-    console.error("REVOKE LICENSE ERROR:", err);
+    console.error("REVOKE ERROR:", err);
     return res.status(500).json({ success: false });
   }
 }

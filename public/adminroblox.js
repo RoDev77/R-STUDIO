@@ -1,10 +1,9 @@
-// adminroblox.js
 // ================= CONFIG =================
 const API_BASE = "https://api.rstudiolab.online/api";
-const ADMIN_SECRET = "rstudioselaludihati";
 
 // ================= STATE =================
 let logs = [];
+let currentUser = null;
 
 // ================= INIT =================
 document.getElementById("apiEndpoint").textContent = API_BASE;
@@ -17,6 +16,23 @@ function showNotification(message, type = "success") {
   setTimeout(() => n.classList.remove("show"), 3000);
 }
 
+// ================= USER =================
+async function loadUser() {
+  try {
+    const res = await fetch(`${API_BASE}/me`);
+    const data = await res.json();
+    currentUser = data.user;
+  } catch {
+    showNotification("Failed load user", "error");
+  }
+}
+
+function canRevoke() {
+  if (!currentUser) return false;
+  return currentUser.role === "admin" || currentUser.role === "owner";
+}
+
+// ================= LOGS =================
 function renderLogs() {
   const el = document.getElementById("logContainer");
   if (!logs || logs.length === 0) {
@@ -35,63 +51,23 @@ function renderLogs() {
     .join("");
 }
 
-// ================= CREATE LICENSE =================
-document
-  .getElementById("createLicenseForm")
-  .addEventListener("submit", async e => {
-    e.preventDefault();
+async function refreshLogs() {
+  try {
+    const res = await fetch(`${API_BASE}/logs`);
+    const data = await res.json();
+    logs = data.logs || [];
+    renderLogs();
+  } catch {
+    showNotification("Failed load logs", "error");
+  }
+}
 
-    const payload = {
-      gameId: Number(gameId.value),
-      placeId: Number(placeId.value),
-      owner: owner.value,
-      duration: Number(duration.value),
-    };
-
-    try {
-      const res = await fetch(`${API_BASE}/create-license`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: ADMIN_SECRET,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "FAILED");
-
-      document.getElementById("licenseKeyDisplay").textContent = `
-License ID : ${data.licenseId}
-Owner      : ${data.owner}
-Game ID    : ${data.gameId}
-Place ID   : ${data.placeId}
-Expires At : ${
-        data.expiresAt
-          ? new Date(data.expiresAt).toLocaleDateString()
-          : "♾️ Unlimited"
-      }
-`;
-
-      document.getElementById("newLicenseInfo").style.display = "block";
-      showNotification("✅ License created");
-
-      loadLicenses();
-    } catch (err) {
-      showNotification(err.message, "error");
-
-    }
-  });
-
+// ================= SERVER STATUS =================
 async function checkServerStatus() {
   const el = document.getElementById("serverStatus");
-
   try {
     const res = await fetch(`${API_BASE}/meta?type=health`);
     if (!res.ok) throw new Error();
-
-    const data = await res.json();
-
     el.textContent = "Online";
     el.className = "status online";
   } catch {
@@ -137,9 +113,13 @@ async function loadLicenses() {
   <p>Expires: ${
     l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "♾️ Unlimited"
   }</p>
+
   ${
-    !l.revoked
-      ? `<button class="btn btn-danger btn-sm" onclick="revokeLicense('${l.licenseId}')">Revoke</button>`
+    canRevoke() && !l.revoked
+      ? `<button class="btn btn-danger btn-sm"
+           onclick="revokeLicense('${l.licenseId}')">
+           Revoke
+         </button>`
       : ""
   }
 </div>`;
@@ -147,6 +127,30 @@ async function loadLicenses() {
       .join("");
   } catch {
     showNotification("Failed load licenses", "error");
+  }
+}
+
+// ================= REVOKE =================
+async function revokeLicense(licenseId) {
+  if (!confirm("Revoke license?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/revoke-license`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        licenseId,
+        uid: currentUser.uid,
+      }),
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error("No permission");
+
+    showNotification("License revoked");
+    loadLicenses();
+  } catch {
+    showNotification("No permission", "error");
   }
 }
 
@@ -158,21 +162,13 @@ async function testConnection() {
   const universeId = document.getElementById("testGameId").value;
   const placeId = document.getElementById("testPlaceId").value;
 
-  if (!universeId) {
-    showNotification("Universe ID kosong", "error");
-    return;
-  }
-
   try {
     const res = await fetch(
       `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
     );
 
     const data = await res.json();
-
-    if (!data.valid) {
-      throw new Error(data.reason || "INVALID");
-    }
+    if (!data.valid) throw new Error();
 
     testResult.innerHTML = `
 <div style="background:#10b981;color:white;padding:12px;border-radius:8px">
@@ -181,7 +177,7 @@ Owner: ${data.owner}<br>
 Game ID: ${data.gameId}<br>
 Universe ID: ${data.universeId}
 </div>`;
-  } catch (err) {
+  } catch {
     testResult.innerHTML = `
 <div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
 ❌ INVALID
@@ -189,51 +185,19 @@ Universe ID: ${data.universeId}
   }
 }
 
-// ================= REVOKE =================
-async function revokeLicense(licenseId) {
-  if (!confirm("Revoke license?")) return;
-
-  await fetch(`${API_BASE}/revoke-license`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: ADMIN_SECRET,
-    },
-    body: JSON.stringify({ licenseId }),
-  });
-
-  showNotification("License revoked");
-  loadLicenses();
-}
-
-// REFRESH LOGS
-async function refreshLogs() {
-  try {
-    const res = await fetch(`${API_BASE}/logs`);
-    const data = await res.json();
-
-    logs = data.logs || [];
-    renderLogs();
-  } catch {
-    showNotification("Failed load logs", "error");
-  }
-}
-
-
-// ================= GLOBAL EXPORT =================
+// ================= GLOBAL =================
 window.loadLicenses = loadLicenses;
-window.testConnection = testConnection;
 window.refreshLogs = refreshLogs;
 window.revokeLicense = revokeLicense;
+window.testConnection = testConnection;
 
 // ================= START =================
-console.log("✅ License Manager ready");
-checkServerStatus();
-loadLicenses();
-refreshLogs();
-
-// optional: auto refresh tiap 30 detik
-setInterval(checkServerStatus, 30000);
-// auto refresh logs tiap 5 detik
-setInterval(refreshLogs, 5000);
-
+(async () => {
+  console.log("✅ License Manager ready");
+  await loadUser();
+  checkServerStatus();
+  loadLicenses();
+  refreshLogs();
+  setInterval(checkServerStatus, 30000);
+  setInterval(refreshLogs, 5000);
+})();
