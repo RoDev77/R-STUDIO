@@ -266,13 +266,24 @@ async function loadLicenses() {
             }</p>
 
             ${
-              !l.revoked && canRevoke(l)
-                ? `<button class="btn btn-danger btn-sm"
-                    onclick="revokeLicense('${l.licenseId}')">
-                    Revoke
+              l.revoked && currentRole === "owner"
+                ? `<button class="btn btn-warning btn-sm"
+                    onclick="undoRevoke('${l.licenseId}')">
+                    Undo Revoke
                   </button>`
-                : ""
+                : !l.revoked &&
+                  (
+                    currentRole === "owner" ||
+                    currentRole === "admin" ||
+                    l.createdBy === currentUser.uid
+                  )
+                  ? `<button class="btn btn-danger btn-sm"
+                      onclick="revokeLicense('${l.licenseId}')">
+                      Revoke
+                    </button>`
+                  : ""
             }
+
           </div>
         `;
       })
@@ -365,6 +376,37 @@ async function revokeLicense(licenseId) {
   }
 }
 
+async function undoRevoke(licenseId) {
+  if (currentRole !== "owner") {
+    return showNotification("Owner only", "error");
+  }
+
+  if (!confirm("Undo revoke license?")) return;
+
+  try {
+    const token = await currentUser.getIdToken();
+
+    const res = await fetch(`${API_BASE}/undo-revoke-license`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ licenseId })
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error();
+
+    showNotification("License restored");
+    loadLicenses();
+    refreshLogs();
+
+  } catch {
+    showNotification("Undo revoke failed", "error");
+  }
+}
+
 /* ================= LOGS ================= */
 async function refreshLogs() {
   try {
@@ -385,6 +427,18 @@ async function refreshLogs() {
         `;
       }
 
+      if (l.type === "undo_revoke") {
+        return `
+          <div class="log-entry success">
+            [${new Date(l.time).toLocaleTimeString()}]
+            ♻️ UNDO —
+            ${l.licenseId} —
+            restored by OWNER
+          </div>
+        `;
+      }
+
+
       // verify / create
       return `
         <div class="log-entry ${l.success ? "success" : "error"}">
@@ -404,8 +458,7 @@ window.loadLicenses = loadLicenses;
 window.testConnection = testConnection;
 window.refreshLogs = refreshLogs;
 window.revokeLicense = revokeLicense;
-
-
+window.undoRevoke = undoRevoke;
 
 /* ================= AUTO REFRESH ================= */
 setInterval(checkServerStatus, 30000);
