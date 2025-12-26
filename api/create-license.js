@@ -41,8 +41,19 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "User not registered" });
     }
 
-    const userRole = userSnap.data().role;
+    const userData = userSnap.data();
 
+    let userRole;
+
+    if (userData.role === "owner") {
+      userRole = "owner";
+    } else if (userData.role === "admin") {
+      userRole = "admin";
+    } else if (userData.isVIP === true) {
+      userRole = "vip";
+    } else {
+      userRole = "member";
+    }
 
     /* ================= PAYLOAD ================= */
     const { gameId, placeId, owner, duration } = req.body;
