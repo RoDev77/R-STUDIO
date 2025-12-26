@@ -117,7 +117,7 @@ document
       if (!data.success) throw new Error(data.error || "FAILED");
 
       // === LOG CREATE LICENSE ===
-      await fetch(`${API_BASE}/log-connection`, {
+      await fetch(`${API_BASE}/logs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -297,7 +297,7 @@ async function testConnection() {
   // === LOG VERIFY (VALID / INVALID) ===
   const token = await currentUser.getIdToken();
 
-  await fetch(`${API_BASE}/log-connection`, {
+  await fetch(`${API_BASE}/logs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -353,7 +353,7 @@ async function revokeLicense(licenseId) {
     if (!data.success) throw new Error();
 
     // === LOG REVOKE ===
-    await fetch(`${API_BASE}/log-connection`, {
+    await fetch(`${API_BASE}/logs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -376,7 +376,7 @@ async function revokeLicense(licenseId) {
 /* ================= LOGS ================= */
 async function refreshLogs() {
   try {
-    const res = await fetch(`${API_BASE}/log-connection`);
+    const res = await fetch(`${API_BASE}/logs`);
     const data = await res.json();
 
     logs = data.logs || [];
