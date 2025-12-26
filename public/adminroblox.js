@@ -1,3 +1,4 @@
+// adminroblox.js
 /* ================= FIREBASE ================= */
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from
@@ -180,9 +181,9 @@ async function loadLicenses() {
 <div class="license-item">
   <b>${l.owner}</b>
   <span class="badge ${badge}">${badge.toUpperCase()}</span>
-  <p>ID: ${l.licenseId}</p>
-  <p>Game: ${l.gameId}</p>
-  <p>Place: ${l.placeId}</p>
+  <p>ID License: ${l.licenseId}</p>
+  <p>Game ID: ${l.gameId}</p>
+  <p>Place ID: ${l.placeId}</p>
   <p>Expires: ${
     l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "♾️ Unlimited"
   }</p>

@@ -1,3 +1,4 @@
+// revoke-license.js
 const licenseSnap = await db
   .collection("licenses")
   .doc(licenseId)
@@ -9,21 +10,42 @@ if (!licenseSnap.exists) {
 
 const license = licenseSnap.data();
 
+// ambil user pembuat license
+const creatorSnap = await db
+  .collection("users")
+  .doc(license.createdBy)
+  .get();
+
+if (!creatorSnap.exists) {
+  return res.status(403).json({ error: "CREATOR_NOT_FOUND" });
+}
+
+const creator = creatorSnap.data();
+
+// tentukan role creator
+let creatorRole;
+if (creator.role === "owner") {
+  creatorRole = "owner";
+} else if (creator.role === "admin") {
+  creatorRole = "admin";
+} else if (creator.isVIP === true) {
+  creatorRole = "vip";
+} else {
+  creatorRole = "member";
+}
+
 let canRevoke = false;
 
-// OWNER BISA SEMUA
+// OWNER
 if (userRole === "owner") {
   canRevoke = true;
 }
 
 // ADMIN
 else if (userRole === "admin") {
-  // admin bisa revoke milik sendiri
   if (license.createdBy === decoded.uid) {
     canRevoke = true;
-  }
-  // admin bisa revoke member & vip
-  else if (["member", "vip"].includes(license.role)) {
+  } else if (["member", "vip"].includes(creatorRole)) {
     canRevoke = true;
   }
 }
