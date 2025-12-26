@@ -119,8 +119,7 @@ export default async function handler(req, res) {
       role: userRole,
       gameId: Number(gameId),
       placeId: Number(placeId),
-      expiresAt:
-        duration === -1 ? null : Date.now() + duration * 86400000,
+      expiresAt,
       revoked: false,
       createdAt: Date.now(),
       createdBy: decoded.uid,
