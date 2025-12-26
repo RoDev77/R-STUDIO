@@ -189,11 +189,19 @@ async function loadLicenses() {
   }</p>
 
   ${
-    canRevoke() && !l.revoked
+    !l.revoked &&
+    (
+      currentRole === "owner" ||
+      currentRole === "admin" ||
+      l.createdBy === currentUser.uid
+    )
       ? `<button class="btn btn-danger btn-sm"
-          onclick="revokeLicense('${l.licenseId}')">Revoke</button>`
+          onclick="revokeLicense('${l.licenseId}')">
+          Revoke
+        </button>`
       : ""
   }
+  
 </div>`;
     }).join("");
 
