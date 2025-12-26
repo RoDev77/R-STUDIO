@@ -39,10 +39,39 @@ onAuthStateChanged(auth, async user => {
   const data = snap.data();
   currentRole = data.role || "member";
 
+  renderUserRole(currentRole); // ✅ TAMBAHKAN INI
   checkServerStatus();
   loadLicenses();
   refreshLogs();
 });
+
+function renderUserRole(role) {
+  const badge = document.getElementById("userRoleBadge");
+  if (!badge) return;
+
+  badge.className = "role-badge"; // reset
+
+  switch (role) {
+    case "owner":
+      badge.textContent = "OWNER";
+      badge.classList.add("role-owner");
+      break;
+
+    case "admin":
+      badge.textContent = "ADMIN";
+      badge.classList.add("role-admin");
+      break;
+
+    case "vip":
+      badge.textContent = "VIP";
+      badge.classList.add("role-vip");
+      break;
+
+    default:
+      badge.textContent = "MEMBER";
+      badge.classList.add("role-member");
+  }
+}
 
 /* ================= PERMISSION ================= */
 function canRevoke() {
@@ -117,7 +146,13 @@ async function checkServerStatus() {
 /* ================= LICENSES ================= */
 async function loadLicenses() {
   try {
-    const res = await fetch(`${API_BASE}/licenses`);
+    const token = await currentUser.getIdToken();
+    const res = await fetch(`${API_BASE}/licenses`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
     const data = await res.json();
     if (!data.success) throw new Error();
 
@@ -235,7 +270,13 @@ async function revokeLicense(licenseId) {
 /* ================= LOGS ================= */
 async function refreshLogs() {
   try {
-    const res = await fetch(`${API_BASE}/logs`);
+    const token = await currentUser.getIdToken();
+    const res = await fetch(`${API_BASE}/logs`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
     const data = await res.json();
 
     logs = data.logs || [];
@@ -258,10 +299,7 @@ window.refreshLogs = refreshLogs;
 window.revokeLicense = revokeLicense;
 
 
-// ================= START =================
-checkServerStatus();
-loadLicenses();
-refreshLogs();
+
 /* ================= AUTO REFRESH ================= */
 setInterval(checkServerStatus, 30000);
 setInterval(refreshLogs, 5000);

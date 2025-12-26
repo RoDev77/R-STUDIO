@@ -544,6 +544,22 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .role-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .role-member { background: #3498db; }
+        .role-vip    { background: linear-gradient(135deg,#f1c40f,#e67e22); }
+        .role-admin  { background: #e74c3c; }
+        .role-owner  { background: linear-gradient(135deg,#9b59b6,#6c3483); }
+
     </style>
 </head>
 <body>
@@ -559,7 +575,10 @@
                     <span class="info-label">API:</span>
                     <code id="apiEndpoint">http://localhost:3000/api</code>
                 </div>
-            </div>
+                <div class="info-item">
+                    <div id="userRoleBadge" class="role-badge">ROLE</div>
+                </div>
+            </div
         </div>
 
         <div class="stats">

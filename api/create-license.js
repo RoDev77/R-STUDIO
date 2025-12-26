@@ -80,17 +80,31 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: "INVALID_ROLE" });
     }
 
-    // hitung license aktif
+    // LICENSE AKTIF
+    const now = Date.now();
+
     const snap = await db
       .collection("licenses")
       .where("createdBy", "==", decoded.uid)
       .where("revoked", "==", false)
       .get();
 
-    if (snap.size >= maxLicense) {
+    // hitung ACTIVE license saja
+    const activeLicenses = snap.docs.filter(doc => {
+      const data = doc.data();
+
+      // unlimited / permanent license
+      if (data.expiresAt === null) return true;
+
+      // masih aktif
+      return data.expiresAt > now;
+    }).length;
+
+    if (activeLicenses >= maxLicense) {
       return res.status(403).json({
         error: "LICENSE_LIMIT",
         max: maxLicense,
+        active: activeLicenses,
       });
     }
 
