@@ -146,13 +146,7 @@ async function checkServerStatus() {
 /* ================= LICENSES ================= */
 async function loadLicenses() {
   try {
-    const token = await currentUser.getIdToken();
-    const res = await fetch(`${API_BASE}/licenses`, {
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    });
-
+    const res = await fetch(`${API_BASE}/licenses`);
     const data = await res.json();
     if (!data.success) throw new Error();
 
@@ -270,13 +264,7 @@ async function revokeLicense(licenseId) {
 /* ================= LOGS ================= */
 async function refreshLogs() {
   try {
-    const token = await currentUser.getIdToken();
-    const res = await fetch(`${API_BASE}/logs`, {
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    });
-
+    const res = await fetch(`${API_BASE}/logs`);
     const data = await res.json();
 
     logs = data.logs || [];

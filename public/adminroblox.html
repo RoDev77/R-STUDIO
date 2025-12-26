@@ -11,32 +11,83 @@
             box-sizing: border-box;
         }
 
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0a0e27 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             padding: 28px;
             color: #e4e4e7;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(121, 40, 202, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.6s ease;
         }
 
         .header {
-            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
-            border-radius: 16px;
+            background: rgba(15, 52, 96, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
             padding: 36px;
             margin-bottom: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .header h1 {
-            color: #00d9ff;
-            font-size: 30px;
-            font-weight: 700;
+            background: linear-gradient(135deg, #00d9ff 0%, #7928ca 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 800;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
@@ -47,6 +98,7 @@
             display: flex;
             gap: 32px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .info-item {
@@ -98,11 +150,6 @@
             background: #f87171;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
-
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -111,14 +158,15 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            background: rgba(15, 52, 96, 0.4);
+            backdrop-filter: blur(20px);
             padding: 28px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .stat-card::before {
@@ -131,9 +179,27 @@
             background: linear-gradient(90deg, #00d9ff, #7928ca);
         }
 
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
         .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 217, 255, 0.3);
+            border-color: rgba(0, 217, 255, 0.3);
+        }
+
+        .stat-card:hover::after {
+            opacity: 1;
         }
 
         .stat-label {
@@ -143,13 +209,20 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-value {
             font-size: 42px;
             font-weight: 800;
-            color: #00d9ff;
+            background: linear-gradient(135deg, #00d9ff 0%, #7928ca 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             line-height: 1;
+            position: relative;
+            z-index: 1;
         }
 
         .grid {
@@ -160,11 +233,18 @@
         }
 
         .card {
-            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
-            border-radius: 16px;
+            background: rgba(15, 52, 96, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
             padding: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+            border-color: rgba(0, 217, 255, 0.2);
         }
 
         .card h3 {
@@ -179,6 +259,7 @@
 
         .icon {
             font-size: 24px;
+            animation: float 3s ease-in-out infinite;
         }
 
         .form-group {
@@ -197,11 +278,12 @@
         .select {
             width: 100%;
             padding: 13px 16px;
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             font-size: 14px;
-            transition: all 0.2s;
-            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             color: #e4e4e7;
             font-family: inherit;
             font-weight: 500;
@@ -215,15 +297,15 @@
 
         .form-group input:hover,
         .select:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .form-group input:focus,
         .select:focus {
             outline: none;
             border-color: #00d9ff;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
             box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
         }
 
@@ -238,8 +320,28 @@
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-primary {
@@ -295,6 +397,7 @@
         .license-list::-webkit-scrollbar-thumb {
             background: rgba(0, 217, 255, 0.3);
             border-radius: 10px;
+            transition: background 0.3s;
         }
 
         .license-list::-webkit-scrollbar-thumb:hover {
@@ -302,20 +405,39 @@
         }
 
         .license-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
             padding: 22px;
             margin-bottom: 14px;
             border-left: 4px solid #00d9ff;
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-left: 4px solid #00d9ff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .license-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.05) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .license-item:hover::before {
+            opacity: 1;
         }
 
         .license-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 16px rgba(0, 217, 255, 0.15);
-            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 217, 255, 0.2);
+            transform: translateX(8px) scale(1.01);
+            border-color: rgba(0, 217, 255, 0.3);
         }
 
         .license-item.expired {
@@ -336,6 +458,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            z-index: 1;
         }
 
         .license-item p {
@@ -344,6 +468,8 @@
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
+            position: relative;
+            z-index: 1;
         }
 
         .license-item p strong {
@@ -354,6 +480,8 @@
             margin-top: 14px;
             display: flex;
             gap: 10px;
+            position: relative;
+            z-index: 1;
         }
 
         .badge {
@@ -370,21 +498,25 @@
         .badge.active {
             background: rgba(74, 222, 128, 0.2);
             color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
         }
 
         .badge.expired {
             background: rgba(251, 191, 36, 0.2);
             color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
         }
 
         .badge.revoked {
             background: rgba(248, 113, 113, 0.2);
             color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
         }
 
         .badge.unlimited {
             background: rgba(0, 217, 255, 0.2);
             color: #00d9ff;
+            border: 1px solid rgba(0, 217, 255, 0.3);
         }
 
         .notification {
@@ -414,19 +546,9 @@
             display: block;
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
         .code-box {
-            background: #0a0a0a;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
             color: #4ade80;
             padding: 16px;
             border-radius: 12px;
@@ -434,18 +556,19 @@
             font-size: 13px;
             overflow-x: auto;
             margin-top: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.3);
         }
 
         .log-container {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 16px;
             max-height: 320px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .log-container::-webkit-scrollbar {
@@ -490,9 +613,11 @@
             display: none;
             margin-top: 20px;
             background: rgba(74, 222, 128, 0.1);
+            backdrop-filter: blur(10px);
             padding: 18px;
             border-radius: 12px;
             border: 1.5px solid #4ade80;
+            animation: fadeIn 0.5s ease;
         }
 
         #newLicenseInfo h4 {
@@ -505,10 +630,11 @@
         #testResult {
             margin-top: 18px;
             padding: 16px;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
             font-size: 13px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         code {
@@ -520,6 +646,22 @@
             color: #00d9ff;
             font-weight: 600;
         }
+
+        .role-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .role-member { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .role-vip { background: linear-gradient(135deg, #f1c40f, #e67e22); }
+        .role-admin { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .role-owner { background: linear-gradient(135deg, #9b59b6, #6c3483); }
 
         @media (max-width: 1024px) {
             .grid {
@@ -544,22 +686,6 @@
                 grid-template-columns: 1fr;
             }
         }
-
-        .role-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            color: #fff;
-        }
-
-        .role-member { background: #3498db; }
-        .role-vip    { background: linear-gradient(135deg,#f1c40f,#e67e22); }
-        .role-admin  { background: #e74c3c; }
-        .role-owner  { background: linear-gradient(135deg,#9b59b6,#6c3483); }
-
     </style>
 </head>
 <body>
@@ -578,7 +704,7 @@
                 <div class="info-item">
                     <div id="userRoleBadge" class="role-badge">ROLE</div>
                 </div>
-            </div
+            </div>
         </div>
 
         <div class="stats">
@@ -667,8 +793,8 @@
 
     <div class="notification" id="notification"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
-<script type="module" src="./adminroblox.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+    <script type="module" src="./adminroblox.js"></script>
 </body>
 </html>
