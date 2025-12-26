@@ -2,7 +2,7 @@
 import { getFirestore, getAuth } from "./lib/firebase.js";
 
 export default async function handler(req, res) {
-    // ===== CORS =====
+  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader(
@@ -17,8 +17,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
   }
-  
+
   try {
+    // ===== AUTH =====
     const authHeader = req.headers.authorization || "";
     if (!authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "NO_TOKEN" });
@@ -32,10 +33,13 @@ export default async function handler(req, res) {
     const db = getFirestore();
     const { licenseId } = req.body;
 
-    const licenseSnap = await db
-      .collection("licenses")
-      .doc(licenseId)
-      .get();
+    if (!licenseId) {
+      return res.status(400).json({ error: "MISSING_LICENSE_ID" });
+    }
+
+    // ===== LICENSE =====
+    const licenseRef = db.collection("licenses").doc(licenseId);
+    const licenseSnap = await licenseRef.get();
 
     if (!licenseSnap.exists) {
       return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
@@ -43,6 +47,7 @@ export default async function handler(req, res) {
 
     const license = licenseSnap.data();
 
+    // ===== CREATOR =====
     const creatorSnap = await db
       .collection("users")
       .doc(license.createdBy)
@@ -54,31 +59,42 @@ export default async function handler(req, res) {
 
     const creator = creatorSnap.data();
 
-    let creatorRole = "member";
-    if (creator.role === "owner") creatorRole = "owner";
-    else if (creator.role === "admin") creatorRole = "admin";
-    else if (creator.isVIP === true) creatorRole = "vip";
+    // ===== ROLES =====
+    const resolveRole = (user) => {
+      if (user.role === "owner") return "owner";
+      if (user.role === "admin") return "admin";
+      if (user.isVIP === true) return "vip";
+      return "member";
+    };
 
-    let userRole = "member";
+    const creatorRole = resolveRole(creator);
+
     const userSnap = await db.collection("users").doc(decoded.uid).get();
+    if (!userSnap.exists) {
+      return res.status(403).json({ error: "USER_NOT_FOUND" });
+    }
+
     const user = userSnap.data();
+    const userRole = resolveRole(user);
 
-    if (user.role === "owner") userRole = "owner";
-    else if (user.role === "admin") userRole = "admin";
-    else if (user.isVIP === true) userRole = "vip";
-
-    // ===== PERMISSION LOGIC =====
+    // ===== PERMISSION LOGIC (FINAL) =====
     let canRevoke = false;
 
     if (userRole === "owner") {
+      // Owner = full access
       canRevoke = true;
+
     } else if (userRole === "admin") {
+      // Admin rules
       if (license.createdBy === decoded.uid) {
-        canRevoke = true;
+        canRevoke = true; // own license
       } else if (creatorRole === "member" || creatorRole === "vip") {
-        canRevoke = true;
+        canRevoke = true; // member / vip
       }
+      // ❌ admin tidak boleh revoke admin lain / owner
+
     } else {
+      // Member / VIP
       if (license.createdBy === decoded.uid) {
         canRevoke = true;
       }
@@ -88,18 +104,21 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "NO_PERMISSION" });
     }
 
-    await licenseSnap.ref.update({
+    // ===== REVOKE =====
+    await licenseRef.update({
       revoked: true,
       revokedAt: Date.now(),
       revokedBy: decoded.uid,
     });
 
+    // ===== LOG =====
     await db.collection("connection_logs").add({
       type: "revoke",
       licenseId,
       mapName: license.mapName || "-",
       userId: decoded.uid,
       role: userRole,
+      targetRole: creatorRole,
       valid: true,
       time: Date.now(),
     });
