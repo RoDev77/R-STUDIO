@@ -1,37 +1,35 @@
 import admin from "firebase-admin";
 
-let firestore;
+let app = null;
+let firestore = null;
 
-export function getFirestore() {
-  if (firestore) return firestore;
+export function initFirebase() {
+  if (app) return app;
 
   if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
     throw new Error("FIREBASE_SERVICE_ACCOUNT is missing");
   }
 
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT
+  );
 
-  let serviceAccount;
-  try {
-    serviceAccount = JSON.parse(raw);
-  } catch (e) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT is not valid JSON");
-  }
+  app = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
 
-  if (!serviceAccount.project_id) {
-    throw new Error("project_id missing in service account");
-  }
+  return app;
+}
 
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: serviceAccount.project_id,
-        clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key.replace(/\\n/g, "\n"),
-      }),
-    });
-  }
+export function getFirestore() {
+  if (firestore) return firestore;
 
+  initFirebase(); // 🔥 PASTIKAN INIT DULU
   firestore = admin.firestore();
   return firestore;
+}
+
+export function getAuth() {
+  initFirebase(); // 🔥 AUTH JUGA PASTI ADA APP
+  return admin.auth();
 }

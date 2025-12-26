@@ -1,5 +1,4 @@
-import admin from "firebase-admin";
-import { getFirestore } from "./lib/firebase.js";
+import { getFirestore, getAuth } from "./lib/firebase.js";
 import { getMaxLicense } from "./utils/licenselimit.js";
 
 export default async function handler(req, res) {
@@ -28,12 +27,12 @@ export default async function handler(req, res) {
 
     const idToken = authHeader.replace("Bearer ", "");
 
-    // 🔑 PAKAI APP YANG SUDAH DI-INIT DARI getFirestore()
-    const decoded = await admin.auth().verifyIdToken(idToken);
+    const auth = getAuth(); // ✅ PASTI ADA APP
+    const decoded = await auth.verifyIdToken(idToken);
 
     const db = getFirestore();
 
-    /* ================= ROLE CHECK ================= */
+    /* ================= ROLE ================= */
     const userSnap = await db
       .collection("users")
       .doc(decoded.uid)
