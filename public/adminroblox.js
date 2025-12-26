@@ -37,7 +37,16 @@ onAuthStateChanged(auth, async user => {
   }
 
   const data = snap.data();
-  currentRole = data.role || "member";
+
+  if (data.role === "owner") {
+    currentRole = "owner";
+  } else if (data.role === "admin") {
+    currentRole = "admin";
+  } else if (data.isVIP === true) {
+    currentRole = "vip";
+  } else {
+    currentRole = "member";
+  }
 
   renderUserRole(currentRole); // ✅ TAMBAHKAN INI
   checkServerStatus();
