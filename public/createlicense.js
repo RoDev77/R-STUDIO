@@ -171,65 +171,90 @@ async function getUserName(uid) {
   }
 }
 
+/* ================= DOM CACHE ================= */
+const totalLicenses   = document.getElementById("totalLicenses");
+const activeLicenses  = document.getElementById("activeLicenses");
+const expiredLicenses = document.getElementById("expiredLicenses");
+const licenseList     = document.getElementById("licenseList");
+
 /* ================= LICENSES ================= */
 async function loadLicenses() {
   try {
     const res = await fetch(`${API_BASE}/licenses`);
+    if (!res.ok) throw new Error("NETWORK");
+
     const data = await res.json();
-    if (!data.success) throw new Error();
+    if (!data.success || !Array.isArray(data.licenses)) {
+      throw new Error("INVALID_RESPONSE");
+    }
+    
 
-    const now = Date.now();
     const licenses = data.licenses;
+    const now = Date.now();
 
-    totalLicenses.textContent = licenses.length;
-    activeLicenses.textContent = licenses.filter(
+    // === SAFE UI UPDATE ===
+    if (totalLicenses)   totalLicenses.textContent = licenses.length;
+    if (activeLicenses)  activeLicenses.textContent = licenses.filter(
       l => !l.revoked && (l.expiresAt === null || l.expiresAt > now)
     ).length;
-    expiredLicenses.textContent = licenses.filter(
+    if (expiredLicenses) expiredLicenses.textContent = licenses.filter(
       l => l.expiresAt !== null && l.expiresAt <= now
     ).length;
 
-    licenseList.innerHTML = await Promise.all(
-    licenses.map(async l => {
-      let badge = "active";
-      if (l.revoked) badge = "revoked";
-      else if (l.expiresAt === null) badge = "unlimited";
-      else if (l.expiresAt <= now) badge = "expired";
-
-      const creatorName = await getUserName(l.createdBy);
-
-      return `
-  <div class="license-item">
-    <b>${l.mapName}</b>
-    <span class="badge ${badge}">${badge.toUpperCase()}</span>
-
-    <p>ID License: ${l.licenseId}</p>
-    <p>Name User: <b>${creatorName}</b></p>
-    <p>Game ID: ${l.gameId}</p>
-    <p>Place ID: ${l.placeId}</p>
-    <p>Expires: ${
-      l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "♾️ Unlimited"
-    }</p>
-
-    ${
-      !l.revoked &&
-      (
-        currentRole === "owner" ||
-        currentRole === "admin" ||
-        l.createdBy === currentUser.uid
-      )
-        ? `<button class="btn btn-danger btn-sm"
-            onclick="revokeLicense('${l.licenseId}')">
-            Revoke
-          </button>`
-        : ""
+    // === EMPTY STATE ===
+    if (!licenses.length) {
+      if (licenseList) {
+        licenseList.innerHTML =
+          `<p style="opacity:.6;text-align:center">No licenses yet</p>`;
+      }
+      return;
     }
-  </div>`;
-    })
-  ).join("");
 
+    // === RENDER LIST ===
+    licenseList.innerHTML = (await Promise.all(
+      licenses.map(async l => {
+        let badge = "active";
+        if (l.revoked) badge = "revoked";
+        else if (l.expiresAt === null) badge = "unlimited";
+        else if (l.expiresAt <= now) badge = "expired";
 
-  } catch {
+        const creatorName = await getUserName(l.createdBy);
+
+        return `
+          <div class="license-item">
+            <b>${l.mapName}</b>
+            <span class="badge ${badge}">${badge.toUpperCase()}</span>
+
+            <p>ID License: ${l.licenseId}</p>
+            <p>Name User: <b>${creatorName}</b></p>
+            <p>Game ID: ${l.gameId}</p>
+            <p>Place ID: ${l.placeId}</p>
+            <p>Expires: ${
+              l.expiresAt
+                ? new Date(l.expiresAt).toLocaleDateString()
+                : "♾️ Unlimited"
+            }</p>
+
+            ${
+              !l.revoked &&
+              (
+                currentRole === "owner" ||
+                currentRole === "admin" ||
+                l.createdBy === currentUser.uid
+              )
+                ? `<button class="btn btn-danger btn-sm"
+                    onclick="revokeLicense('${l.licenseId}')">
+                    Revoke
+                  </button>`
+                : ""
+            }
+          </div>
+        `;
+      })
+    )).join("");
+
+  } catch (err) {
+    console.error("LOAD LICENSE ERROR:", err);
     showNotification("Failed load licenses", "error");
   }
 }
