@@ -1,5 +1,4 @@
 import { getFirestore, getAuth } from "./lib/firebase.js";
-import { getMaxLicense } from "./utils/licenselimit.js";
 
 export default async function handler(req, res) {
   // CORS
@@ -44,9 +43,6 @@ export default async function handler(req, res) {
 
     const userRole = userSnap.data().role;
 
-    if (userRole !== "admin" && userRole !== "owner") {
-      return res.status(403).json({ error: "NO_PERMISSION" });
-    }
 
     /* ================= PAYLOAD ================= */
     const { gameId, placeId, owner, duration } = req.body;
@@ -56,27 +52,32 @@ export default async function handler(req, res) {
     }
 
     // ================= LIMIT & RULE =================
-    let maxLicense = 0;
-    let maxDays = null;
-    let allowUnlimited = false;
+    let maxLicense;
+    let maxDays;
+    let allowUnlimited;
 
-    if (userRole === "member") {
-      maxLicense = 2;
-      maxDays = 30;
-      allowUnlimited = false;
-    }
-    else if (userRole === "vip") {
-      maxLicense = 5;
-      maxDays = null;
-      allowUnlimited = true;
-    }
-    else if (userRole === "admin" || userRole === "owner") {
-      maxLicense = Infinity;
-      maxDays = null;
-      allowUnlimited = true;
-    }
-    else {
-      return res.status(403).json({ error: "INVALID_ROLE" });
+    switch (userRole) {
+      case "member":
+        maxLicense = 2;
+        maxDays = 30;
+        allowUnlimited = false;
+        break;
+
+      case "vip":
+        maxLicense = 5;
+        maxDays = null;
+        allowUnlimited = true;
+        break;
+
+      case "admin":
+      case "owner":
+        maxLicense = Infinity;
+        maxDays = null;
+        allowUnlimited = true;
+        break;
+
+      default:
+        return res.status(403).json({ error: "INVALID_ROLE" });
     }
 
     // hitung license aktif
