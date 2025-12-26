@@ -55,20 +55,56 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    /* ================= LIMIT ================= */
+    // ================= LIMIT & RULE =================
+    let maxLicense = 0;
+    let maxDays = null;
+    let allowUnlimited = false;
+
+    if (userRole === "member") {
+      maxLicense = 2;
+      maxDays = 30;
+      allowUnlimited = false;
+    }
+    else if (userRole === "vip") {
+      maxLicense = 5;
+      maxDays = null;
+      allowUnlimited = true;
+    }
+    else if (userRole === "admin" || userRole === "owner") {
+      maxLicense = Infinity;
+      maxDays = null;
+      allowUnlimited = true;
+    }
+    else {
+      return res.status(403).json({ error: "INVALID_ROLE" });
+    }
+
+    // hitung license aktif
     const snap = await db
       .collection("licenses")
-      .where("owner", "==", owner)
+      .where("createdBy", "==", decoded.uid)
       .where("revoked", "==", false)
       .get();
 
-    const maxLicense = getMaxLicense({ role: userRole });
-
     if (snap.size >= maxLicense) {
       return res.status(403).json({
-        success: false,
-        error: `LIMIT_${maxLicense}`,
+        error: "LICENSE_LIMIT",
+        max: maxLicense,
       });
+    }
+
+    // ================= DURATION CHECK =================
+    if (duration === -1) {
+      if (!allowUnlimited) {
+        return res.status(403).json({ error: "NO_UNLIMITED" });
+      }
+    } else {
+      if (maxDays !== null && duration > maxDays) {
+        return res.status(403).json({
+          error: "DURATION_LIMIT",
+          maxDays,
+        });
+      }
     }
 
     /* ================= CREATE ================= */
@@ -82,7 +118,8 @@ export default async function handler(req, res) {
       role: userRole,
       gameId: Number(gameId),
       placeId: Number(placeId),
-      expiresAt,
+      expiresAt:
+        duration === -1 ? null : Date.now() + duration * 86400000,
       revoked: false,
       createdAt: Date.now(),
       createdBy: decoded.uid,

@@ -1,41 +1,48 @@
-import { cors } from "./_cors.js";
-import { getFirestore } from "./lib/firebase.js";
-import admin from "firebase-admin";
+const licenseSnap = await db
+  .collection("licenses")
+  .doc(licenseId)
+  .get();
 
-export default async function handler(req, res) {
-  if (cors(req, res)) return;
-  if (req.method !== "POST")
-    return res.status(405).json({ success: false });
+if (!licenseSnap.exists) {
+  return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
+}
 
-  try {
-    const authHeader = req.headers.authorization || "";
-    if (!authHeader.startsWith("Bearer "))
-      return res.status(401).json({ success: false });
+const license = licenseSnap.data();
 
-    const idToken = authHeader.replace("Bearer ", "");
-    const decoded = await admin.auth().verifyIdToken(idToken);
+let canRevoke = false;
 
-    const db = getFirestore();
-    const userSnap = await db.collection("users").doc(decoded.uid).get();
+// OWNER BISA SEMUA
+if (userRole === "owner") {
+  canRevoke = true;
+}
 
-    if (!userSnap.exists)
-      return res.status(403).json({ success: false });
-
-    const role = userSnap.data().role;
-    if (role !== "admin" && role !== "owner")
-      return res.status(403).json({ success: false });
-
-    const { licenseId } = req.body;
-    if (!licenseId)
-      return res.status(400).json({ success: false });
-
-    await db.collection("licenses").doc(licenseId).update({
-      revoked: true
-    });
-
-    return res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ success: false });
+// ADMIN
+else if (userRole === "admin") {
+  // admin bisa revoke milik sendiri
+  if (license.createdBy === decoded.uid) {
+    canRevoke = true;
+  }
+  // admin bisa revoke member & vip
+  else if (["member", "vip"].includes(license.role)) {
+    canRevoke = true;
   }
 }
+
+// MEMBER / VIP
+else {
+  if (license.createdBy === decoded.uid) {
+    canRevoke = true;
+  }
+}
+
+if (!canRevoke) {
+  return res.status(403).json({ error: "NO_PERMISSION" });
+}
+
+await licenseSnap.ref.update({
+  revoked: true,
+  revokedAt: Date.now(),
+  revokedBy: decoded.uid,
+});
+
+return res.json({ success: true });
