@@ -116,6 +116,20 @@ document
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "FAILED");
 
+      // === LOG CREATE LICENSE ===
+      await fetch(`${API_BASE}/log-connection`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify({
+          licenseId: data.licenseId,
+          action: "CREATE_LICENSE",
+          valid: true
+        })
+      });
+
       licenseKeyDisplay.textContent = `
       License ID : ${data.licenseId}
       Map Name   : ${data.mapName}
@@ -132,6 +146,7 @@ document
       showNotification("✅ License created");
 
       loadLicenses();
+
     } catch (err) {
       showNotification(err.message, "error");
 
@@ -273,28 +288,44 @@ async function testConnection() {
   }
 
   try {
-    const res = await fetch(
-      `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
-    );
+  const res = await fetch(
+    `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
+  );
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (!data.valid) {
-      throw new Error(data.reason || "INVALID");
-    }
+  // === LOG VERIFY (VALID / INVALID) ===
+  const token = await currentUser.getIdToken();
 
+  await fetch(`${API_BASE}/log-connection`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({
+      licenseId,
+      action: "TEST_CONNECTION",
+      valid: data.valid === true
+    })
+  });
+
+  if (!data.valid) {
+    throw new Error(data.reason || "INVALID");
+  }
+
+  testResult.innerHTML = `
+  <div style="background:#10b981;color:white;padding:12px;border-radius:8px">
+  ✅ VALID<br>
+  Map Name: ${data.mapName}<br>
+  Game ID: ${data.gameId}<br>
+  Universe ID: ${data.universeId}
+  </div>`;
+  } catch {
     testResult.innerHTML = `
-<div style="background:#10b981;color:white;padding:12px;border-radius:8px">
-✅ VALID<br>
-Map Name: ${data.mapName}<br>
-Game ID: ${data.gameId}<br>
-Universe ID: ${data.universeId}
-</div>`;
-  } catch (err) {
-    testResult.innerHTML = `
-<div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
-❌ INVALID
-</div>`;
+  <div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
+  ❌ INVALID
+  </div>`;
   }
 }
 
@@ -321,6 +352,20 @@ async function revokeLicense(licenseId) {
     const data = await res.json();
     if (!data.success) throw new Error();
 
+    // === LOG REVOKE ===
+    await fetch(`${API_BASE}/log-connection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        licenseId,
+        action: "REVOKE_LICENSE",
+        valid: false
+      })
+    });
+
     showNotification("License revoked");
     loadLicenses();
   } catch {
@@ -331,14 +376,14 @@ async function revokeLicense(licenseId) {
 /* ================= LOGS ================= */
 async function refreshLogs() {
   try {
-    const res = await fetch(`${API_BASE}/logs`);
+    const res = await fetch(`${API_BASE}/log-connection`);
     const data = await res.json();
 
     logs = data.logs || [];
     logContainer.innerHTML = logs.map(l => `
       <div class="log-entry ${l.valid ? "success" : "error"}">
         [${new Date(l.time).toLocaleTimeString()}]
-        ${l.licenseId} — ${l.valid ? "VALID" : "INVALID"}
+        ${l.licenseId} — ${l.action} — ${l.valid ? "VALID" : "INVALID"}
       </div>
     `).join("");
 

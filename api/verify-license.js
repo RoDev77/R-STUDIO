@@ -1,3 +1,4 @@
+//verify-license.js
 import { cors } from "./_cors.js";
 import { getFirestore } from "./lib/firebase.js";
 
@@ -29,11 +30,31 @@ export default async function handler(req, res) {
 
     const license = snap.data();
 
-    if (license.revoked) {
+    if (license.revoked && Date.now() > license.revoked) {
+
+      await db.collection("connection_logs").add({
+        type: "verify",
+        licenseId,
+        valid: false,
+        reason: "REVOKED",
+        universeId: Number(universeId),
+        time: Date.now(),
+      });
+
       return res.json({ valid: false, reason: "REVOKED" });
     }
 
     if (license.expiresAt && Date.now() > license.expiresAt) {
+
+      await db.collection("connection_logs").add({
+        type: "verify",
+        licenseId,
+        valid: false,
+        reason: "EXPIRED",
+        universeId: Number(universeId),
+        time: Date.now(),
+      });
+
       return res.json({ valid: false, reason: "EXPIRED" });
     }
 
@@ -49,7 +70,20 @@ export default async function handler(req, res) {
         reason: "UNIVERSE_MISMATCH",
       });
     }
-      
+    
+    // CONNECTION LOGS
+    await db.collection("connection_logs").add({
+      type: "verify",
+      licenseId,
+      userId: license.createdBy,
+      role: license.role || "unknown",
+      valid: true,
+      gameId: license.gameId,
+      placeId: license.placeId,
+      universeId: Number(universeId),
+      time: Date.now(),
+    });
+
     return res.json({
       valid: true,
       mapName: license.mapName || null, // ✅ FIX UTAMA

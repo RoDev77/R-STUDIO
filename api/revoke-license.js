@@ -67,4 +67,13 @@ await licenseSnap.ref.update({
   revokedBy: decoded.uid,
 });
 
+await db.collection("connection_logs").add({
+  type: "revoke",
+  licenseId,
+  userId: decoded.uid,
+  role: userRole,
+  valid: true,
+  time: Date.now(),
+});
+
 return res.json({ success: true });

@@ -1,8 +1,18 @@
 // create-license.js
 import { getFirestore, getAuth } from "./lib/firebase.js";
 
+/* ================= UTIL ================= */
+function generateLicenseId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 5; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return "RSTUDIO_" + result;
+}
+
 export default async function handler(req, res) {
-  // CORS
+  /* ================= CORS ================= */
   res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader(
@@ -25,36 +35,25 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Missing token" });
     }
 
-    const idToken = authHeader.replace("Bearer ", "");
-
-    const auth = getAuth(); // ✅ PASTI ADA APP
-    const decoded = await auth.verifyIdToken(idToken);
+    const auth = getAuth();
+    const decoded = await auth.verifyIdToken(
+      authHeader.replace("Bearer ", "")
+    );
 
     const db = getFirestore();
 
-    /* ================= ROLE ================= */
-    const userSnap = await db
-      .collection("users")
-      .doc(decoded.uid)
-      .get();
-
+    /* ================= USER ROLE ================= */
+    const userSnap = await db.collection("users").doc(decoded.uid).get();
     if (!userSnap.exists) {
       return res.status(403).json({ error: "User not registered" });
     }
 
-    const userData = userSnap.data();
+    const user = userSnap.data();
 
-    let userRole;
-
-    if (userData.role === "owner") {
-      userRole = "owner";
-    } else if (userData.role === "admin") {
-      userRole = "admin";
-    } else if (userData.isVIP === true) {
-      userRole = "vip";
-    } else {
-      userRole = "member";
-    }
+    let userRole = "member";
+    if (user.role === "owner") userRole = "owner";
+    else if (user.role === "admin") userRole = "admin";
+    else if (user.isVIP === true) userRole = "vip";
 
     /* ================= PAYLOAD ================= */
     const { gameId, placeId, mapName, duration } = req.body;
@@ -63,36 +62,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    // ================= LIMIT & RULE =================
-    let maxLicense;
-    let maxDays;
-    let allowUnlimited;
+    /* ================= RULES ================= */
+    let maxLicense = 2;
+    let maxDays = 30;
+    let allowUnlimited = false;
 
-    switch (userRole) {
-      case "member":
-        maxLicense = 2;
-        maxDays = 30;
-        allowUnlimited = false;
-        break;
-
-      case "vip":
-        maxLicense = 5;
-        maxDays = null;
-        allowUnlimited = true;
-        break;
-
-      case "admin":
-      case "owner":
-        maxLicense = Infinity;
-        maxDays = null;
-        allowUnlimited = true;
-        break;
-
-      default:
-        return res.status(403).json({ error: "INVALID_ROLE" });
+    if (userRole === "vip") {
+      maxLicense = 5;
+      maxDays = null;
+      allowUnlimited = true;
+    } else if (userRole === "admin" || userRole === "owner") {
+      maxLicense = Infinity;
+      maxDays = null;
+      allowUnlimited = true;
     }
 
-    // LICENSE AKTIF
+    /* ================= ACTIVE LICENSE CHECK ================= */
     const now = Date.now();
 
     const snap = await db
@@ -101,46 +86,49 @@ export default async function handler(req, res) {
       .where("revoked", "==", false)
       .get();
 
-    // hitung ACTIVE license saja
-    const activeLicenses = snap.docs.filter(doc => {
-      const data = doc.data();
-
-      // unlimited / permanent license
-      if (data.expiresAt === null) return true;
-
-      // masih aktif
-      return data.expiresAt > now;
+    const activeCount = snap.docs.filter(d => {
+      const l = d.data();
+      if (l.expiresAt === null) return true;
+      return l.expiresAt > now;
     }).length;
 
-    if (activeLicenses >= maxLicense) {
+    if (activeCount >= maxLicense) {
       return res.status(403).json({
         error: "LICENSE_LIMIT",
         max: maxLicense,
-        active: activeLicenses,
+        active: activeCount,
       });
     }
 
-    // ================= DURATION CHECK =================
+    /* ================= DURATION CHECK ================= */
     if (duration === -1) {
       if (!allowUnlimited) {
         return res.status(403).json({ error: "NO_UNLIMITED" });
       }
-    } else {
-      if (maxDays !== null && duration > maxDays) {
-        return res.status(403).json({
-          error: "DURATION_LIMIT",
-          maxDays,
-        });
-      }
+    } else if (maxDays !== null && duration > maxDays) {
+      return res.status(403).json({
+        error: "DURATION_LIMIT",
+        maxDays,
+      });
     }
 
-    /* ================= CREATE ================= */
+    /* ================= GENERATE UNIQUE LICENSE ID ================= */
+    let licenseId;
+    let exists = true;
+
+    while (exists) {
+      licenseId = generateLicenseId();
+      const check = await db.collection("licenses").doc(licenseId).get();
+      exists = check.exists;
+    }
+
+    /* ================= CREATE LICENSE ================= */
     const expiresAt =
-      duration === 0 || duration === -1
+      duration === -1 || duration === 0
         ? null
         : Date.now() + duration * 86400000;
 
-    const doc = {
+    await db.collection("licenses").doc(licenseId).set({
       mapName,
       role: userRole,
       gameId: Number(gameId),
@@ -149,13 +137,23 @@ export default async function handler(req, res) {
       revoked: false,
       createdAt: Date.now(),
       createdBy: decoded.uid,
-    };
+    });
 
-    const ref = await db.collection("licenses").add(doc);
+    // CONNECTION LOGS
+    await db.collection("connection_logs").add({
+      type: "create",
+      licenseId: licenseId,
+      userId: decoded.uid,
+      role: userRole,
+      valid: true,
+      gameId: Number(gameId),
+      placeId: Number(placeId),
+      time: Date.now(),
+    });
 
     return res.json({
       success: true,
-      licenseId: ref.id,
+      licenseId,
       mapName,
       gameId: Number(gameId),
       placeId: Number(placeId),
