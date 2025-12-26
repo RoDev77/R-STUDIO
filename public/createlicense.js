@@ -63,22 +63,22 @@ function renderUserRole(role) {
 
   switch (role) {
     case "owner":
-      badge.textContent = "OWNER";
+      badge.textContent = "👑 Owner";
       badge.classList.add("role-owner");
       break;
 
     case "admin":
-      badge.textContent = "ADMIN";
+      badge.textContent = "🛠 Admin";
       badge.classList.add("role-admin");
       break;
 
     case "vip":
-      badge.textContent = "VIP";
+      badge.textContent = "💎 VIP";
       badge.classList.add("role-vip");
       break;
 
     default:
-      badge.textContent = "MEMBER";
+      badge.textContent = "👤 Member";
       badge.classList.add("role-member");
   }
 }
