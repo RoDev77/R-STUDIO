@@ -49,10 +49,10 @@ export default async function handler(req, res) {
         reason: "UNIVERSE_MISMATCH",
       });
     }
-
+      
     return res.json({
       valid: true,
-      owner: license.owner,
+      mapName: license.mapName || null, // ✅ FIX UTAMA
       gameId: license.gameId,
       placeId: license.placeId,
       universeId: license.universeId ?? Number(universeId),
