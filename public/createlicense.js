@@ -187,7 +187,7 @@ async function loadLicenses() {
     if (!data.success || !Array.isArray(data.licenses)) {
       throw new Error("INVALID_RESPONSE");
     }
-    
+
 
     const licenses = data.licenses;
     const now = Date.now();
@@ -226,7 +226,7 @@ async function loadLicenses() {
             <span class="badge ${badge}">${badge.toUpperCase()}</span>
 
             <p>ID License: ${l.licenseId}</p>
-            <p>Name User: <b>${creatorName}</b></p>
+            <p>Name User: ${creatorName}</p>
             <p>Game ID: ${l.gameId}</p>
             <p>Place ID: ${l.placeId}</p>
             <p>Expires: ${
