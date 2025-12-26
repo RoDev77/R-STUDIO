@@ -36,22 +36,27 @@ if (creator.role === "owner") {
 
 let canRevoke = false;
 
-// OWNER
+// ===== OWNER =====
 if (userRole === "owner") {
   canRevoke = true;
 }
 
-// ADMIN
+// ===== ADMIN =====
 else if (userRole === "admin") {
+  // admin boleh revoke license sendiri
   if (license.createdBy === decoded.uid) {
     canRevoke = true;
-  } else if (["member", "vip"].includes(creatorRole)) {
+  }
+  // admin boleh revoke member / vip
+  else if (creatorRole === "member" || creatorRole === "vip") {
     canRevoke = true;
   }
+  // admin TIDAK boleh revoke admin lain / owner
 }
 
-// MEMBER / VIP
+// ===== MEMBER / VIP =====
 else {
+  // hanya boleh revoke license sendiri
   if (license.createdBy === decoded.uid) {
     canRevoke = true;
   }
@@ -70,7 +75,7 @@ await licenseSnap.ref.update({
 await db.collection("connection_logs").add({
   type: "revoke",
   licenseId,
-  mapName,
+  mapName: license.mapName || "-", // ✅ FIX
   userId: decoded.uid,
   role: userRole,
   valid: true,
