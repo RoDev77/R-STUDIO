@@ -35,6 +35,7 @@ export default async function handler(req, res) {
       await db.collection("connection_logs").add({
         type: "verify",
         licenseId,
+        mapName,
         valid: false,
         reason: "REVOKED",
         universeId: Number(universeId),
@@ -49,6 +50,7 @@ export default async function handler(req, res) {
       await db.collection("connection_logs").add({
         type: "verify",
         licenseId,
+        mapName,
         valid: false,
         reason: "EXPIRED",
         universeId: Number(universeId),
@@ -75,6 +77,7 @@ export default async function handler(req, res) {
     await db.collection("connection_logs").add({
       type: "verify",
       licenseId,
+      mapName,
       userId: license.createdBy,
       role: license.role || "unknown",
       valid: true,

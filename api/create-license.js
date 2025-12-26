@@ -143,6 +143,7 @@ export default async function handler(req, res) {
     await db.collection("connection_logs").add({
       type: "create",
       licenseId: licenseId,
+      mapName: mapName,
       userId: decoded.uid,
       role: userRole,
       valid: true,

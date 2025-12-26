@@ -383,7 +383,8 @@ async function refreshLogs() {
     logContainer.innerHTML = logs.map(l => `
       <div class="log-entry ${l.valid ? "success" : "error"}">
         [${new Date(l.time).toLocaleTimeString()}]
-        ${l.licenseId} — ${l.action} — ${l.valid ? "VALID" : "INVALID"}
+        ${l.licenseId} — ${l.mapName} — ${l.valid ? "VALID" : "INVALID"}
+
       </div>
     `).join("");
 

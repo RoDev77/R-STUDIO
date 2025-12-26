@@ -70,6 +70,7 @@ await licenseSnap.ref.update({
 await db.collection("connection_logs").add({
   type: "revoke",
   licenseId,
+  mapName,
   userId: decoded.uid,
   role: userRole,
   valid: true,
