@@ -1,4 +1,4 @@
-// adminroblox.js
+// createlicense.js
 /* ================= FIREBASE ================= */
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from
