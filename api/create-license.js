@@ -1,3 +1,4 @@
+// create-license.js
 import { getFirestore, getAuth } from "./lib/firebase.js";
 
 export default async function handler(req, res) {
@@ -56,9 +57,9 @@ export default async function handler(req, res) {
     }
 
     /* ================= PAYLOAD ================= */
-    const { gameId, placeId, owner, duration } = req.body;
+    const { gameId, placeId, mapName, duration } = req.body;
 
-    if (!gameId || !placeId || !owner) {
+    if (!gameId || !placeId || !mapName || !mapName.trim()) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
@@ -140,7 +141,7 @@ export default async function handler(req, res) {
         : Date.now() + duration * 86400000;
 
     const doc = {
-      owner,
+      mapName,
       role: userRole,
       gameId: Number(gameId),
       placeId: Number(placeId),
@@ -155,7 +156,10 @@ export default async function handler(req, res) {
     return res.json({
       success: true,
       licenseId: ref.id,
-      ...doc,
+      mapName,
+      gameId: Number(gameId),
+      placeId: Number(placeId),
+      expiresAt,
     });
 
   } catch (err) {

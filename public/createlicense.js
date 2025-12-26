@@ -100,11 +100,10 @@ document
       const payload = {
         gameId: Number(gameId.value),
         placeId: Number(placeId.value),
-        owner: owner.value,
+        mapName: mapName.value, // ⬅️ nama map
         duration: Number(duration.value),
       };
       
-
       const res = await fetch(`${API_BASE}/create-license`, {
         method: "POST",
         headers: {
@@ -118,16 +117,16 @@ document
       if (!data.success) throw new Error(data.error || "FAILED");
 
       licenseKeyDisplay.textContent = `
-License ID : ${data.licenseId}
-Owner      : ${data.owner}
-Game ID    : ${data.gameId}
-Place ID   : ${data.placeId}
-Expires At : ${
+      License ID : ${data.licenseId}
+      Map Name   : ${data.mapName}
+      Game ID    : ${data.gameId}
+      Place ID   : ${data.placeId}
+      Expires At : ${
         data.expiresAt
           ? new Date(data.expiresAt).toLocaleDateString()
           : "♾️ Unlimited"
       }
-`;
+      `;
 
       newLicenseInfo.style.display = "block";
       showNotification("✅ License created");
@@ -153,6 +152,25 @@ async function checkServerStatus() {
   }
 }
 
+const userCache = {};
+
+async function getUserName(uid) {
+  if (userCache[uid]) return userCache[uid];
+
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (!snap.exists()) return "Unknown";
+
+    const data = snap.data();
+    const name = data.username || data.name || data.email || "Unknown";
+
+    userCache[uid] = name;
+    return name;
+  } catch {
+    return "Unknown";
+  }
+}
+
 /* ================= LICENSES ================= */
 async function loadLicenses() {
   try {
@@ -171,39 +189,45 @@ async function loadLicenses() {
       l => l.expiresAt !== null && l.expiresAt <= now
     ).length;
 
-    licenseList.innerHTML = licenses.map(l => {
+    licenseList.innerHTML = await Promise.all(
+    licenses.map(async l => {
       let badge = "active";
       if (l.revoked) badge = "revoked";
       else if (l.expiresAt === null) badge = "unlimited";
       else if (l.expiresAt <= now) badge = "expired";
 
-      return `
-<div class="license-item">
-  <b>${l.owner}</b>
-  <span class="badge ${badge}">${badge.toUpperCase()}</span>
-  <p>ID License: ${l.licenseId}</p>
-  <p>Game ID: ${l.gameId}</p>
-  <p>Place ID: ${l.placeId}</p>
-  <p>Expires: ${
-    l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "♾️ Unlimited"
-  }</p>
+      const creatorName = await getUserName(l.createdBy);
 
-  ${
-    !l.revoked &&
-    (
-      currentRole === "owner" ||
-      currentRole === "admin" ||
-      l.createdBy === currentUser.uid
-    )
-      ? `<button class="btn btn-danger btn-sm"
-          onclick="revokeLicense('${l.licenseId}')">
-          Revoke
-        </button>`
-      : ""
-  }
-  
-</div>`;
-    }).join("");
+      return `
+  <div class="license-item">
+    <b>${l.mapName}</b>
+    <span class="badge ${badge}">${badge.toUpperCase()}</span>
+
+    <p>ID License: ${l.licenseId}</p>
+    <p>Name User: <b>${creatorName}</b></p>
+    <p>Game ID: ${l.gameId}</p>
+    <p>Place ID: ${l.placeId}</p>
+    <p>Expires: ${
+      l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "♾️ Unlimited"
+    }</p>
+
+    ${
+      !l.revoked &&
+      (
+        currentRole === "owner" ||
+        currentRole === "admin" ||
+        l.createdBy === currentUser.uid
+      )
+        ? `<button class="btn btn-danger btn-sm"
+            onclick="revokeLicense('${l.licenseId}')">
+            Revoke
+          </button>`
+        : ""
+    }
+  </div>`;
+    })
+  ).join("");
+
 
   } catch {
     showNotification("Failed load licenses", "error");
@@ -237,7 +261,7 @@ async function testConnection() {
     testResult.innerHTML = `
 <div style="background:#10b981;color:white;padding:12px;border-radius:8px">
 ✅ VALID<br>
-Owner: ${data.owner}<br>
+Map Name: ${data.mapName}<br>
 Game ID: ${data.gameId}<br>
 Universe ID: ${data.universeId}
 </div>`;
