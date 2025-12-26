@@ -2,12 +2,6 @@ import admin from "firebase-admin";
 import { getFirestore } from "./lib/firebase.js";
 import { getMaxLicense } from "./utils/licenselimit.js";
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-  });
-}
-
 export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
@@ -33,11 +27,13 @@ export default async function handler(req, res) {
     }
 
     const idToken = authHeader.replace("Bearer ", "");
+
+    // 🔑 PAKAI APP YANG SUDAH DI-INIT DARI getFirestore()
     const decoded = await admin.auth().verifyIdToken(idToken);
 
     const db = getFirestore();
 
-    // ambil role user
+    /* ================= ROLE CHECK ================= */
     const userSnap = await db
       .collection("users")
       .doc(decoded.uid)

@@ -6,10 +6,21 @@ export function getFirestore() {
   if (firestore) return firestore;
 
   if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT missing");
+    throw new Error("FIREBASE_SERVICE_ACCOUNT is missing");
   }
 
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(raw);
+  } catch (e) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT is not valid JSON");
+  }
+
+  if (!serviceAccount.project_id) {
+    throw new Error("project_id missing in service account");
+  }
 
   if (!admin.apps.length) {
     admin.initializeApp({
