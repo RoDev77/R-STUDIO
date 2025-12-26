@@ -80,14 +80,24 @@ export default async function handler(req, res) {
       revokedBy: decoded.uid,
     });
 
-
+    
     await db.collection("connection_logs").add({
       type: "revoke",
+
       licenseId,
+      mapName: license.mapName || "-",
+      gameId: license.gameId || null,
+      placeId: license.placeId || null,
 
-      userId: decoded.uid,
-      role: userRole,
+      revokedBy: decoded.uid,
+      revokedByRole: userRole,
 
+      licenseOwner: license.createdBy,
+      licenseOwnerRole: creatorRole,
+
+      reason: "MANUAL_REVOKE",
+
+      success: true,
       time: Date.now(),
     });
 

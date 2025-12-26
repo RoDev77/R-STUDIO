@@ -84,8 +84,23 @@ function renderUserRole(role) {
 }
 
 /* ================= PERMISSION ================= */
-function canRevoke() {
-  return currentRole === "admin" || currentRole === "owner";
+function canRevoke(license) {
+  if (!license) return false;
+
+  // OWNER → semua
+  if (currentRole === "owner") return true;
+
+  // ADMIN
+  if (currentRole === "admin") {
+    // license sendiri
+    if (license.createdBy === currentUser.uid) return true;
+
+    // revoke member / vip
+    return license.creatorRole === "member" || license.creatorRole === "vip";
+  }
+
+  // MEMBER / VIP → hanya license sendiri
+  return license.createdBy === currentUser.uid;
 }
 
 // ================= CREATE LICENSE =================
@@ -251,12 +266,7 @@ async function loadLicenses() {
             }</p>
 
             ${
-              !l.revoked &&
-              (
-                currentRole === "owner" ||
-                currentRole === "admin" ||
-                l.createdBy === currentUser.uid
-              )
+              !l.revoked && canRevoke(l)
                 ? `<button class="btn btn-danger btn-sm"
                     onclick="revokeLicense('${l.licenseId}')">
                     Revoke
@@ -331,10 +341,6 @@ async function testConnection() {
 
 /* ================= REVOKE ================= */
 async function revokeLicense(licenseId) {
-  if (!canRevoke()) {
-    return showNotification("No permission", "error");
-  }
-
   if (!confirm("Revoke license?")) return;
 
   try {
@@ -350,26 +356,12 @@ async function revokeLicense(licenseId) {
     });
 
     const data = await res.json();
-    if (!data.success) throw new Error();
-
-    // === LOG REVOKE ===
-    await fetch(`${API_BASE}/logs`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({
-        licenseId,
-        action: "REVOKE_LICENSE",
-        valid: false
-      })
-    });
+    if (!data.success) throw new Error(data.error || "NO_PERMISSION");
 
     showNotification("License revoked");
     loadLicenses();
-  } catch {
-    showNotification("Revoke failed", "error");
+  } catch (err) {
+    showNotification(err.message || "Revoke failed", "error");
   }
 }
 
@@ -380,13 +372,27 @@ async function refreshLogs() {
     const data = await res.json();
 
     logs = data.logs || [];
-    logContainer.innerHTML = logs.map(l => `
-      <div class="log-entry ${l.valid ? "success" : "error"}">
-        [${new Date(l.time).toLocaleTimeString()}]
-        ${l.licenseId} — ${l.mapName} — ${l.valid ? "VALID" : "INVALID"}
+    logContainer.innerHTML = logs.map(l => {
+      if (l.type === "revoke") {
+        return `
+          <div class="log-entry error">
+            [${new Date(l.time).toLocaleTimeString()}]
+            🔥 REVOKE —
+            ${l.licenseId} —
+            ${l.mapName} —
+            by ${l.revokedByRole}
+          </div>
+        `;
+      }
 
-      </div>
-    `).join("");
+      // verify / create
+      return `
+        <div class="log-entry ${l.success ? "success" : "error"}">
+          [${new Date(l.time).toLocaleTimeString()}]
+          ${l.licenseId} — ${l.mapName}
+        </div>
+      `;
+    }).join("");
 
   } catch {
     showNotification("Failed load logs", "error");
