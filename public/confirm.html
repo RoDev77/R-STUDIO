@@ -333,7 +333,7 @@ async function handleFirebaseEmailVerify(code) {
     
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu sudah berhasil diverifikasi oleh R STUDIO."
+      "Email kamu sudah berhasil diverifikasi melalui Firebase."
     );
 
   } catch (error) {
@@ -414,6 +414,7 @@ function showSuccess(title, message, extraHTML = "") {
 
     <div class="button-group">
       <a href="profile.html" class="button btn-primary">Kembali ke Profile</a>
+      <a href="license.html" class="button btn-secondary">Buat License</a>
     </div>
   `;
 }

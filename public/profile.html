@@ -194,6 +194,11 @@ body{
   opacity:0.9;
 }
 
+.verify-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
 .verified-badge{
   color:#10b981;
   font-weight:700;
@@ -210,7 +215,7 @@ body{
 <div class="navbar">
   <div class="brand">
     <h2>R STUDIO</h2>
-    <span>Creative dashboard for Roblox developers & creators</span>
+    <span>Creative Dashboard</span>
   </div>
 
   <div class="profile-nav">
@@ -254,6 +259,21 @@ body{
     </div>
     <button class="verify-btn" id="verifyBtn">Verifikasi Email</button>
   </div>
+  
+  <!-- Refresh Status Button (only show if not verified) -->
+  <div id="refreshStatusDiv" style="text-align:center;margin-top:8px;display:none">
+    <button onclick="location.reload()" style="
+      background:transparent;
+      color:#6366f1;
+      border:2px solid #6366f1;
+      padding:8px 16px;
+      font-size:12px;
+      margin:0;
+      width:auto;
+    ">
+      🔄 Refresh Status Verifikasi
+    </button>
+  </div>
 
   <label>Role</label>
   <input id="role" readonly>
@@ -285,8 +305,7 @@ import {
   updateProfile,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword,
-  sendEmailVerification
+  updatePassword
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import {
@@ -318,6 +337,26 @@ const verifyBtn = document.getElementById("verifyBtn");
 
 let currentUser;
 
+const COOLDOWN = 60;
+const KEY = "verify_email_cooldown";
+
+function remaining() {
+  const t = localStorage.getItem(KEY);
+  if (!t) return 0;
+  return Math.max(0, COOLDOWN - Math.floor((Date.now() - t) / 1000));
+}
+
+function updateVerifyBtn() {
+  const r = remaining();
+  if (r > 0) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = `Tunggu ${r}s`;
+  } else {
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = "Verifikasi Email";
+  }
+}
+
 /* ================= LOAD PROFILE ================= */
 const navAvatar = document.getElementById("navAvatar");
 const navAvatarImg = document.getElementById("navAvatarImg");
@@ -343,6 +382,10 @@ function updateVerificationStatus(isVerified) {
     verificationIcon.textContent = "⚠️";
     verificationText.textContent = "Email belum diverifikasi";
     verifyBtn.style.display = "block";
+    
+    // Update button cooldown
+    setInterval(updateVerifyBtn, 1000);
+    updateVerifyBtn();
   }
 }
 
@@ -372,20 +415,8 @@ onAuthStateChanged(auth, async user=>{
     }
 
     // Update verification status dari Firestore
-    // Cek dari Firebase Auth DAN Firestore
-    const isVerifiedInAuth = user.emailVerified;
-    const isVerifiedInFirestore = data.emailVerified || false;
-    
-    // Jika sudah verified di Auth tapi belum di Firestore, update Firestore
-    if(isVerifiedInAuth && !isVerifiedInFirestore) {
-      await updateDoc(doc(db,"users",user.uid), {
-        emailVerified: true
-      });
-      updateVerificationStatus(true);
-    } else {
-      // Gunakan status dari Firestore
-      updateVerificationStatus(isVerifiedInFirestore);
-    }
+    const isVerified = data.emailVerified || false;
+    updateVerificationStatus(isVerified);
   } else {
     // Jika user baru dan belum ada di Firestore
     updateVerificationStatus(false);
@@ -394,35 +425,35 @@ onAuthStateChanged(auth, async user=>{
 
 /* ================= SEND EMAIL VERIFICATION ================= */
 verifyBtn.onclick = async () => {
+  if (remaining() > 0) return;
+  
   try {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
     
-    await sendEmailVerification(currentUser);
+    // Kirim request ke API endpoint
+    const response = await fetch("/api/send-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        email: currentUser.email,
+        uid: currentUser.uid 
+      })
+    });
+
+    const result = await response.json();
     
-    alert("✅ Email verifikasi telah dikirim! Silakan cek inbox atau folder spam Anda.");
-    
-    verifyBtn.textContent = "Email Terkirim";
-    
-    // Check verification status setiap 5 detik
-    const checkInterval = setInterval(async () => {
-      await currentUser.reload();
-      if (currentUser.emailVerified) {
-        clearInterval(checkInterval);
-        
-        // Update di Firestore
-        await updateDoc(doc(db,"users",currentUser.uid), {
-          emailVerified: true
-        });
-        
-        updateVerificationStatus(true);
-        alert("🎉 Email Anda telah diverifikasi!");
-      }
-    }, 5000);
+    if (result.ok) {
+      localStorage.setItem(KEY, Date.now());
+      alert("✅ Email verifikasi telah dikirim! Silakan cek inbox atau folder spam Anda.");
+      updateVerifyBtn();
+    } else {
+      throw new Error(result.error || "Gagal mengirim email");
+    }
     
   } catch (error) {
     console.error("Error sending verification:", error);
-    alert("❌ Gagal mengirim email verifikasi: " + error.message);
+    alert("❌ Gagal mengirim email verifikasi. Silakan coba lagi.");
     verifyBtn.disabled = false;
     verifyBtn.textContent = "Verifikasi Email";
   }
