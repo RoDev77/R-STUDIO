@@ -453,14 +453,19 @@ verifyBtn.onclick = async () => {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
     
+    console.log("🔍 Sending verification to:", currentUser.email);
+    console.log("🔍 User emailVerified status:", currentUser.emailVerified);
+    
     // ✅ Gunakan Firebase built-in email verification
     await sendEmailVerification(currentUser, {
       url: window.location.origin + '/action.html',
       handleCodeInApp: false
     });
     
+    console.log("✅ Verification email sent successfully!");
+    
     localStorage.setItem(KEY, Date.now());
-    alert("✅ Email verifikasi telah dikirim menggunakan Firebase!\n\nSilakan cek inbox atau folder spam Anda.");
+    alert("✅ Email verifikasi telah dikirim menggunakan Firebase!\n\nSilakan cek inbox atau folder spam:\n" + currentUser.email);
     updateVerifyBtn();
     
     // Check verification status setiap 5 detik
