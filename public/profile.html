@@ -332,9 +332,14 @@ function updateVerificationStatus(isVerified) {
 }
 
 /* ================= AUTH ================= */
-onAuthStateChanged(auth, async user => {
-  if (!user) return location.href = "login.html";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
   currentUser = user;
+  await user.reload(); // 🔥 PENTING
 
   emailInput.value = user.email;
   nameInput.value = user.displayName || "";
@@ -355,7 +360,7 @@ onAuthStateChanged(auth, async user => {
   avatarImg.src = photo;
   navAvatarImg.src = photo;
 
-  // 🔑 FINAL: source of truth
+  // ✅ FINAL: AUTH ADALAH SUMBER KEBENARAN
   updateVerificationStatus(user.emailVerified);
 });
 
@@ -397,7 +402,10 @@ document.getElementById("changePass").onclick = async () => {
   const newPass = newPassInput.value;
   const confirm = confirmPassInput.value;
 
-  if (newPass !== confirm) return alert("Password tidak cocok");
+  if (newPass !== confirm) {
+    alert("Password tidak cocok");
+    return;
+  }
 
   const cred = EmailAuthProvider.credential(
     currentUser.email,
