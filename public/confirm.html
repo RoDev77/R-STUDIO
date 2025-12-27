@@ -240,22 +240,18 @@ async function handleAction(mode, code) {
 async function handleVerify(code) {
   try {
     await applyActionCode(auth, code);
-    await auth.currentUser?.reload();
 
-    if (auth.currentUser) {
-      await updateDoc(
-        doc(db, "users", auth.currentUser.uid),
-        { emailVerified: true, verifiedAt: Date.now() }
-      );
-    }
-
+    
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu sudah berhasil diverifikasi."
+      "Email kamu sudah berhasil diverifikasi. Silakan login."
     );
   } catch (err) {
     console.error(err);
-    showError("Verifikasi Gagal", "Link invalid atau sudah digunakan.");
+    showError(
+      "Verifikasi Gagal",
+      "Link invalid atau sudah digunakan."
+    );
   }
 }
 

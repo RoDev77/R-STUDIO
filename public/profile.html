@@ -354,12 +354,8 @@ onAuthStateChanged(auth, async user => {
 
   // 🔑 SOURCE OF TRUTH = FIREBASE AUTH
   const isVerified = user.emailVerified;
-
-  await updateDoc(doc(db, "users", user.uid), {
-    emailVerified: isVerified
-  });
-
   updateVerificationStatus(isVerified);
+
 });
 
 /* ================= EMAIL VERIFY ================= */
