@@ -76,6 +76,7 @@ form.addEventListener("submit", async (e) => {
       email: emailInput.value,
       role: "member",
       isVIP: false,
+      emailVerified: false, // ⬅️ TAMBAHAN INI
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp()
     });

@@ -148,6 +148,61 @@ body{
   padding-top:90px;
 }
 
+/* ===== EMAIL VERIFICATION BOX ===== */
+.verification-box{
+  background:#fef3c7;
+  border:2px solid #fbbf24;
+  border-radius:12px;
+  padding:16px;
+  margin-top:16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.verification-box.verified{
+  background:#d1fae5;
+  border-color:#10b981;
+}
+
+.verification-text{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  font-weight:600;
+}
+
+.verification-icon{
+  font-size:24px;
+}
+
+.verify-btn{
+  padding:10px 20px;
+  background:linear-gradient(135deg,#f59e0b,#d97706);
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-weight:700;
+  font-size:13px;
+  cursor:pointer;
+  margin:0;
+  width:auto;
+}
+
+.verify-btn:hover{
+  opacity:0.9;
+}
+
+.verified-badge{
+  color:#10b981;
+  font-weight:700;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
 </style>
 </head>
 
@@ -191,6 +246,15 @@ body{
   <label>Email</label>
   <input id="email" readonly>
 
+  <!-- EMAIL VERIFICATION BOX -->
+  <div class="verification-box" id="verificationBox">
+    <div class="verification-text">
+      <span class="verification-icon" id="verificationIcon">⚠️</span>
+      <span id="verificationText">Email belum diverifikasi</span>
+    </div>
+    <button class="verify-btn" id="verifyBtn">Verifikasi Email</button>
+  </div>
+
   <label>Role</label>
   <input id="role" readonly>
 
@@ -221,7 +285,8 @@ import {
   updateProfile,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword
+  updatePassword,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import {
@@ -245,6 +310,12 @@ const oldPassInput = document.getElementById("oldPass");
 const newPassInput = document.getElementById("newPass");
 const confirmPassInput = document.getElementById("confirmPass");
 
+// Email verification elements
+const verificationBox = document.getElementById("verificationBox");
+const verificationIcon = document.getElementById("verificationIcon");
+const verificationText = document.getElementById("verificationText");
+const verifyBtn = document.getElementById("verifyBtn");
+
 let currentUser;
 
 /* ================= LOAD PROFILE ================= */
@@ -257,6 +328,23 @@ navAvatar.onclick = ()=>{
   dropdown.style.display =
     dropdown.style.display === "block" ? "none" : "block";
 };
+
+/* ================= UPDATE EMAIL VERIFICATION STATUS ================= */
+function updateVerificationStatus(isVerified) {
+  if (isVerified) {
+    // Email sudah diverifikasi
+    verificationBox.classList.add("verified");
+    verificationIcon.textContent = "✅";
+    verificationText.textContent = "Email sudah diverifikasi";
+    verifyBtn.style.display = "none";
+  } else {
+    // Email belum diverifikasi
+    verificationBox.classList.remove("verified");
+    verificationIcon.textContent = "⚠️";
+    verificationText.textContent = "Email belum diverifikasi";
+    verifyBtn.style.display = "block";
+  }
+}
 
 onAuthStateChanged(auth, async user=>{
   if(!user) return location.href="login.html";
@@ -282,8 +370,63 @@ onAuthStateChanged(auth, async user=>{
     if(data.role === "admin" || data.role === "owner"){
       adminMenu.style.display = "block";
     }
+
+    // Update verification status dari Firestore
+    // Cek dari Firebase Auth DAN Firestore
+    const isVerifiedInAuth = user.emailVerified;
+    const isVerifiedInFirestore = data.emailVerified || false;
+    
+    // Jika sudah verified di Auth tapi belum di Firestore, update Firestore
+    if(isVerifiedInAuth && !isVerifiedInFirestore) {
+      await updateDoc(doc(db,"users",user.uid), {
+        emailVerified: true
+      });
+      updateVerificationStatus(true);
+    } else {
+      // Gunakan status dari Firestore
+      updateVerificationStatus(isVerifiedInFirestore);
+    }
+  } else {
+    // Jika user baru dan belum ada di Firestore
+    updateVerificationStatus(false);
   }
 });
+
+/* ================= SEND EMAIL VERIFICATION ================= */
+verifyBtn.onclick = async () => {
+  try {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Mengirim...";
+    
+    await sendEmailVerification(currentUser);
+    
+    alert("✅ Email verifikasi telah dikirim! Silakan cek inbox atau folder spam Anda.");
+    
+    verifyBtn.textContent = "Email Terkirim";
+    
+    // Check verification status setiap 5 detik
+    const checkInterval = setInterval(async () => {
+      await currentUser.reload();
+      if (currentUser.emailVerified) {
+        clearInterval(checkInterval);
+        
+        // Update di Firestore
+        await updateDoc(doc(db,"users",currentUser.uid), {
+          emailVerified: true
+        });
+        
+        updateVerificationStatus(true);
+        alert("🎉 Email Anda telah diverifikasi!");
+      }
+    }, 5000);
+    
+  } catch (error) {
+    console.error("Error sending verification:", error);
+    alert("❌ Gagal mengirim email verifikasi: " + error.message);
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = "Verifikasi Email";
+  }
+};
 
 // LOGOUT
 document.getElementById("logoutBtn").onclick = async ()=>{
@@ -307,6 +450,7 @@ photoInput.onchange = ()=>{
     });
 
     avatarImg.src = base64;
+    navAvatarImg.src = base64;
     alert("✅ Foto profile diperbarui");
   };
 
