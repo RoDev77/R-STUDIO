@@ -339,12 +339,15 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   currentUser = user;
-  await user.reload(); // 🔥 PENTING
+  
+  // 🔥 PENTING: Reload untuk mendapatkan status terbaru
+  await user.reload();
 
   emailInput.value = user.email;
   nameInput.value = user.displayName || "";
 
-  const snap = await getDoc(doc(db, "users", user.uid));
+  const userDocRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userDocRef);
   const data = snap.exists() ? snap.data() : {};
 
   roleInput.value = data.role || "member";
@@ -360,9 +363,62 @@ onAuthStateChanged(auth, async (user) => {
   avatarImg.src = photo;
   navAvatarImg.src = photo;
 
-  // ✅ FINAL: AUTH ADALAH SUMBER KEBENARAN
+  // 🔥 SINKRONISASI: Jika Auth verified tapi Firestore belum, update Firestore
+  if (user.emailVerified && !data.emailVerified) {
+    console.log("🔄 Sinkronisasi status verifikasi ke Firestore...");
+    
+    await updateDoc(userDocRef, {
+      emailVerified: true,
+      emailVerifiedAt: Date.now()
+    });
+    
+    console.log("✅ Firestore berhasil diupdate");
+  }
+
+  // ✅ AUTH ADALAH SUMBER KEBENARAN
   updateVerificationStatus(user.emailVerified);
 });
+
+/* ================= DROPDOWN NAVBAR ================= */
+document.getElementById("navAvatar").onclick = () => {
+  const dropdown = document.getElementById("dropdown");
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+};
+
+// Close dropdown when clicking outside
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".profile-nav")) {
+    document.getElementById("dropdown").style.display = "none";
+  }
+});
+
+/* ================= UPLOAD FOTO ================= */
+document.getElementById("avatar").onclick = () => {
+  document.getElementById("photoInput").click();
+};
+
+document.getElementById("photoInput").onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    const base64 = event.target.result;
+    
+    // Update UI immediately
+    avatarImg.src = base64;
+    navAvatarImg.src = base64;
+
+    // Save to Firestore
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      photoBase64: base64
+    });
+
+    alert("✅ Foto profile diperbarui");
+  };
+  
+  reader.readAsDataURL(file);
+};
 
 /* ================= SEND VERIFY EMAIL ================= */
 verifyBtn.onclick = async () => {
@@ -385,15 +441,19 @@ verifyBtn.onclick = async () => {
 
 /* ================= SAVE PROFILE ================= */
 document.getElementById("saveProfile").onclick = async () => {
-  await updateProfile(currentUser, {
-    displayName: nameInput.value
-  });
+  try {
+    await updateProfile(currentUser, {
+      displayName: nameInput.value
+    });
 
-  await updateDoc(doc(db, "users", currentUser.uid), {
-    name: nameInput.value
-  });
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      name: nameInput.value
+    });
 
-  alert("✅ Profile diperbarui");
+    alert("✅ Profile diperbarui");
+  } catch (err) {
+    alert("❌ Gagal update profile: " + err.message);
+  }
 };
 
 /* ================= CHANGE PASSWORD ================= */
@@ -402,20 +462,39 @@ document.getElementById("changePass").onclick = async () => {
   const newPass = newPassInput.value;
   const confirm = confirmPassInput.value;
 
-  if (newPass !== confirm) {
-    alert("Password tidak cocok");
+  if (!oldPass || !newPass || !confirm) {
+    alert("⚠️ Semua field harus diisi");
     return;
   }
 
-  const cred = EmailAuthProvider.credential(
-    currentUser.email,
-    oldPass
-  );
+  if (newPass !== confirm) {
+    alert("❌ Password baru tidak cocok");
+    return;
+  }
 
-  await reauthenticateWithCredential(currentUser, cred);
-  await updatePassword(currentUser, newPass);
+  if (newPass.length < 6) {
+    alert("❌ Password minimal 6 karakter");
+    return;
+  }
 
-  alert("🔐 Password berhasil diubah");
+  try {
+    const cred = EmailAuthProvider.credential(currentUser.email, oldPass);
+    await reauthenticateWithCredential(currentUser, cred);
+    await updatePassword(currentUser, newPass);
+
+    alert("🔐 Password berhasil diubah");
+    
+    // Clear inputs
+    oldPassInput.value = "";
+    newPassInput.value = "";
+    confirmPassInput.value = "";
+  } catch (err) {
+    if (err.code === "auth/wrong-password") {
+      alert("❌ Password lama salah");
+    } else {
+      alert("❌ Gagal update password: " + err.message);
+    }
+  }
 };
 
 /* ================= LOGOUT ================= */
@@ -424,8 +503,6 @@ document.getElementById("logoutBtn").onclick = async () => {
   location.href = "login.html";
 };
 </script>
-
-
 
 </body>
 </html>

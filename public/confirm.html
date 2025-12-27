@@ -142,6 +142,7 @@ button,a.button{
   text-decoration:none;
   display:inline-block;
   transition:all .2s;
+  text-align:center;
 }
 
 .btn-primary{
@@ -196,15 +197,18 @@ button,a.button{
 </div>
 
 <script type="module">
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import {
   applyActionCode,
   verifyPasswordResetCode,
   confirmPasswordReset
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-import { getAuth } from "firebase/auth";
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const content = document.getElementById("content");
 const params = new URLSearchParams(window.location.search);
@@ -212,27 +216,11 @@ const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
 
-const auth = getAuth();
-const db = getFirestore();
-
 if (!mode || !oobCode) {
   showError("Link Tidak Valid", "Link rusak atau tidak lengkap.");
 } else {
   router(mode, oobCode);
 }
-
-auth.onAuthStateChanged(async (user) => {
-  if (!user) return;
-
-  await user.reload(); // 🔥 WAJIB
-
-  if (user.emailVerified) {
-    await updateDoc(doc(db, "users", user.uid), {
-      emailVerified: true,
-      emailVerifiedAt: Date.now(),
-    });
-  }
-});
 
 /* ================= ROUTER ================= */
 async function router(mode, code) {
@@ -253,16 +241,36 @@ async function router(mode, code) {
 /* ================= VERIFY EMAIL ================= */
 async function verifyEmail(code) {
   try {
+    // 1. Apply verification code
     await applyActionCode(auth, code);
+
+    // 2. 🔥 PENTING: Update Firestore untuk user yang terverifikasi
+    const currentUser = auth.currentUser;
+    
+    if (currentUser) {
+      // Jika user sedang login, langsung update
+      await currentUser.reload();
+      
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        emailVerified: true,
+        emailVerifiedAt: Date.now()
+      });
+    } else {
+      // 3. Jika user belum login, cari user berdasarkan email dari link
+      // Sayangnya Firebase tidak menyediakan cara langsung untuk mendapatkan
+      // user dari oobCode, jadi kita perlu user login dulu
+      console.log("User belum login, akan diupdate saat login berikutnya");
+    }
 
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu berhasil diverifikasi. Silakan login kembali."
+      "Email kamu berhasil diverifikasi. Silakan login kembali untuk melihat perubahan."
     );
-  } catch {
+  } catch (err) {
+    console.error("Verifikasi error:", err);
     showError(
       "Verifikasi Gagal",
-      "Link tidak valid atau sudah digunakan."
+      "Link tidak valid, sudah digunakan, atau expired."
     );
   }
 }
@@ -273,46 +281,88 @@ async function resetPassword(code) {
     await verifyPasswordResetCode(auth, code);
 
     content.innerHTML = `
+      <div class="status-icon">🔐</div>
       <h2>Reset Password</h2>
-      <input id="newPass" type="password" placeholder="Password baru">
-      <input id="confirmPass" type="password" placeholder="Konfirmasi password">
-      <button id="submit">Simpan</button>
+      <p>Masukkan password baru kamu</p>
+      
+      <label>Password Baru</label>
+      <input id="newPass" type="password" placeholder="Minimal 6 karakter">
+      
+      <label>Konfirmasi Password</label>
+      <input id="confirmPass" type="password" placeholder="Ketik ulang password">
+      
+      <div class="button-group">
+        <button class="btn-primary" id="submitBtn">💾 Simpan Password</button>
+      </div>
     `;
 
-    document.getElementById("submit").onclick = async () => {
-      const p1 = newPass.value;
-      const p2 = confirmPass.value;
+    document.getElementById("submitBtn").onclick = async () => {
+      const p1 = document.getElementById("newPass").value;
+      const p2 = document.getElementById("confirmPass").value;
 
-      if (p1 !== p2) return alert("Password tidak cocok");
-      if (p1.length < 6) return alert("Minimal 6 karakter");
+      if (!p1 || !p2) {
+        alert("⚠️ Semua field harus diisi");
+        return;
+      }
 
-      await confirmPasswordReset(auth, code, p1);
-      showSuccess("Password Diubah", "Silakan login kembali.");
+      if (p1 !== p2) {
+        alert("❌ Password tidak cocok");
+        return;
+      }
+
+      if (p1.length < 6) {
+        alert("❌ Password minimal 6 karakter");
+        return;
+      }
+
+      try {
+        document.getElementById("submitBtn").disabled = true;
+        document.getElementById("submitBtn").textContent = "Menyimpan...";
+
+        await confirmPasswordReset(auth, code, p1);
+        
+        showSuccess(
+          "Password Berhasil Diubah!",
+          "Password kamu telah diperbarui. Silakan login dengan password baru."
+        );
+      } catch (err) {
+        alert("❌ Gagal mengubah password: " + err.message);
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtn").textContent = "💾 Simpan Password";
+      }
     };
-  } catch {
-    showError("Link Expired", "Link reset sudah tidak berlaku.");
+  } catch (err) {
+    console.error("Reset password error:", err);
+    showError(
+      "Link Tidak Valid",
+      "Link reset password expired atau sudah digunakan."
+    );
   }
 }
 
-/* ================= UI ================= */
+/* ================= UI HELPERS ================= */
 function showSuccess(title, msg) {
   content.innerHTML = `
-    <h2>✅ ${title}</h2>
+    <div class="status-icon">✅</div>
+    <h2 class="success">${title}</h2>
     <p>${msg}</p>
-    <a href="login.html">Login</a>
+    <div class="button-group">
+      <a href="login.html" class="btn-primary">🚀 Login Sekarang</a>
+    </div>
   `;
 }
 
 function showError(title, msg) {
   content.innerHTML = `
-    <h2>❌ ${title}</h2>
+    <div class="status-icon">❌</div>
+    <h2 class="error">${title}</h2>
     <p>${msg}</p>
-    <a href="login.html">Kembali</a>
+    <div class="button-group">
+      <a href="login.html" class="btn-secondary">← Kembali ke Login</a>
+    </div>
   `;
 }
 </script>
-
-
 
 </body>
 </html>
