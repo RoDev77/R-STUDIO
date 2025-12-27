@@ -278,10 +278,7 @@ body{
 </div>
 
 <script type="module">
-import { checkMaintenance } from "./firebase.js";
-await checkMaintenance();
-
-import { auth, db } from "./firebase.js";
+import { checkMaintenance, auth, db } from "./firebase.js";
 import {
   onAuthStateChanged,
   updateProfile,
@@ -298,6 +295,8 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
+await checkMaintenance();
+
 /* ================= DOM ================= */
 const avatarImg = document.getElementById("avatarImg");
 const navAvatarImg = document.getElementById("navAvatarImg");
@@ -310,6 +309,10 @@ const verificationBox = document.getElementById("verificationBox");
 const verificationIcon = document.getElementById("verificationIcon");
 const verificationText = document.getElementById("verificationText");
 const verifyBtn = document.getElementById("verifyBtn");
+
+const oldPassInput = document.getElementById("oldPass");
+const newPassInput = document.getElementById("newPass");
+const confirmPassInput = document.getElementById("confirmPass");
 
 let currentUser;
 
@@ -352,21 +355,21 @@ onAuthStateChanged(auth, async user => {
   avatarImg.src = photo;
   navAvatarImg.src = photo;
 
-  // 🔑 SOURCE OF TRUTH = FIREBASE AUTH
-  const isVerified = user.emailVerified;
-  updateVerificationStatus(isVerified);
-
+  // 🔑 FINAL: source of truth
+  updateVerificationStatus(user.emailVerified);
 });
 
-/* ================= EMAIL VERIFY ================= */
+/* ================= SEND VERIFY EMAIL ================= */
 verifyBtn.onclick = async () => {
   try {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
 
-    await sendEmailVerification(currentUser);
+    await sendEmailVerification(currentUser, {
+      url: "https://rstudiolab.online/confirm.html"
+    });
 
-    alert("✅ Email verifikasi dikirim. Silakan cek inbox / spam.");
+    alert("✅ Email verifikasi dikirim. Cek inbox / spam.");
     verifyBtn.textContent = "Email terkirim";
   } catch (err) {
     alert("❌ Gagal kirim email: " + err.message);
@@ -394,8 +397,7 @@ document.getElementById("changePass").onclick = async () => {
   const newPass = newPassInput.value;
   const confirm = confirmPassInput.value;
 
-  if (newPass !== confirm)
-    return alert("Password tidak cocok");
+  if (newPass !== confirm) return alert("Password tidak cocok");
 
   const cred = EmailAuthProvider.credential(
     currentUser.email,

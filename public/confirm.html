@@ -196,17 +196,12 @@ button,a.button{
 </div>
 
 <script type="module">
-import { auth, db } from "./firebase.js";
+import { auth } from "./firebase.js";
 import {
+  applyActionCode,
   verifyPasswordResetCode,
-  confirmPasswordReset,
-  applyActionCode
+  confirmPasswordReset
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-import {
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const content = document.getElementById("content");
 const params = new URLSearchParams(window.location.search);
@@ -215,20 +210,20 @@ const mode = params.get("mode");
 const oobCode = params.get("oobCode");
 
 if (!mode || !oobCode) {
-  showError("Link Tidak Valid", "Link tidak lengkap atau rusak.");
+  showError("Link Tidak Valid", "Link rusak atau tidak lengkap.");
 } else {
-  handleAction(mode, oobCode);
+  router(mode, oobCode);
 }
 
 /* ================= ROUTER ================= */
-async function handleAction(mode, code) {
+async function router(mode, code) {
   switch (mode) {
-    case "resetPassword":
-      await handleReset(code);
+    case "verifyEmail":
+      await verifyEmail(code);
       break;
 
-    case "verifyEmail":
-      await handleVerify(code);
+    case "resetPassword":
+      await resetPassword(code);
       break;
 
     default:
@@ -237,33 +232,31 @@ async function handleAction(mode, code) {
 }
 
 /* ================= VERIFY EMAIL ================= */
-async function handleVerify(code) {
+async function verifyEmail(code) {
   try {
     await applyActionCode(auth, code);
 
-    
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu sudah berhasil diverifikasi. Silakan login."
+      "Email kamu berhasil diverifikasi. Silakan login kembali."
     );
-  } catch (err) {
-    console.error(err);
+  } catch {
     showError(
       "Verifikasi Gagal",
-      "Link invalid atau sudah digunakan."
+      "Link tidak valid atau sudah digunakan."
     );
   }
 }
 
 /* ================= RESET PASSWORD ================= */
-async function handleReset(code) {
+async function resetPassword(code) {
   try {
     await verifyPasswordResetCode(auth, code);
 
     content.innerHTML = `
       <h2>Reset Password</h2>
       <input id="newPass" type="password" placeholder="Password baru">
-      <input id="confirmPass" type="password" placeholder="Konfirmasi">
+      <input id="confirmPass" type="password" placeholder="Konfirmasi password">
       <button id="submit">Simpan</button>
     `;
 
@@ -278,7 +271,7 @@ async function handleReset(code) {
       showSuccess("Password Diubah", "Silakan login kembali.");
     };
   } catch {
-    showError("Link Expired", "Link reset sudah tidak valid.");
+    showError("Link Expired", "Link reset sudah tidak berlaku.");
   }
 }
 
@@ -295,10 +288,11 @@ function showError(title, msg) {
   content.innerHTML = `
     <h2>❌ ${title}</h2>
     <p>${msg}</p>
-    <a href="profile.html">Kembali</a>
+    <a href="login.html">Kembali</a>
   `;
 }
 </script>
+
 
 
 </body>
