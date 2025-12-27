@@ -329,11 +329,44 @@ async function handlePasswordReset(code) {
 /* ================= FIREBASE EMAIL VERIFICATION ================= */
 async function handleFirebaseEmailVerify(code) {
   try {
+    // Apply action code untuk verify email
     await applyActionCode(auth, code);
+    
+    console.log("✅ Email verified in Firebase Auth");
+    
+    // Tunggu sebentar untuk Firebase Auth update
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Reload auth state
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      
+      // Update Firestore
+      try {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          emailVerified: true,
+          verifiedAt: Date.now()
+        });
+        console.log("✅ Firestore updated: emailVerified = true");
+      } catch (firestoreError) {
+        console.error("⚠️ Firestore update error:", firestoreError);
+        // Tetap lanjut ke success meskipun Firestore error
+      }
+    } else {
+      console.warn("⚠️ No current user, will update Firestore on next login");
+    }
     
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu sudah berhasil diverifikasi melalui Firebase."
+      "Email kamu sudah berhasil diverifikasi melalui Firebase.",
+      `
+      <div class="info-box">
+        <p><strong>✨ Apa selanjutnya?</strong></p>
+        <p>• Akun Anda sekarang sudah terverifikasi</p>
+        <p>• Anda dapat menggunakan semua fitur R Studio</p>
+        <p>• Keamanan akun Anda lebih terjamin</p>
+      </div>
+      `
     );
 
   } catch (error) {
@@ -413,7 +446,7 @@ function showSuccess(title, message, extraHTML = "") {
     ${extraHTML}
 
     <div class="button-group">
-      <a href="profile.html" class="button btn-primary">Kembali ke Profile</a>
+      <a href="profile.html?verified=true" class="button btn-primary">Kembali ke Profile</a>
       <a href="license.html" class="button btn-secondary">Buat License</a>
     </div>
   `;

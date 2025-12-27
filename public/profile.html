@@ -430,6 +430,19 @@ onAuthStateChanged(auth, async user=>{
   emailInput.value = user.email;
   nameInput.value = user.displayName || "";
 
+  // ✅ Sync Firebase Auth verification ke Firestore
+  if(user.emailVerified) {
+    const snap = await getDoc(doc(db,"users",user.uid));
+    if(snap.exists() && !snap.data().emailVerified) {
+      // Firebase Auth verified tapi Firestore belum
+      await updateDoc(doc(db,"users",user.uid), {
+        emailVerified: true,
+        verifiedAt: Date.now()
+      });
+      console.log("✅ Synced emailVerified from Auth to Firestore");
+    }
+  }
+
   await loadUserProfile();
 
   // ✅ CHECK URL PARAMETER (jika dari verifikasi)
