@@ -1,3 +1,4 @@
+<!--confirm.html-->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -201,239 +202,108 @@ import {
   confirmPasswordReset,
   applyActionCode
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
 import {
   doc,
-  getDoc,
-  updateDoc,
-  deleteDoc
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const content = document.getElementById("content");
 const params = new URLSearchParams(window.location.search);
 
-// Deteksi mode dari URL
 const mode = params.get("mode");
 const oobCode = params.get("oobCode");
-const token = params.get("token");
 
-// Router: tentukan action berdasarkan parameter
-if (token) {
-  // Custom email verification (token-based)
-  handleEmailVerification(token);
-} else if (mode && oobCode) {
-  // Firebase action handler (mode-based)
-  handleFirebaseAction(mode, oobCode);
+if (!mode || !oobCode) {
+  showError("Link Tidak Valid", "Link tidak lengkap atau rusak.");
 } else {
-  showError(
-    "Link Tidak Valid",
-    "Link ini tidak valid atau rusak. Pastikan Anda mengklik link lengkap dari email."
-  );
+  handleAction(mode, oobCode);
 }
 
-/* ================= FIREBASE ACTION HANDLER ================= */
-async function handleFirebaseAction(mode, code) {
+/* ================= ROUTER ================= */
+async function handleAction(mode, code) {
   switch (mode) {
     case "resetPassword":
-      await handlePasswordReset(code);
+      await handleReset(code);
       break;
+
     case "verifyEmail":
-      await handleFirebaseEmailVerify(code);
+      await handleVerify(code);
       break;
-    case "recoverEmail":
-      showError("Recovery Email", "Fitur ini belum tersedia.");
-      break;
+
     default:
-      showError("Mode Tidak Dikenal", "Action mode tidak valid.");
+      showError("Mode Tidak Dikenal", "Action tidak valid.");
   }
 }
 
-/* ================= PASSWORD RESET ================= */
-async function handlePasswordReset(code) {
-  try {
-    // Verifikasi code masih valid
-    await verifyPasswordResetCode(auth, code);
-    
-    // Tampilkan form reset password
-    content.innerHTML = `
-      <div class="status-icon">🔐</div>
-      <h2>Reset Password</h2>
-      <p>Buat password baru untuk akun kamu</p>
-
-      <form id="resetForm">
-        <label>Password Baru</label>
-        <input type="password" id="newPassword" placeholder="Minimal 6 karakter" required>
-
-        <label>Konfirmasi Password</label>
-        <input type="password" id="confirmPassword" placeholder="Ketik ulang password" required>
-
-        <div class="button-group">
-          <button type="submit" class="button btn-primary" id="submitBtn">
-            💾 Simpan Password
-          </button>
-        </div>
-      </form>
-
-      <div class="button-group" style="margin-top:16px">
-        <a href="login.html" class="button btn-secondary">← Kembali ke Login</a>
-      </div>
-    `;
-
-    const form = document.getElementById("resetForm");
-    const newPassword = document.getElementById("newPassword");
-    const confirmPassword = document.getElementById("confirmPassword");
-    const submitBtn = document.getElementById("submitBtn");
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-
-      if (newPassword.value !== confirmPassword.value) {
-        alert("❌ Password tidak cocok!");
-        return;
-      }
-
-      if (newPassword.value.length < 6) {
-        alert("❌ Password minimal 6 karakter!");
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Menyimpan...";
-
-      try {
-        await confirmPasswordReset(auth, code, newPassword.value);
-        
-        showSuccess(
-          "Password Berhasil Diubah!",
-          "Password kamu sudah berhasil diperbarui. Silakan login dengan password baru."
-        );
-
-        setTimeout(() => location.href = "login.html", 3000);
-
-      } catch (error) {
-        console.error("Reset error:", error);
-        alert("❌ Gagal reset password. Link mungkin sudah expired.");
-        submitBtn.disabled = false;
-        submitBtn.textContent = "💾 Simpan Password";
-      }
-    };
-
-  } catch (error) {
-    console.error("Verify code error:", error);
-    showError(
-      "Link Expired",
-      "Link reset password sudah tidak valid atau expired. Silakan minta link baru."
-    );
-  }
-}
-
-/* ================= FIREBASE EMAIL VERIFICATION ================= */
-async function handleFirebaseEmailVerify(code) {
+/* ================= VERIFY EMAIL ================= */
+async function handleVerify(code) {
   try {
     await applyActionCode(auth, code);
-    
+    await auth.currentUser?.reload();
+
+    if (auth.currentUser) {
+      await updateDoc(
+        doc(db, "users", auth.currentUser.uid),
+        { emailVerified: true, verifiedAt: Date.now() }
+      );
+    }
+
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu sudah berhasil diverifikasi melalui Firebase."
+      "Email kamu sudah berhasil diverifikasi."
     );
-
-  } catch (error) {
-    console.error("Firebase verify error:", error);
-    showError(
-      "Verifikasi Gagal",
-      "Link verifikasi tidak valid atau sudah expired."
-    );
+  } catch (err) {
+    console.error(err);
+    showError("Verifikasi Gagal", "Link invalid atau sudah digunakan.");
   }
 }
 
-/* ================= CUSTOM EMAIL VERIFICATION (TOKEN) ================= */
-async function handleEmailVerification(token) {
+/* ================= RESET PASSWORD ================= */
+async function handleReset(code) {
   try {
-    // Get token dari Firestore
-    const tokenRef = doc(db, "email_verification_tokens", token);
-    const tokenSnap = await getDoc(tokenRef);
+    await verifyPasswordResetCode(auth, code);
 
-    if (!tokenSnap.exists()) {
-      showError(
-        "Token Tidak Ditemukan",
-        "Token verifikasi tidak ditemukan atau sudah pernah digunakan. Silakan minta verifikasi email baru dari halaman Profile."
-      );
-      return;
-    }
+    content.innerHTML = `
+      <h2>Reset Password</h2>
+      <input id="newPass" type="password" placeholder="Password baru">
+      <input id="confirmPass" type="password" placeholder="Konfirmasi">
+      <button id="submit">Simpan</button>
+    `;
 
-    const tokenData = tokenSnap.data();
+    document.getElementById("submit").onclick = async () => {
+      const p1 = newPass.value;
+      const p2 = confirmPass.value;
 
-    // Check expiry
-    if (Date.now() > tokenData.expiry) {
-      await deleteDoc(tokenRef);
-      showError(
-        "Token Sudah Kedaluwarsa",
-        "Link verifikasi ini sudah melewati batas waktu (24 jam). Silakan minta verifikasi email baru dari halaman Profile.",
-        true
-      );
-      return;
-    }
+      if (p1 !== p2) return alert("Password tidak cocok");
+      if (p1.length < 6) return alert("Minimal 6 karakter");
 
-    // Update user emailVerified di Firestore
-    await updateDoc(doc(db, "users", tokenData.uid), {
-      emailVerified: true,
-      verifiedAt: Date.now()
-    });
-
-    // Delete token setelah digunakan (one-time use)
-    await deleteDoc(tokenRef);
-
-    showSuccess(
-      "Email Terverifikasi!",
-      `Selamat! Email <strong>${tokenData.email}</strong> sudah berhasil diverifikasi.`,
-      `
-      <div class="info-box">
-        <p><strong>✨ Apa selanjutnya?</strong></p>
-        <p>• Akun Anda sekarang sudah terverifikasi</p>
-        <p>• Anda dapat menggunakan semua fitur R Studio</p>
-        <p>• Keamanan akun Anda lebih terjamin</p>
-      </div>
-      `
-    );
-
-  } catch (error) {
-    console.error("Verification error:", error);
-    showError(
-      "Terjadi Kesalahan",
-      "Maaf, terjadi kesalahan saat memverifikasi email Anda. Silakan coba lagi atau hubungi support jika masalah berlanjut."
-    );
+      await confirmPasswordReset(auth, code, p1);
+      showSuccess("Password Diubah", "Silakan login kembali.");
+    };
+  } catch {
+    showError("Link Expired", "Link reset sudah tidak valid.");
   }
 }
 
-/* ================= UI HELPER FUNCTIONS ================= */
-function showSuccess(title, message, extraHTML = "") {
+/* ================= UI ================= */
+function showSuccess(title, msg) {
   content.innerHTML = `
-    <div class="status-icon success">✅</div>
-    <h2>${title}</h2>
-    <p>${message}</p>
-    ${extraHTML}
-
-    <div class="button-group">
-      <a href="profile.html" class="button btn-primary">Kembali ke Profile</a>
-      <a href="license.html" class="button btn-secondary">Buat License</a>
-    </div>
+    <h2>✅ ${title}</h2>
+    <p>${msg}</p>
+    <a href="login.html">Login</a>
   `;
 }
 
-function showError(title, message, isExpired = false) {
+function showError(title, msg) {
   content.innerHTML = `
-    <div class="status-icon error">❌</div>
-    <h2>${title}</h2>
-    <p>${message}</p>
-
-    <div class="button-group">
-      <a href="profile.html" class="button btn-primary">
-        ${isExpired ? 'Kirim Ulang Verifikasi' : 'Ke Halaman Profile'}
-      </a>
-      <a href="https://rstudiolab.online/" class="button btn-secondary">Kembali ke Home</a>
-    </div>
+    <h2>❌ ${title}</h2>
+    <p>${msg}</p>
+    <a href="profile.html">Kembali</a>
   `;
 }
 </script>
+
 
 </body>
 </html>

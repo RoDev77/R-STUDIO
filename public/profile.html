@@ -1,3 +1,4 @@
+<!-- profile.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -279,6 +280,7 @@ body{
 <script type="module">
 import { checkMaintenance } from "./firebase.js";
 await checkMaintenance();
+
 import { auth, db } from "./firebase.js";
 import {
   onAuthStateChanged,
@@ -286,7 +288,8 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
-  sendEmailVerification
+  sendEmailVerification,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import {
@@ -295,22 +298,14 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-import { signOut } from
-"https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-const avatar = document.getElementById("avatar");
+/* ================= DOM ================= */
 const avatarImg = document.getElementById("avatarImg");
-const photoInput = document.getElementById("photoInput");
-
+const navAvatarImg = document.getElementById("navAvatarImg");
 const nameInput = document.getElementById("name");
 const emailInput = document.getElementById("email");
 const roleInput = document.getElementById("role");
+const adminMenu = document.getElementById("adminMenu");
 
-const oldPassInput = document.getElementById("oldPass");
-const newPassInput = document.getElementById("newPass");
-const confirmPassInput = document.getElementById("confirmPass");
-
-// Email verification elements
 const verificationBox = document.getElementById("verificationBox");
 const verificationIcon = document.getElementById("verificationIcon");
 const verificationText = document.getElementById("verificationText");
@@ -318,27 +313,14 @@ const verifyBtn = document.getElementById("verifyBtn");
 
 let currentUser;
 
-/* ================= LOAD PROFILE ================= */
-const navAvatar = document.getElementById("navAvatar");
-const navAvatarImg = document.getElementById("navAvatarImg");
-const dropdown = document.getElementById("dropdown");
-const adminMenu = document.getElementById("adminMenu");
-
-navAvatar.onclick = ()=>{
-  dropdown.style.display =
-    dropdown.style.display === "block" ? "none" : "block";
-};
-
-/* ================= UPDATE EMAIL VERIFICATION STATUS ================= */
+/* ================= UI ================= */
 function updateVerificationStatus(isVerified) {
   if (isVerified) {
-    // Email sudah diverifikasi
     verificationBox.classList.add("verified");
     verificationIcon.textContent = "✅";
     verificationText.textContent = "Email sudah diverifikasi";
     verifyBtn.style.display = "none";
   } else {
-    // Email belum diverifikasi
     verificationBox.classList.remove("verified");
     verificationIcon.textContent = "⚠️";
     verificationText.textContent = "Email belum diverifikasi";
@@ -346,148 +328,94 @@ function updateVerificationStatus(isVerified) {
   }
 }
 
-onAuthStateChanged(auth, async user=>{
-  if(!user) return location.href="login.html";
+/* ================= AUTH ================= */
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
   currentUser = user;
 
   emailInput.value = user.email;
   nameInput.value = user.displayName || "";
 
-  const snap = await getDoc(doc(db,"users",user.uid));
-  if(snap.exists()){
-    const data = snap.data();
+  const snap = await getDoc(doc(db, "users", user.uid));
+  const data = snap.exists() ? snap.data() : {};
 
-    roleInput.value = data.role || "member";
+  roleInput.value = data.role || "member";
 
-    const photo =
-      data.photoBase64 ||
-      "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-    avatarImg.src = photo;
-    navAvatarImg.src = photo;
-
-    // ADMIN MENU
-    if(data.role === "admin" || data.role === "owner"){
-      adminMenu.style.display = "block";
-    }
-
-    // Update verification status dari Firestore
-    // Cek dari Firebase Auth DAN Firestore
-    const isVerifiedInAuth = user.emailVerified;
-    const isVerifiedInFirestore = data.emailVerified || false;
-    
-    // Jika sudah verified di Auth tapi belum di Firestore, update Firestore
-    if(isVerifiedInAuth && !isVerifiedInFirestore) {
-      await updateDoc(doc(db,"users",user.uid), {
-        emailVerified: true
-      });
-      updateVerificationStatus(true);
-    } else {
-      // Gunakan status dari Firestore
-      updateVerificationStatus(isVerifiedInFirestore);
-    }
-  } else {
-    // Jika user baru dan belum ada di Firestore
-    updateVerificationStatus(false);
+  if (data.role === "admin" || data.role === "owner") {
+    adminMenu.style.display = "block";
   }
+
+  const photo =
+    data.photoBase64 ||
+    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+  avatarImg.src = photo;
+  navAvatarImg.src = photo;
+
+  // 🔑 SOURCE OF TRUTH = FIREBASE AUTH
+  const isVerified = user.emailVerified;
+
+  await updateDoc(doc(db, "users", user.uid), {
+    emailVerified: isVerified
+  });
+
+  updateVerificationStatus(isVerified);
 });
 
-/* ================= SEND EMAIL VERIFICATION ================= */
+/* ================= EMAIL VERIFY ================= */
 verifyBtn.onclick = async () => {
   try {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
-    
+
     await sendEmailVerification(currentUser);
-    
-    alert("✅ Email verifikasi telah dikirim! Silakan cek inbox atau folder spam Anda.");
-    
-    verifyBtn.textContent = "Email Terkirim";
-    
-    // Check verification status setiap 5 detik
-    const checkInterval = setInterval(async () => {
-      await currentUser.reload();
-      if (currentUser.emailVerified) {
-        clearInterval(checkInterval);
-        
-        // Update di Firestore
-        await updateDoc(doc(db,"users",currentUser.uid), {
-          emailVerified: true
-        });
-        
-        updateVerificationStatus(true);
-        alert("🎉 Email Anda telah diverifikasi!");
-      }
-    }, 5000);
-    
-  } catch (error) {
-    console.error("Error sending verification:", error);
-    alert("❌ Gagal mengirim email verifikasi: " + error.message);
+
+    alert("✅ Email verifikasi dikirim. Silakan cek inbox / spam.");
+    verifyBtn.textContent = "Email terkirim";
+  } catch (err) {
+    alert("❌ Gagal kirim email: " + err.message);
     verifyBtn.disabled = false;
     verifyBtn.textContent = "Verifikasi Email";
   }
 };
 
-// LOGOUT
-document.getElementById("logoutBtn").onclick = async ()=>{
-  await signOut(auth);
-  location.href="login.html";
-};
-
-/* ================= FOTO PROFILE (BASE64) ================= */
-avatar.onclick = ()=> photoInput.click();
-
-photoInput.onchange = ()=>{
-  const file = photoInput.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async ()=>{
-    const base64 = reader.result;
-
-    await updateDoc(doc(db,"users",currentUser.uid),{
-      photoBase64: base64
-    });
-
-    avatarImg.src = base64;
-    navAvatarImg.src = base64;
-    alert("✅ Foto profile diperbarui");
-  };
-
-  reader.readAsDataURL(file);
-};
-
-/* ================= SIMPAN NAMA ================= */
-document.getElementById("saveProfile").onclick = async ()=>{
-  await updateProfile(currentUser,{
+/* ================= SAVE PROFILE ================= */
+document.getElementById("saveProfile").onclick = async () => {
+  await updateProfile(currentUser, {
     displayName: nameInput.value
   });
 
-  await updateDoc(doc(db,"users",currentUser.uid),{
+  await updateDoc(doc(db, "users", currentUser.uid), {
     name: nameInput.value
   });
 
   alert("✅ Profile diperbarui");
 };
 
-/* ================= GANTI PASSWORD ================= */
-document.getElementById("changePass").onclick = async ()=>{
+/* ================= CHANGE PASSWORD ================= */
+document.getElementById("changePass").onclick = async () => {
   const oldPass = oldPassInput.value;
   const newPass = newPassInput.value;
   const confirm = confirmPassInput.value;
 
-  if(newPass !== confirm)
-    return alert("Password baru tidak cocok");
+  if (newPass !== confirm)
+    return alert("Password tidak cocok");
 
   const cred = EmailAuthProvider.credential(
     currentUser.email,
     oldPass
   );
 
-  await reauthenticateWithCredential(currentUser,cred);
-  await updatePassword(currentUser,newPass);
+  await reauthenticateWithCredential(currentUser, cred);
+  await updatePassword(currentUser, newPass);
 
   alert("🔐 Password berhasil diubah");
+};
+
+/* ================= LOGOUT ================= */
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  location.href = "login.html";
 };
 </script>
 
