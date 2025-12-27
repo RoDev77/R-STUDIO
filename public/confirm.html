@@ -221,7 +221,8 @@ import { auth, db } from "./firebase.js";
 import {
   applyActionCode,
   verifyPasswordResetCode,
-  confirmPasswordReset
+  confirmPasswordReset,
+  signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import {
@@ -261,26 +262,41 @@ async function router(mode, code) {
 /* ================= VERIFY EMAIL ================= */
 async function verifyEmail(code) {
   try {
-    // 1. Apply verification code
+    // 1. ✅ Apply verification code DULU (ini tidak perlu auth)
     await applyActionCode(auth, code);
+    
+    console.log("✅ Email verification code applied");
 
-    // 2. 🔥 PENTING: Update Firestore untuk user yang terverifikasi
-    const currentUser = auth.currentUser;
+    // 2. ✅ Cek apakah user sedang login
+    let currentUser = auth.currentUser;
     
     if (currentUser) {
-      // Jika user sedang login, langsung update
+      console.log("User sudah login, update Firestore...");
+      
+      // Reload untuk update status
       await currentUser.reload();
       
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        emailVerified: true,
-        emailVerifiedAt: Date.now()
-      });
+      // Update Firestore
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          emailVerified: true,
+          emailVerifiedAt: Date.now()
+        });
+        console.log("✅ Firestore updated");
+      } catch (firestoreErr) {
+        console.warn("⚠️ Firestore update failed:", firestoreErr.message);
+        // Tidak masalah, yang penting Auth sudah verified
+      }
+    } else {
+      console.log("User belum login, skip Firestore update");
+      // Firestore akan diupdate saat user login di profile.html
     }
 
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu berhasil diverifikasi."
+      "Email kamu berhasil diverifikasi. Login untuk melihat perubahan."
     );
+    
   } catch (err) {
     console.error("Verifikasi error:", err);
     
@@ -416,9 +432,15 @@ function showSuccess(title, msg) {
     <div class="status-icon">✅</div>
     <h2 class="success">${title}</h2>
     <p>${msg}</p>
+    <div class="info-box">
+      <p><strong>✨ Langkah selanjutnya:</strong></p>
+      <p>• Login ke akun kamu</p>
+      <p>• Status verifikasi akan otomatis terupdate</p>
+      <p>• Nikmati akses penuh ke semua fitur</p>
+    </div>
     <div class="button-group">
-      <a href="profile.html" class="btn-primary">📱 Ke Profile</a>
-      <a href="login.html" class="btn-secondary">🔑 Login</a>
+      <a href="login.html" class="btn-primary">🚀 Login Sekarang</a>
+      <a href="profile.html" class="btn-secondary">📱 Ke Profile</a>
     </div>
   `;
 }
