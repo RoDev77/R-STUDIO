@@ -846,6 +846,63 @@
                 grid-template-columns: 1fr;
             }
         }
+
+                /* Footer */
+        .footer {
+            padding: 60px 0 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 80px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #00d9ff;
+        }
+
+        .footer p {
+            color: #71717a;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 40px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -890,7 +947,7 @@
 
         <div class="grid">
             <div class="card">
-                <h3><span class="icon">➕</span> Create New License</h3>
+                <h3><span class="icon" id="license">➕</span> Create New License</h3>
                 <form id="createLicenseForm">
                     <div class="form-group">
                         <label>Game ID</label>
@@ -956,6 +1013,17 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="#license">Create License</a>
+            <a href="license.html#docs">API Docs</a>
+            <a href="license.html#stats">Statistics</a>
+            <a href="subscribe.html">Berlangganan VIP</a>
+        </div>
+        <p>&copy; 2025 R STUDIO. All rights reserved.</p>
+    </footer>
 
     <div class="notification" id="notification"></div>
 

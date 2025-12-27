@@ -55,7 +55,7 @@
     <div class="status" id="roleBadge">👤 Member</div>
   </div>
 
-  <div class="section">
+  <div class="section" id="content">
     <h3>🎬 Video Library</h3>
     <p>Tutorial & konten eksklusif R Studio</p>
 
@@ -116,6 +116,60 @@
   </div>
 
 </div>
+<!-- Modern Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <!-- About Section -->
+        <div class="footer-section">
+            <h3>R STUDIO</h3>
+            <p>Building the future of Roblox development with cutting-edge tools and solutions. Join thousands of developers creating amazing experiences.</p>
+            <div class="social-links">
+                <a href="https://www.roblox.com/communities/13174452/R-TEAMX#!/about" class="social-link" title="Roblox">
+                  <img src="./images/roblox-icon.png" alt="Roblox" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+                <a href="https://discord.gg/AUAzsxPP27" class="social-link" title="Discord">
+                    <img src="./images/discord-icon.jpg" alt="Discord" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+                <a href="https://www.youtube.com/@ahmadrodiii" class="social-link" title="YouTube">
+                    <img src="./images/youtube-icon.png" alt="YouTube" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+                <a href="https://www.instagram.com/ahmadrodiii" class="social-link" title="Instagram">
+                    <img src="./images/instagram-icon.png" alt="Instagram" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="footer-section">
+            <h3>Resources</h3>
+            <div class="footer-links">
+                <a href="#content">Tutorials</a>
+                <a href="license.html">License</a>
+                <a href="https://discord.gg/AUAzsxPP27">Community</a>
+                <a href="subscribe.html">Support</a>
+            </div>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="footer-section">
+            <h3>Stay Updated</h3>
+            <p>Get the latest updates and news delivered to your inbox.</p>
+            <form class="newsletter-form" onsubmit="return false;">
+                <input type="email" class="newsletter-input" placeholder="Enter your email" required>
+                <button type="submit" class="newsletter-btn">Subscribe</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2025 R STUDIO. All rights reserved.</p>
+        <div class="footer-bottom-links">
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms of Service</a>
+            <a href="#cookies">Cookies</a>
+        </div>
+    </div>
+</footer>
 
 <script type="module">
 import { auth, db, checkMaintenance } from "./firebase.js";
