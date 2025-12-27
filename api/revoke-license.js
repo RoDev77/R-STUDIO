@@ -1,10 +1,8 @@
-// revoke-license.js
 import { getFirestore, getAuth } from "./lib/firebase.js";
 
 export default async function handler(req, res) {
-
   res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization"
@@ -14,51 +12,51 @@ export default async function handler(req, res) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
 
-
   try {
-
     const authHeader = req.headers.authorization || "";
     if (!authHeader.startsWith("Bearer "))
       return res.status(401).json({ error: "NO_TOKEN" });
-
 
     const auth = getAuth();
     const decoded = await auth.verifyIdToken(
       authHeader.replace("Bearer ", "")
     );
 
+    const { licenseId, reason } = req.body;
+    if (!reason || reason.trim().length < 3)
+      return res.status(400).json({ error: "REASON_REQUIRED" });
+
     const db = getFirestore();
-    const { licenseId } = req.body;
 
-    const licenseSnap = await db
-      .collection("licenses")
-      .doc(licenseId)
-      .get();
-
+    const licenseSnap = await db.collection("licenses").doc(licenseId).get();
     if (!licenseSnap.exists)
       return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
 
-
     const license = licenseSnap.data();
-
-    const userSnap = await db.collection("users").doc(decoded.uid).get();
-    const user = userSnap.data();
-
-    let userRole = "member";
-    if (user.role === "owner") userRole = "owner";
-    else if (user.role === "admin") userRole = "admin";
-    else if (user.isVIP) userRole = "vip";
 
     const creatorSnap = await db
       .collection("users")
       .doc(license.createdBy)
       .get();
+    if (!creatorSnap.exists)
+      return res.status(403).json({ error: "CREATOR_NOT_FOUND" });
 
-    const creator = creatorSnap.exists ? creatorSnap.data() : {};
-    let creatorRole = "member";
-    if (creator.role === "owner") creatorRole = "owner";
-    else if (creator.role === "admin") creatorRole = "admin";
-    else if (creator.isVIP) creatorRole = "vip";
+    const creator = creatorSnap.data();
+
+    const userSnap = await db.collection("users").doc(decoded.uid).get();
+    const user = userSnap.data();
+
+    const getRole = u =>
+      u.role === "owner"
+        ? "owner"
+        : u.role === "admin"
+        ? "admin"
+        : u.isVIP
+        ? "vip"
+        : "member";
+
+    const creatorRole = getRole(creator);
+    const userRole = getRole(user);
 
     let canRevoke = false;
 
@@ -73,36 +71,25 @@ export default async function handler(req, res) {
     if (!canRevoke)
       return res.status(403).json({ error: "NO_PERMISSION" });
 
-
     await licenseSnap.ref.update({
       revoked: true,
       revokedAt: Date.now(),
       revokedBy: decoded.uid,
+      revokedByRole: userRole,
+      revokedReason: reason.trim(),
     });
 
-    
     await db.collection("connection_logs").add({
       type: "revoke",
-
       licenseId,
       mapName: license.mapName || "-",
-      gameId: license.gameId || null,
-      placeId: license.placeId || null,
-
       revokedBy: decoded.uid,
       revokedByRole: userRole,
-
-      licenseOwner: license.createdBy,
-      licenseOwnerRole: creatorRole,
-
-      reason: "MANUAL_REVOKE",
-
-      success: true,
+      reason: reason.trim(),
       time: Date.now(),
     });
 
     return res.json({ success: true });
-    
   } catch (err) {
     console.error("REVOKE ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });

@@ -277,11 +277,14 @@ async function loadLicenses() {
                     currentRole === "admin" ||
                     l.createdBy === currentUser.uid
                   )
-                  ? `<button class="btn btn-danger btn-sm"
-                      onclick="revokeLicense('${l.licenseId}')">
-                      Revoke
-                    </button>`
-                  : ""
+                ? `<p style="color:#ef4444">
+                    🔥 Revoked by: <b>${await getUserName(l.revokedBy)}</b>
+                    (${l.revokedByRole})
+                  </p>
+                  <p style="font-style:italic">
+                    Reason: "${l.revokedReason}"
+                  </p>`
+                : ""
             }
 
           </div>
@@ -352,7 +355,11 @@ async function testConnection() {
 
 /* ================= REVOKE ================= */
 async function revokeLicense(licenseId) {
-  if (!confirm("Revoke license?")) return;
+  const reason = prompt("Alasan revoke (wajib):");
+  if (!reason || reason.trim().length < 3)
+    return showNotification("Alasan wajib diisi", "error");
+
+  if (!confirm("Revoke license ini?")) return;
 
   try {
     const token = await currentUser.getIdToken();
@@ -363,16 +370,17 @@ async function revokeLicense(licenseId) {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ licenseId })
+      body: JSON.stringify({ licenseId, reason })
     });
 
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || "NO_PERMISSION");
+    if (!data.success) throw new Error(data.error);
 
     showNotification("License revoked");
     loadLicenses();
+    refreshLogs();
   } catch (err) {
-    showNotification(err.message || "Revoke failed", "error");
+    showNotification(err.message, "error");
   }
 }
 
@@ -415,29 +423,28 @@ async function refreshLogs() {
 
     logs = data.logs || [];
     logContainer.innerHTML = logs.map(l => {
-      if (l.type === "revoke") {
-        return `
-          <div class="log-entry error">
-            [${new Date(l.time).toLocaleTimeString()}]
-            🔥 REVOKE —
-            ${l.licenseId} —
-            ${l.mapName} —
-            by ${l.revokedByRole}
-          </div>
-        `;
-      }
+    if (l.type === "revoke") {
+      return `
+        <div class="log-entry error">
+          [${new Date(l.time).toLocaleTimeString()}]
+          🔥 REVOKE —
+          ${l.licenseId} —
+          ${l.mapName}<br>
+          by ${l.revokedByRole.toUpperCase()}
+          — "${l.reason}"
+        </div>
+      `;
+    }
 
-      if (l.type === "undo_revoke") {
-        return `
-          <div class="log-entry success">
-            [${new Date(l.time).toLocaleTimeString()}]
-            ♻️ UNDO —
-            ${l.licenseId} —
-            restored by OWNER
-          </div>
-        `;
-      }
-
+    if (l.type === "undo_revoke") {
+      return `
+        <div class="log-entry success">
+          [${new Date(l.time).toLocaleTimeString()}]
+          ♻️ UNDO REVOKE —
+          ${l.licenseId} restored by OWNER
+        </div>
+      `;
+    }
 
       // verify / create
       return `
