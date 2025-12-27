@@ -49,12 +49,12 @@ export default async function handler(req, res) {
 
     const getRole = u =>
       u.role === "owner"
-        ? "owner"
+        ? "👑 Owner"
         : u.role === "admin"
-        ? "admin"
+        ? "🛠 Admin"
         : u.isVIP
-        ? "vip"
-        : "member";
+        ? "💎 VIP"
+        : "👤 Member";
 
     const creatorRole = getRole(creator);
     const userRole = getRole(user);
