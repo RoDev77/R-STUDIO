@@ -12,6 +12,7 @@ const API_BASE = "https://api.rstudiolab.online/api";
 /* ================= STATE ================= */
 let currentUser = null;     // firebase auth user
 let currentRole = "member"; // role dari Firestore
+let isEmailVerified = false; // status verifikasi email
 let logs = [];
 
 /* ================= INIT ================= */
@@ -23,6 +24,79 @@ function showNotification(message, type = "success") {
   n.textContent = message;
   n.className = `notification ${type} show`;
   setTimeout(() => n.classList.remove("show"), 3000);
+}
+
+/* ================= EMAIL VERIFICATION BANNER ================= */
+function showVerificationBanner(isVerified) {
+  // Hapus banner lama jika ada
+  const oldBanner = document.getElementById("verificationBanner");
+  if (oldBanner) oldBanner.remove();
+
+  if (isVerified) return; // Jangan tampilkan jika sudah verified
+
+  // Buat banner warning
+  const banner = document.createElement("div");
+  banner.id = "verificationBanner";
+  banner.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 6px rgba(0,0,0,.1);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      animation: slideDown 0.3s ease-out;
+    ">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 24px;">⚠️</span>
+        <div>
+          <div style="font-weight: 700; font-size: 15px;">Email Belum Diverifikasi</div>
+          <div style="font-size: 13px; opacity: 0.9;">
+            Verifikasi email kamu untuk menggunakan semua fitur dengan aman.
+          </div>
+        </div>
+      </div>
+      <a href="profile.html" style="
+        background: white;
+        color: #f59e0b;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,.1);
+      ">
+        Verifikasi Sekarang
+      </a>
+    </div>
+  `;
+
+  // Tambahkan CSS animation
+  if (!document.getElementById("verificationBannerStyle")) {
+    const style = document.createElement("style");
+    style.id = "verificationBannerStyle";
+    style.textContent = `
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Insert banner di awal konten
+  const mainContent = document.querySelector(".container") || document.body;
+  mainContent.insertBefore(banner, mainContent.firstChild);
 }
 
 /* ================= AUTH ================= */
@@ -39,6 +113,19 @@ onAuthStateChanged(auth, async user => {
 
   const data = snap.data();
 
+  // Cek status verifikasi email
+  isEmailVerified = data.emailVerified || false;
+
+  // Tampilkan banner jika belum verified
+  showVerificationBanner(isEmailVerified);
+
+  // Tampilkan notifikasi toast
+  if (!isEmailVerified) {
+    setTimeout(() => {
+      showNotification("⚠️ Email belum diverifikasi. Silakan verifikasi di halaman Profile.", "warning");
+    }, 1000);
+  }
+
   if (data.role === "owner") {
     currentRole = "owner";
   } else if (data.role === "admin") {
@@ -49,7 +136,7 @@ onAuthStateChanged(auth, async user => {
     currentRole = "member";
   }
 
-  renderUserRole(currentRole); // ✅ TAMBAHKAN INI
+  renderUserRole(currentRole);
   checkServerStatus();
   loadLicenses();
   refreshLogs();
@@ -109,13 +196,21 @@ document
   .addEventListener("submit", async e => {
     e.preventDefault();
 
+    // ⚠️ CEK VERIFIKASI EMAIL SEBELUM CREATE LICENSE
+    if (!isEmailVerified) {
+      if (confirm("Email kamu belum diverifikasi. Verifikasi dulu untuk keamanan akun.\n\nKe halaman Profile sekarang?")) {
+        location.href = "profile.html";
+      }
+      return;
+    }
+
     try {
       const token = await currentUser.getIdToken();
 
       const payload = {
         gameId: Number(gameId.value),
         placeId: Number(placeId.value),
-        mapName: mapName.value, // ⬅️ nama map
+        mapName: mapName.value,
         duration: Number(duration.value),
       };
       
@@ -164,9 +259,8 @@ document
 
     } catch (err) {
       showNotification(err.message, "error");
-
     }
-  })
+  });
 
 /* ================= SERVER STATUS ================= */
 async function checkServerStatus() {
@@ -217,7 +311,6 @@ async function loadLicenses() {
     if (!data.success || !Array.isArray(data.licenses)) {
       throw new Error("INVALID_RESPONSE");
     }
-
 
     const licenses = data.licenses;
     const now = Date.now();
@@ -316,49 +409,55 @@ async function testConnection() {
   }
 
   try {
-  const res = await fetch(
-    `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
-  );
+    const res = await fetch(
+      `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
+    );
 
-  const data = await res.json();
+    const data = await res.json();
 
-  // === LOG VERIFY (VALID / INVALID) ===
-  const token = await currentUser.getIdToken();
+    // === LOG VERIFY (VALID / INVALID) ===
+    const token = await currentUser.getIdToken();
 
-  await fetch(`${API_BASE}/logs`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token
-    },
-    body: JSON.stringify({
-      licenseId,
-      action: "TEST_CONNECTION",
-      valid: data.valid === true
-    })
-  });
+    await fetch(`${API_BASE}/logs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        licenseId,
+        action: "TEST_CONNECTION",
+        valid: data.valid === true
+      })
+    });
 
-  if (!data.valid) {
-    throw new Error(data.reason || "INVALID");
-  }
+    if (!data.valid) {
+      throw new Error(data.reason || "INVALID");
+    }
 
-  testResult.innerHTML = `
-  <div style="background:#10b981;color:white;padding:12px;border-radius:8px">
-  ✅ VALID<br>
-  Map Name: ${data.mapName}<br>
-  Game ID: ${data.gameId}<br>
-  Universe ID: ${data.universeId}
-  </div>`;
+    testResult.innerHTML = `
+    <div style="background:#10b981;color:white;padding:12px;border-radius:8px">
+    ✅ VALID<br>
+    Map Name: ${data.mapName}<br>
+    Game ID: ${data.gameId}<br>
+    Universe ID: ${data.universeId}
+    </div>`;
   } catch {
     testResult.innerHTML = `
-  <div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
-  ❌ INVALID
-  </div>`;
+    <div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
+    ❌ INVALID
+    </div>`;
   }
 }
 
 /* ================= REVOKE ================= */
 async function revokeLicense(licenseId) {
+  // ⚠️ CEK VERIFIKASI EMAIL SEBELUM REVOKE
+  if (!isEmailVerified) {
+    showNotification("⚠️ Verifikasi email dulu untuk melakukan revoke", "warning");
+    return;
+  }
+
   const reason = prompt("Alasan revoke (wajib):");
   if (!reason || reason.trim().length < 3)
     return showNotification("Alasan wajib diisi", "error");
