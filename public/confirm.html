@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>R Studio — Action Handler</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:Inter}
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  padding:20px;
+}
+
+.card{
+  width:100%;
+  max-width:520px;
+  padding:40px;
+  border-radius:24px;
+  background:white;
+  box-shadow:0 30px 70px rgba(0,0,0,.25);
+  animation:slideUp .4s ease;
+}
+
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(30px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  margin-bottom:32px;
+}
+.brand img{width:48px;height:48px}
+.brand h1{margin:0;font-size:24px;font-weight:800;color:#111827}
+
+.status-icon{
+  font-size:72px;
+  text-align:center;
+  margin:24px 0;
+  animation:bounce .6s ease;
+}
+
+@keyframes bounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+
+.spinner{
+  width:48px;
+  height:48px;
+  border:4px solid #e5e7eb;
+  border-top-color:#6366f1;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:20px auto;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+h2{
+  text-align:center;
+  color:#111827;
+  margin:20px 0 12px;
+  font-size:26px;
+  font-weight:800;
+}
+
+p{
+  text-align:center;
+  color:#6b7280;
+  line-height:1.7;
+  font-size:15px;
+  margin:12px 0;
+}
+
+.info-box{
+  background:#f3f4f6;
+  border-radius:12px;
+  padding:16px;
+  margin:20px 0;
+  text-align:left;
+}
+.info-box p{
+  margin:8px 0;
+  font-size:14px;
+  color:#4b5563;
+  text-align:left;
+}
+.info-box strong{color:#111827}
+
+label{
+  font-size:13px;
+  font-weight:700;
+  display:block;
+  margin:16px 0 8px;
+  color:#374151;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:2px solid #e5e7eb;
+  font-size:14px;
+  transition:border .2s;
+}
+input:focus{
+  outline:none;
+  border-color:#6366f1;
+}
+
+.button-group{
+  display:flex;
+  gap:12px;
+  margin-top:32px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+button,a.button{
+  padding:14px 28px;
+  border-radius:12px;
+  border:none;
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+  transition:all .2s;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  color:white;
+  box-shadow:0 4px 12px rgba(99,102,241,.3);
+}
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(99,102,241,.4);
+}
+.btn-primary:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.btn-secondary{
+  background:#f3f4f6;
+  color:#374151;
+}
+.btn-secondary:hover{
+  background:#e5e7eb;
+}
+
+.success{color:#16a34a}
+.error{color:#dc2626}
+.loading{color:#6366f1}
+
+@media (max-width:600px){
+  .card{padding:28px 24px}
+  h2{font-size:22px}
+  .button-group{flex-direction:column}
+  button,a.button{width:100%}
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="brand">
+    <img src="./images/RSLogo.png" alt="R Studio">
+    <h1>R STUDIO</h1>
+  </div>
+
+  <div id="content">
+    <div class="spinner"></div>
+    <h2>Memproses...</h2>
+    <p>Mohon tunggu sebentar</p>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "./firebase.js";
+import {
+  verifyPasswordResetCode,
+  confirmPasswordReset,
+  applyActionCode
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const content = document.getElementById("content");
+const params = new URLSearchParams(window.location.search);
+
+// Deteksi mode dari URL
+const mode = params.get("mode");
+const oobCode = params.get("oobCode");
+const token = params.get("token");
+
+// Router: tentukan action berdasarkan parameter
+if (token) {
+  // Custom email verification (token-based)
+  handleEmailVerification(token);
+} else if (mode && oobCode) {
+  // Firebase action handler (mode-based)
+  handleFirebaseAction(mode, oobCode);
+} else {
+  showError(
+    "Link Tidak Valid",
+    "Link ini tidak valid atau rusak. Pastikan Anda mengklik link lengkap dari email."
+  );
+}
+
+/* ================= FIREBASE ACTION HANDLER ================= */
+async function handleFirebaseAction(mode, code) {
+  switch (mode) {
+    case "resetPassword":
+      await handlePasswordReset(code);
+      break;
+    case "verifyEmail":
+      await handleFirebaseEmailVerify(code);
+      break;
+    case "recoverEmail":
+      showError("Recovery Email", "Fitur ini belum tersedia.");
+      break;
+    default:
+      showError("Mode Tidak Dikenal", "Action mode tidak valid.");
+  }
+}
+
+/* ================= PASSWORD RESET ================= */
+async function handlePasswordReset(code) {
+  try {
+    // Verifikasi code masih valid
+    await verifyPasswordResetCode(auth, code);
+    
+    // Tampilkan form reset password
+    content.innerHTML = `
+      <div class="status-icon">🔐</div>
+      <h2>Reset Password</h2>
+      <p>Buat password baru untuk akun kamu</p>
+
+      <form id="resetForm">
+        <label>Password Baru</label>
+        <input type="password" id="newPassword" placeholder="Minimal 6 karakter" required>
+
+        <label>Konfirmasi Password</label>
+        <input type="password" id="confirmPassword" placeholder="Ketik ulang password" required>
+
+        <div class="button-group">
+          <button type="submit" class="button btn-primary" id="submitBtn">
+            💾 Simpan Password
+          </button>
+        </div>
+      </form>
+
+      <div class="button-group" style="margin-top:16px">
+        <a href="login.html" class="button btn-secondary">← Kembali ke Login</a>
+      </div>
+    `;
+
+    const form = document.getElementById("resetForm");
+    const newPassword = document.getElementById("newPassword");
+    const confirmPassword = document.getElementById("confirmPassword");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+
+      if (newPassword.value !== confirmPassword.value) {
+        alert("❌ Password tidak cocok!");
+        return;
+      }
+
+      if (newPassword.value.length < 6) {
+        alert("❌ Password minimal 6 karakter!");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Menyimpan...";
+
+      try {
+        await confirmPasswordReset(auth, code, newPassword.value);
+        
+        showSuccess(
+          "Password Berhasil Diubah!",
+          "Password kamu sudah berhasil diperbarui. Silakan login dengan password baru."
+        );
+
+        setTimeout(() => location.href = "login.html", 3000);
+
+      } catch (error) {
+        console.error("Reset error:", error);
+        alert("❌ Gagal reset password. Link mungkin sudah expired.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "💾 Simpan Password";
+      }
+    };
+
+  } catch (error) {
+    console.error("Verify code error:", error);
+    showError(
+      "Link Expired",
+      "Link reset password sudah tidak valid atau expired. Silakan minta link baru."
+    );
+  }
+}
+
+/* ================= FIREBASE EMAIL VERIFICATION ================= */
+async function handleFirebaseEmailVerify(code) {
+  try {
+    await applyActionCode(auth, code);
+    
+    showSuccess(
+      "Email Terverifikasi!",
+      "Email kamu sudah berhasil diverifikasi melalui Firebase."
+    );
+
+  } catch (error) {
+    console.error("Firebase verify error:", error);
+    showError(
+      "Verifikasi Gagal",
+      "Link verifikasi tidak valid atau sudah expired."
+    );
+  }
+}
+
+/* ================= CUSTOM EMAIL VERIFICATION (TOKEN) ================= */
+async function handleEmailVerification(token) {
+  try {
+    // Get token dari Firestore
+    const tokenRef = doc(db, "email_verification_tokens", token);
+    const tokenSnap = await getDoc(tokenRef);
+
+    if (!tokenSnap.exists()) {
+      showError(
+        "Token Tidak Ditemukan",
+        "Token verifikasi tidak ditemukan atau sudah pernah digunakan. Silakan minta verifikasi email baru dari halaman Profile."
+      );
+      return;
+    }
+
+    const tokenData = tokenSnap.data();
+
+    // Check expiry
+    if (Date.now() > tokenData.expiry) {
+      await deleteDoc(tokenRef);
+      showError(
+        "Token Sudah Kedaluwarsa",
+        "Link verifikasi ini sudah melewati batas waktu (24 jam). Silakan minta verifikasi email baru dari halaman Profile.",
+        true
+      );
+      return;
+    }
+
+    // Update user emailVerified di Firestore
+    await updateDoc(doc(db, "users", tokenData.uid), {
+      emailVerified: true,
+      verifiedAt: Date.now()
+    });
+
+    // Delete token setelah digunakan (one-time use)
+    await deleteDoc(tokenRef);
+
+    showSuccess(
+      "Email Terverifikasi!",
+      `Selamat! Email <strong>${tokenData.email}</strong> sudah berhasil diverifikasi.`,
+      `
+      <div class="info-box">
+        <p><strong>✨ Apa selanjutnya?</strong></p>
+        <p>• Akun Anda sekarang sudah terverifikasi</p>
+        <p>• Anda dapat menggunakan semua fitur R Studio</p>
+        <p>• Keamanan akun Anda lebih terjamin</p>
+      </div>
+      `
+    );
+
+  } catch (error) {
+    console.error("Verification error:", error);
+    showError(
+      "Terjadi Kesalahan",
+      "Maaf, terjadi kesalahan saat memverifikasi email Anda. Silakan coba lagi atau hubungi support jika masalah berlanjut."
+    );
+  }
+}
+
+/* ================= UI HELPER FUNCTIONS ================= */
+function showSuccess(title, message, extraHTML = "") {
+  content.innerHTML = `
+    <div class="status-icon success">✅</div>
+    <h2>${title}</h2>
+    <p>${message}</p>
+    ${extraHTML}
+
+    <div class="button-group">
+      <a href="profile.html" class="button btn-primary">Kembali ke Profile</a>
+      <a href="license.html" class="button btn-secondary">Buat License</a>
+    </div>
+  `;
+}
+
+function showError(title, message, isExpired = false) {
+  content.innerHTML = `
+    <div class="status-icon error">❌</div>
+    <h2>${title}</h2>
+    <p>${message}</p>
+
+    <div class="button-group">
+      <a href="profile.html" class="button btn-primary">
+        ${isExpired ? 'Kirim Ulang Verifikasi' : 'Ke Halaman Profile'}
+      </a>
+      <a href="https://rstudiolab.online/" class="button btn-secondary">Kembali ke Home</a>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
