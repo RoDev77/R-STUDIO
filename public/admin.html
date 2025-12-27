@@ -64,6 +64,7 @@ body{
   box-shadow:0 25px 50px rgba(0,0,0,.15);
   overflow:hidden;
   display:none;
+  z-index:99;
 }
 
 .dropdown a{
@@ -96,6 +97,10 @@ body{
   font-size:13px;
   font-weight:600;
   cursor:pointer;
+  transition:all .2s;
+}
+.tab:hover{
+  background:#d1d5db;
 }
 .tab.active{
   background:#6366f1;
@@ -117,7 +122,7 @@ thead th{
   font-size:12px;text-transform:uppercase;
   color:#6b7280;text-align:left;padding:10px;
 }
-tbody tr{background:#f9fafb}
+tbody tr{background:#f9fafb;transition:all .2s}
 tbody tr:hover{background:#eef2ff}
 td{padding:14px}
 
@@ -139,15 +144,25 @@ td{padding:14px}
 .free{background:#e5e7eb;color:#374151}
 .admin{background:#fef3c7;color:#92400e}
 .owner{background:#fde68a;color:#92400e}
+.member{background:#e5e7eb;color:#374151}
 
 /* ===== BUTTON ===== */
 button{
   padding:8px 14px;border-radius:12px;
   border:none;font-size:12px;
   font-weight:700;cursor:pointer;
+  transition:all .2s;
+}
+button:hover{
+  opacity:0.8;
+}
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
 }
 .primary{background:#6366f1;color:white}
 .danger{background:#ef4444;color:white}
+.success{background:#10b981;color:white}
 .gray{background:#e5e7eb}
 
 /* ===== INPUT ===== */
@@ -159,7 +174,7 @@ input:focus{outline:none;border-color:#6366f1}
 
 /* ===== HIDDEN ===== */
 .hidden{display:none}
-.center{text-align:center;color:#6b7280}
+.center{text-align:center;color:#6b7280;padding:20px}
 </style>
 </head>
 
@@ -170,20 +185,21 @@ input:focus{outline:none;border-color:#6366f1}
     <h2>R STUDIO</h2>
     <span>Admin Panel</span>
   </div>
-<!-- PROFILE -->
-    <div class="profile">
-      <div class="avatar" id="avatar">
-        <img id="avatarImg" style="display:none">
-        <span id="avatarText">R</span>
-      </div>
 
-      <div class="dropdown" id="dropdown">
-        <a href="https://rstudiolab.online/">🚀 Home</a>
-        <a href="license.html">🔐 License</a>
-        <a href="profile.html">👤 Profile</a>
-        <a href="login.html" id="logoutBtn">🚪 Logout</a>
-      </div>
+  <!-- PROFILE -->
+  <div class="profile">
+    <div class="avatar" id="avatar">
+      <img id="avatarImg" style="display:none">
+      <span id="avatarText">R</span>
     </div>
+
+    <div class="dropdown" id="dropdown">
+      <a href="https://rstudiolab.online/">🚀 Home</a>
+      <a href="license.html">🔐 License</a>
+      <a href="profile.html">👤 Profile</a>
+      <a href="#" id="logoutBtn">🚪 Logout</a>
+    </div>
+  </div>
 </div>
 
 <div class="container">
@@ -219,233 +235,367 @@ input:focus{outline:none;border-color:#6366f1}
       <thead>
         <tr>
           <th>User</th>
+          <th>Total</th>
+          <th>ID Transaksi</th>
           <th>Status</th>
           <th>Aksi</th>
         </tr>
       </thead>
       <tbody id="vipList"></tbody>
     </table>
-    <p id="vipEmpty" class="center hidden">Tidak ada request</p>
+    <p id="vipEmpty" class="center hidden">Tidak ada request VIP</p>
   </div>
 
   <!-- SYSTEM -->
   <div id="system" class="card hidden">
-    <h3>Maintenance Mode</h3>
+    <h3>⚙️ Maintenance Mode</h3>
     <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="primary" id="mtOn">Aktifkan</button>
-      <button class="danger" id="mtOff">Matikan</button>
+      <button class="danger" id="mtOn">🔴 Aktifkan</button>
+      <button class="success" id="mtOff">🟢 Matikan</button>
     </div>
-    <p id="mtStatus" style="margin-top:12px"></p>
+    <p id="mtStatus" style="margin-top:12px;font-weight:600"></p>
   </div>
 
   <!-- LOGS -->
   <div id="logs" class="card hidden">
+    <h3>📋 Activity Logs</h3>
     <table>
       <thead>
         <tr>
           <th>Action</th>
           <th>Target</th>
           <th>Admin</th>
+          <th>Time</th>
         </tr>
       </thead>
       <tbody id="logList"></tbody>
     </table>
+    <p id="logEmpty" class="center hidden">Tidak ada logs</p>
   </div>
 
 </div>
 
 <script type="module">
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, getAuth, signOut } from
-"https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { 
+  onAuthStateChanged, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
 import {
-  collection, getDocs, getDoc, doc,
-  updateDoc, addDoc, serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-  
+  collection, 
+  getDocs, 
+  getDoc, 
+  doc,
+  updateDoc, 
+  addDoc, 
+  serverTimestamp,
+  query,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+/* ===== AVATAR DROPDOWN ===== */
 const avatar = document.getElementById("avatar");
 const avatarImg = document.getElementById("avatarImg");
 const avatarText = document.getElementById("avatarText");
 const dropdown = document.getElementById("dropdown");
 
 avatar.onclick = () => {
-  dropdown.style.display =
-    dropdown.style.display === "block" ? "none" : "block";
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 };
 
-/* ===== TABS ===== */
-document.querySelectorAll(".tab").forEach(t=>{
-  t.onclick=()=>{
-    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
-    t.classList.add("active");
-    document.getElementById(t.dataset.tab).classList.remove("hidden");
+// Close dropdown when clicking outside
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".profile")) {
+    dropdown.style.display = "none";
   }
 });
 
+/* ===== TABS ===== */
+document.querySelectorAll(".tab").forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
+    t.classList.add("active");
+    document.getElementById(t.dataset.tab).classList.remove("hidden");
+  };
+});
+
 /* ===== AUTH ===== */
-onAuthStateChanged(auth, async user => {
-  if (!user) return location.href = "login.html";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
 
-  const snap = await getDoc(doc(db,"users",user.uid));
-  if (!snap.exists()) return location.href = "/";
+  const userDocRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userDocRef);
+  
+  if (!snap.exists()) {
+    alert("❌ User data tidak ditemukan");
+    location.href = "/";
+    return;
+  }
 
-  const data = snap.data(); // ✅ FIX UTAMA DI SINI
+  const userData = snap.data();
 
-  if (!["admin","owner"].includes(data.role))
-    return location.href = "/";
+  // Check admin/owner
+  if (!["admin", "owner"].includes(userData.role)) {
+    alert("❌ Akses ditolak. Hanya admin/owner yang bisa mengakses panel ini.");
+    location.href = "/";
+    return;
+  }
 
   /* ===== AVATAR SYNC ===== */
-  if (data.photoBase64) {
-    avatarImg.src = data.photoBase64;
+  if (userData.photoBase64) {
+    avatarImg.src = userData.photoBase64;
     avatarImg.style.display = "block";
     avatarText.style.display = "none";
   } else {
-    avatarText.textContent =
-      (data.name || user.email)[0].toUpperCase();
+    avatarText.textContent = (userData.name || user.email)[0].toUpperCase();
     avatarImg.style.display = "none";
     avatarText.style.display = "block";
   }
 
+  // Load data
   loadUsers();
   loadVip();
   loadMaintenance();
   loadLogs();
 });
 
-
-document.getElementById("logoutBtn").onclick = async () => {
-  await signOut(auth);
-  location.href = "login.html";
+/* ===== LOGOUT ===== */
+document.getElementById("logoutBtn").onclick = async (e) => {
+  e.preventDefault();
+  if (confirm("Logout dari admin panel?")) {
+    await signOut(auth);
+    location.href = "login.html";
+  }
 };
 
 /* ===== USERS ===== */
 const userList = document.getElementById("userList");
 const searchUser = document.getElementById("searchUser");
-let users=[];
+let users = [];
 
-async function loadUsers(){
-  const snap = await getDocs(collection(db,"users"));
-  users = snap.docs.map(d=>({uid:d.id,...d.data()}));
-  renderUsers();
+async function loadUsers() {
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    renderUsers();
+  } catch (err) {
+    console.error("Load users error:", err);
+    alert("❌ Gagal load users: " + err.message);
+  }
 }
 
 searchUser.oninput = renderUsers;
 
-function renderUsers(){
-  userList.innerHTML="";
+function renderUsers() {
+  userList.innerHTML = "";
   const q = searchUser.value.toLowerCase();
   const filtered = users.filter(u =>
     !q || u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
   );
 
-  document.getElementById("userEmpty").classList.toggle("hidden", filtered.length);
+  document.getElementById("userEmpty").classList.toggle("hidden", filtered.length > 0);
 
-  filtered.forEach(u=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
+  filtered.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
       <td class="user">
-        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+        <img src="${u.photoBase64 || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}">
         <div>
           <strong>${u.name || "-"}</strong>
           <small>${u.email}</small>
         </div>
       </td>
-      <td><span class="badge ${u.role}">${u.role}</span></td>
-      <td><span class="badge ${u.isVIP?"vip":"free"}">${u.isVIP?"VIP":"FREE"}</span></td>
+      <td><span class="badge ${u.role}">${u.role.toUpperCase()}</span></td>
+      <td><span class="badge ${u.isVIP ? "vip" : "free"}">${u.isVIP ? "VIP" : "FREE"}</span></td>
       <td>
-        ${u.role==="member"
-          ? `<button class="primary">Toggle VIP</button>`
+        ${u.role === "member"
+          ? `<button class="primary" data-uid="${u.uid}">Toggle VIP</button>`
           : "—"}
       </td>
     `;
-    const btn=tr.querySelector("button");
-    if(btn) btn.onclick=()=>toggleVIP(u);
+    
+    const btn = tr.querySelector("button");
+    if (btn) {
+      btn.onclick = () => toggleVIP(u);
+    }
+    
     userList.appendChild(tr);
   });
 }
 
-async function toggleVIP(u){
-  if(!confirm("Ubah status VIP user ini?")) return;
-  await updateDoc(doc(db,"users",u.uid),{isVIP:!u.isVIP});
-  await log("TOGGLE_VIP",u.uid);
-  loadUsers();
+async function toggleVIP(u) {
+  if (!confirm(`Ubah status VIP untuk ${u.email}?`)) return;
+  
+  try {
+    await updateDoc(doc(db, "users", u.uid), { isVIP: !u.isVIP });
+    await log("TOGGLE_VIP", u.uid);
+    alert(`✅ Status VIP ${u.email} berhasil diubah`);
+    loadUsers();
+  } catch (err) {
+    alert("❌ Gagal update VIP: " + err.message);
+  }
 }
 
 /* ===== VIP REQUESTS ===== */
-async function loadVip(){
-  const snap = await getDocs(collection(db,"vip_requests"));
-  const list = snap.docs.map(d=>({id:d.id,...d.data()}));
-  const tbody=document.getElementById("vipList");
-  tbody.innerHTML="";
-  document.getElementById("vipEmpty").classList.toggle("hidden", list.length);
+async function loadVip() {
+  try {
+    const snap = await getDocs(collection(db, "vip_requests"));
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const tbody = document.getElementById("vipList");
+    
+    tbody.innerHTML = "";
+    document.getElementById("vipEmpty").classList.toggle("hidden", list.length > 0);
 
-  list.forEach(v=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${v.email}</td>
-      <td>${v.status}</td>
-      <td>
-        ${v.status==="pending"
-          ? `<button class="primary">Approve</button>`
-          : "—"}
-      </td>
-    `;
-    const btn=tr.querySelector("button");
-    if(btn) btn.onclick=()=>approveVIP(v);
-    tbody.appendChild(tr);
-  });
+    list.forEach(v => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <strong>${v.name || "-"}</strong><br>
+          <small>${v.email}</small>
+        </td>
+        <td>Rp ${(v.amount || 0).toLocaleString("id-ID")}</td>
+        <td><small>${v.transactionId || "-"}</small></td>
+        <td><span class="badge ${v.status === "approved" ? "vip" : "free"}">${v.status.toUpperCase()}</span></td>
+        <td>
+          ${v.status === "pending"
+            ? `<button class="success" data-id="${v.id}">✅ Approve</button>`
+            : "—"}
+        </td>
+      `;
+      
+      const btn = tr.querySelector("button");
+      if (btn) {
+        btn.onclick = () => approveVIP(v);
+      }
+      
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Load VIP error:", err);
+    alert("❌ Gagal load VIP requests: " + err.message);
+  }
 }
 
-async function approveVIP(v){
-  await updateDoc(doc(db,"vip_requests",v.id),{
-    status:"approved",approvedAt:serverTimestamp()
-  });
-  await updateDoc(doc(db,"users",v.uid),{isVIP:true});
-  await log("APPROVE_VIP",v.uid);
-  loadVip();loadUsers();
+async function approveVIP(v) {
+  if (!confirm(`Approve VIP request dari ${v.email}?`)) return;
+  
+  try {
+    // Update request status
+    await updateDoc(doc(db, "vip_requests", v.id), {
+      status: "approved",
+      approvedAt: serverTimestamp()
+    });
+    
+    // Set user VIP
+    await updateDoc(doc(db, "users", v.uid), { isVIP: true });
+    
+    // Log activity
+    await log("APPROVE_VIP", v.uid);
+    
+    alert(`✅ VIP request untuk ${v.email} berhasil diapprove!`);
+    
+    loadVip();
+    loadUsers();
+  } catch (err) {
+    alert("❌ Gagal approve VIP: " + err.message);
+  }
 }
 
 /* ===== MAINTENANCE ===== */
-const mtRef=doc(db,"settings","maintenance");
-async function loadMaintenance(){
-  const snap=await getDoc(mtRef);
-  document.getElementById("mtStatus").textContent =
-    snap.exists() && snap.data().enabled
-      ? "🟢 Maintenance AKTIF"
-      : "⚪ Maintenance NONAKTIF";
+const mtRef = doc(db, "settings", "maintenance");
+
+async function loadMaintenance() {
+  try {
+    const snap = await getDoc(mtRef);
+    const isEnabled = snap.exists() && snap.data().enabled;
+    
+    document.getElementById("mtStatus").textContent = isEnabled
+      ? "🔴 Maintenance Mode: AKTIF"
+      : "🟢 Maintenance Mode: NONAKTIF";
+  } catch (err) {
+    console.error("Load maintenance error:", err);
+  }
 }
-document.getElementById("mtOn").onclick=()=>updateDoc(mtRef,{enabled:true});
-document.getElementById("mtOff").onclick=()=>updateDoc(mtRef,{enabled:false});
+
+document.getElementById("mtOn").onclick = async () => {
+  if (!confirm("Aktifkan maintenance mode? Website akan tidak bisa diakses.")) return;
+  
+  try {
+    await updateDoc(mtRef, { enabled: true });
+    alert("✅ Maintenance mode diaktifkan");
+    loadMaintenance();
+  } catch (err) {
+    alert("❌ Gagal: " + err.message);
+  }
+};
+
+document.getElementById("mtOff").onclick = async () => {
+  try {
+    await updateDoc(mtRef, { enabled: false });
+    alert("✅ Maintenance mode dinonaktifkan");
+    loadMaintenance();
+  } catch (err) {
+    alert("❌ Gagal: " + err.message);
+  }
+};
 
 /* ===== LOGS ===== */
-async function loadLogs(){
-  const snap = await getDocs(collection(db,"admin_logs"));
-  const tbody=document.getElementById("logList");
-  tbody.innerHTML="";
-  snap.docs.slice(0,50).forEach(l=>{
-    const d=l.data();
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${d.action}</td>
-      <td>${d.targetUid}</td>
-      <td>${d.adminEmail}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+async function loadLogs() {
+  try {
+    const q = query(
+      collection(db, "admin_logs"),
+      orderBy("timestamp", "desc"),
+      limit(50)
+    );
+    
+    const snap = await getDocs(q);
+    const tbody = document.getElementById("logList");
+    
+    tbody.innerHTML = "";
+    document.getElementById("logEmpty")?.classList.toggle("hidden", snap.docs.length > 0);
+
+    snap.docs.forEach(l => {
+      const d = l.data();
+      const tr = document.createElement("tr");
+      
+      const timestamp = d.timestamp?.toDate 
+        ? d.timestamp.toDate().toLocaleString("id-ID")
+        : "-";
+      
+      tr.innerHTML = `
+        <td><strong>${d.action}</strong></td>
+        <td><small>${d.targetUid}</small></td>
+        <td><small>${d.adminEmail}</small></td>
+        <td><small>${timestamp}</small></td>
+      `;
+      
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Load logs error:", err);
+  }
 }
 
-async function log(action,targetUid){
-  await addDoc(collection(db,"admin_logs"),{
-    action,targetUid,
-    adminUid:auth.currentUser.uid,
-    adminEmail:auth.currentUser.email,
-    timestamp:serverTimestamp()
-  });
+/* ===== LOG HELPER ===== */
+async function log(action, targetUid) {
+  try {
+    await addDoc(collection(db, "admin_logs"), {
+      action,
+      targetUid,
+      adminUid: auth.currentUser.uid,
+      adminEmail: auth.currentUser.email,
+      timestamp: serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Log error:", err);
+  }
 }
-
-
 </script>
 
 </body>

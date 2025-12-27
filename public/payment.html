@@ -122,10 +122,21 @@ button{
   color:#78350f;
 }
 
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
 .note{
   margin-top:14px;
   font-size:12px;
   color:#666;
+}
+
+.loading{
+  text-align:center;
+  padding:20px;
+  color:#6366f1;
 }
 </style>
 </head>
@@ -139,7 +150,12 @@ button{
     <p>Silakan lakukan pembayaran melalui QRIS</p>
   </div>
 
-  <div class="grid">
+  <div id="loadingState" class="loading">
+    <div style="font-size:48px">⏳</div>
+    <div style="margin-top:12px">Memuat data pembayaran...</div>
+  </div>
+
+  <div id="mainContent" class="grid" style="display:none">
 
     <!-- QRIS -->
     <div class="qris-box">
@@ -173,11 +189,10 @@ button{
 
 <!-- ===== FIREBASE ===== -->
 <script type="module">
-import { checkMaintenance } from "./firebase.js";
+import { checkMaintenance, auth, db } from "./firebase.js";
 await checkMaintenance();
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
   collection,
   doc,
@@ -195,114 +210,178 @@ let currentUser;
 let uniqueCode;
 let transactionId;
 
-async function getVIPSession(uid){
+/* ===== GET/CREATE VIP SESSION ===== */
+async function getVIPSession(uid) {
   const ref = doc(db, "vip_sessions", uid);
-  const snap = await getDoc(ref);
-  const now = Date.now();
+  
+  try {
+    const snap = await getDoc(ref);
+    const now = Date.now();
 
-  if (snap.exists()) {
-    const d = snap.data();
-    if (d.expiresAt.toMillis() > now) {
-      return d;
+    if (snap.exists()) {
+      const d = snap.data();
+      
+      // Cek apakah session masih valid (belum expired)
+      if (d.expiresAt.toMillis() > now) {
+        console.log("✅ Using existing session");
+        return d;
+      }
+
+      // Session expired, update dengan data baru
+      console.log("🔄 Session expired, creating new one");
+      const newData = {
+        uniqueCode: Math.floor(7 + Math.random() * 77),
+        transactionId: "RS-VIP-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+        expiresAt: Timestamp.fromMillis(now + 86400000), // 24 jam
+        createdAt: serverTimestamp()
+      };
+
+      await updateDoc(ref, newData);
+      return newData;
     }
 
-    // 🔁 UPDATE SAJA
-    const newData = {
+    // Belum ada session, buat baru
+    console.log("🆕 Creating new session");
+    const data = {
       uniqueCode: Math.floor(7 + Math.random() * 77),
-      transactionId: "RS-VIP-" +
-        Math.random().toString(36).substring(2,8).toUpperCase(),
+      transactionId: "RS-VIP-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
       expiresAt: Timestamp.fromMillis(now + 86400000),
       createdAt: serverTimestamp()
     };
 
-    await updateDoc(ref, newData);
-    return newData;
+    await setDoc(ref, data);
+    return data;
+    
+  } catch (err) {
+    console.error("❌ VIP Session error:", err);
+    
+    // Fallback: generate session in-memory (tidak tersimpan)
+    console.warn("⚠️ Using fallback session (not saved to Firestore)");
+    alert("⚠️ Tidak dapat menyimpan session. ID transaksi akan dibuat sementara.");
+    
+    return {
+      uniqueCode: Math.floor(7 + Math.random() * 77),
+      transactionId: "RS-VIP-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 86400000),
+      createdAt: Timestamp.now()
+    };
   }
-
-  // 🆕 CREATE
-  const data = {
-    uniqueCode: Math.floor(7 + Math.random() * 77),
-    transactionId: "RS-VIP-" +
-      Math.random().toString(36).substring(2,8).toUpperCase(),
-    expiresAt: Timestamp.fromMillis(now + 86400000),
-    createdAt: serverTimestamp()
-  };
-
-  await setDoc(ref, data);
-  return data;
 }
 
-
-onAuthStateChanged(auth, async user => {
-  if (!user) return location.href = "login.html";
+/* ===== AUTH ===== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
 
   currentUser = user;
 
-  const vip = await getVIPSession(user.uid);
+  try {
+    // Get or create VIP session
+    const vip = await getVIPSession(user.uid);
 
-  uniqueCode = vip.uniqueCode;
-  transactionId = vip.transactionId;
+    uniqueCode = vip.uniqueCode;
+    transactionId = vip.transactionId;
 
-  document.getElementById("uniqueCode").textContent = uniqueCode;
-  document.getElementById("totalText").textContent =
-    `Rp ${(25000 + uniqueCode).toLocaleString("id-ID")}`;
+    // Update UI
+    document.getElementById("uniqueCode").textContent = uniqueCode;
+    document.getElementById("totalText").textContent = `Rp ${(25000 + uniqueCode).toLocaleString("id-ID")}`;
+    document.getElementById("trxId").value = transactionId;
 
-  document.getElementById("trxId").value = transactionId;
+    // Show content, hide loading
+    document.getElementById("loadingState").style.display = "none";
+    document.getElementById("mainContent").style.display = "grid";
+    
+  } catch (err) {
+    console.error("Init error:", err);
+    alert("❌ Gagal memuat halaman pembayaran: " + err.message);
+  }
 });
 
-/* === SEND === */
-document.getElementById("sendBtn").onclick = async ()=>{
+/* ===== SEND TO DISCORD ===== */
+document.getElementById("sendBtn").onclick = async () => {
   const file = document.getElementById("proof").files[0];
-  if(!file) return alert("Upload bukti transfer!");
+  
+  if (!file) {
+    alert("⚠️ Upload bukti transfer terlebih dahulu!");
+    return;
+  }
 
-  const reader = new FileReader();
+  if (!currentUser) {
+    alert("❌ Anda belum login!");
+    return;
+  }
 
-  reader.onload = async () => {
+  if (!transactionId || !uniqueCode) {
+    alert("❌ Data transaksi tidak valid. Refresh halaman dan coba lagi.");
+    return;
+  }
 
-  const formData = new FormData();
-  formData.append("file", file, "bukti.jpg");
+  const sendBtn = document.getElementById("sendBtn");
+  sendBtn.disabled = true;
+  sendBtn.textContent = "⏳ Mengirim...";
 
-  formData.append("payload_json", JSON.stringify({
-    username: "Verifikasi VIP",
-    embeds: [{
-      title: "💎 Pembayaran VIP Masuk",
-      color: 0xfacc15,
-      fields: [
-        { name: "👤 Nama", value: currentUser.displayName || "Member VIP", inline: true },
-        { name: "📧 Email", value: currentUser.email, inline: true },
-        { name: "💰 Total", value: `Rp ${(25000 + uniqueCode).toLocaleString("id-ID")}`, inline: true },
-        { name: "🆔 ID Transaksi", value: transactionId }
-      ],
-      image: { url: "attachment://bukti.jpg" },
-      footer: { text: "R STUDIO • Manual Verification" },
-      timestamp: new Date()
-    }]
-  }));
+  try {
+    // Buat FormData untuk Discord webhook
+    const formData = new FormData();
+    formData.append("file", file, "bukti.jpg");
 
-  await fetch(WEBHOOK_URL, {
-    method: "POST",
-    body: formData
-  });
+    formData.append("payload_json", JSON.stringify({
+      username: "Verifikasi VIP",
+      embeds: [{
+        title: "💎 Pembayaran VIP Masuk",
+        color: 0xfacc15,
+        fields: [
+          { name: "👤 Nama", value: currentUser.displayName || "Member VIP", inline: true },
+          { name: "📧 Email", value: currentUser.email, inline: true },
+          { name: "💰 Total", value: `Rp ${(25000 + uniqueCode).toLocaleString("id-ID")}`, inline: true },
+          { name: "🔢 Kode Unik", value: `${uniqueCode}`, inline: true },
+          { name: "🆔 ID Transaksi", value: transactionId }
+        ],
+        image: { url: "attachment://bukti.jpg" },
+        footer: { text: "R STUDIO • Manual Verification" },
+        timestamp: new Date().toISOString()
+      }]
+    }));
 
-  // simpan ke firestore
-await addDoc(collection(db, "vip_requests"), {
-  uid: currentUser.uid,
-  email: currentUser.email,
-  amount: 25000 + uniqueCode,
-  uniqueCode,
-  transactionId,
-  status: "pending",
-  createdAt: serverTimestamp()
-});
+    // Kirim ke Discord
+    const webhookResponse = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      body: formData
+    });
 
-  alert("✅ Bukti dikirim ke admin");
-  location.href = "https://rstudiolab.online/";
+    if (!webhookResponse.ok) {
+      throw new Error("Gagal mengirim ke Discord");
+    }
+
+    console.log("✅ Discord webhook sent");
+
+    // Simpan ke Firestore
+    await addDoc(collection(db, "vip_requests"), {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      name: currentUser.displayName || "",
+      amount: 25000 + uniqueCode,
+      uniqueCode,
+      transactionId,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    console.log("✅ Firestore saved");
+
+    alert("✅ Bukti transfer berhasil dikirim ke admin!\n\n⏳ Tunggu konfirmasi dalam 1x24 jam.");
+    location.href = "https://rstudiolab.online/";
+
+  } catch (err) {
+    console.error("Send error:", err);
+    alert("❌ Gagal mengirim bukti: " + err.message);
+    
+    sendBtn.disabled = false;
+    sendBtn.textContent = "📤 Kirim ke Admin";
+  }
 };
-
-
-  reader.readAsDataURL(file);
-};
-
 </script>
 
 </body>
