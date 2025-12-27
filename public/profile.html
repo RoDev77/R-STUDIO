@@ -215,7 +215,7 @@ body{
 <div class="navbar">
   <div class="brand">
     <h2>R STUDIO</h2>
-    <span>Creative Dashboard</span>
+    <span>Creative dashboard for Roblox developers & creators</span>
   </div>
 
   <div class="profile-nav">
@@ -305,7 +305,8 @@ import {
   updateProfile,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword
+  updatePassword,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 import {
@@ -370,18 +371,22 @@ navAvatar.onclick = ()=>{
 
 /* ================= UPDATE EMAIL VERIFICATION STATUS ================= */
 function updateVerificationStatus(isVerified) {
+  const refreshDiv = document.getElementById("refreshStatusDiv");
+  
   if (isVerified) {
     // Email sudah diverifikasi
     verificationBox.classList.add("verified");
     verificationIcon.textContent = "✅";
     verificationText.textContent = "Email sudah diverifikasi";
     verifyBtn.style.display = "none";
+    if(refreshDiv) refreshDiv.style.display = "none";
   } else {
     // Email belum diverifikasi
     verificationBox.classList.remove("verified");
     verificationIcon.textContent = "⚠️";
     verificationText.textContent = "Email belum diverifikasi";
     verifyBtn.style.display = "block";
+    if(refreshDiv) refreshDiv.style.display = "block";
     
     // Update button cooldown
     setInterval(updateVerifyBtn, 1000);
@@ -389,14 +394,10 @@ function updateVerificationStatus(isVerified) {
   }
 }
 
-onAuthStateChanged(auth, async user=>{
-  if(!user) return location.href="login.html";
-  currentUser = user;
+async function loadUserProfile() {
+  if(!currentUser) return;
 
-  emailInput.value = user.email;
-  nameInput.value = user.displayName || "";
-
-  const snap = await getDoc(doc(db,"users",user.uid));
+  const snap = await getDoc(doc(db,"users",currentUser.uid));
   if(snap.exists()){
     const data = snap.data();
 
@@ -418,12 +419,33 @@ onAuthStateChanged(auth, async user=>{
     const isVerified = data.emailVerified || false;
     updateVerificationStatus(isVerified);
   } else {
-    // Jika user baru dan belum ada di Firestore
     updateVerificationStatus(false);
+  }
+}
+
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+  currentUser = user;
+
+  emailInput.value = user.email;
+  nameInput.value = user.displayName || "";
+
+  await loadUserProfile();
+
+  // ✅ CHECK URL PARAMETER (jika dari verifikasi)
+  const urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('verified') === 'true') {
+    // Refresh data setelah verifikasi
+    setTimeout(async () => {
+      await loadUserProfile();
+      alert("🎉 Email berhasil diverifikasi!");
+      // Clear URL parameter
+      window.history.replaceState({}, document.title, "/profile.html");
+    }, 500);
   }
 });
 
-/* ================= SEND EMAIL VERIFICATION ================= */
+/* ================= SEND EMAIL VERIFICATION (FIREBASE) ================= */
 verifyBtn.onclick = async () => {
   if (remaining() > 0) return;
   
@@ -431,29 +453,47 @@ verifyBtn.onclick = async () => {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
     
-    // Kirim request ke API endpoint
-    const response = await fetch("/api/send-verification", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        email: currentUser.email,
-        uid: currentUser.uid 
-      })
+    // ✅ Gunakan Firebase built-in email verification
+    await sendEmailVerification(currentUser, {
+      url: window.location.origin + '/action.html',
+      handleCodeInApp: false
     });
-
-    const result = await response.json();
     
-    if (result.ok) {
-      localStorage.setItem(KEY, Date.now());
-      alert("✅ Email verifikasi telah dikirim! Silakan cek inbox atau folder spam Anda.");
-      updateVerifyBtn();
-    } else {
-      throw new Error(result.error || "Gagal mengirim email");
-    }
+    localStorage.setItem(KEY, Date.now());
+    alert("✅ Email verifikasi telah dikirim menggunakan Firebase!\n\nSilakan cek inbox atau folder spam Anda.");
+    updateVerifyBtn();
+    
+    // Check verification status setiap 5 detik
+    const checkInterval = setInterval(async () => {
+      await currentUser.reload();
+      if (currentUser.emailVerified) {
+        clearInterval(checkInterval);
+        
+        // Update di Firestore
+        await updateDoc(doc(db,"users",currentUser.uid), {
+          emailVerified: true,
+          verifiedAt: Date.now()
+        });
+        
+        updateVerificationStatus(true);
+        alert("🎉 Email Anda telah diverifikasi!");
+      }
+    }, 5000);
     
   } catch (error) {
     console.error("Error sending verification:", error);
-    alert("❌ Gagal mengirim email verifikasi. Silakan coba lagi.");
+    
+    let errorMsg = "❌ Gagal mengirim email verifikasi.";
+    
+    if (error.code === 'auth/too-many-requests') {
+      errorMsg = "❌ Terlalu banyak percobaan. Tunggu beberapa saat.";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMsg = "❌ Email tidak valid.";
+    } else if (error.code === 'auth/user-not-found') {
+      errorMsg = "❌ User tidak ditemukan.";
+    }
+    
+    alert(errorMsg + "\n\nDetail: " + error.message);
     verifyBtn.disabled = false;
     verifyBtn.textContent = "Verifikasi Email";
   }
@@ -507,18 +547,41 @@ document.getElementById("changePass").onclick = async ()=>{
   const newPass = newPassInput.value;
   const confirm = confirmPassInput.value;
 
-  if(newPass !== confirm)
-    return alert("Password baru tidak cocok");
+  if(!oldPass || !newPass || !confirm) {
+    return alert("❌ Semua field password harus diisi");
+  }
 
-  const cred = EmailAuthProvider.credential(
-    currentUser.email,
-    oldPass
-  );
+  if(newPass !== confirm) {
+    return alert("❌ Password baru tidak cocok");
+  }
 
-  await reauthenticateWithCredential(currentUser,cred);
-  await updatePassword(currentUser,newPass);
+  if(newPass.length < 6) {
+    return alert("❌ Password minimal 6 karakter");
+  }
 
-  alert("🔐 Password berhasil diubah");
+  try {
+    const cred = EmailAuthProvider.credential(
+      currentUser.email,
+      oldPass
+    );
+
+    await reauthenticateWithCredential(currentUser,cred);
+    await updatePassword(currentUser,newPass);
+
+    // Clear inputs
+    oldPassInput.value = "";
+    newPassInput.value = "";
+    confirmPassInput.value = "";
+
+    alert("🔐 Password berhasil diubah");
+  } catch (error) {
+    console.error("Error changing password:", error);
+    if (error.code === "auth/wrong-password") {
+      alert("❌ Password lama salah");
+    } else {
+      alert("❌ Gagal mengubah password: " + error.message);
+    }
+  }
 };
 </script>
 
