@@ -14,6 +14,73 @@
 
 <body>
 
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loadingScreen">
+  
+  <!-- Holographic lines -->
+  <div class="holo-lines">
+    <div class="holo-line"></div>
+    <div class="holo-line"></div>
+    <div class="holo-line"></div>
+    <div class="holo-line"></div>
+  </div>
+  
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+  
+  <!-- Ultra Modern Spinner -->
+  <div class="roblox-spinner">
+    <!-- Multiple rotating rings -->
+    <div class="hex-ring ring-3"></div>
+    <div class="hex-ring ring-2"></div>
+    <div class="hex-ring ring-1"></div>
+    
+    <!-- Glowing orbital trail -->
+    <div class="orbit-trail"></div>
+    
+    <!-- Premium 3D Cubes -->
+    <div class="roblox-cube cube-1"></div>
+    <div class="roblox-cube cube-2"></div>
+    <div class="roblox-cube cube-3"></div>
+    <div class="roblox-cube cube-4"></div>
+    
+    <!-- Enhanced glowing dots -->
+    <div class="glow-dots">
+      <div class="glow-dot dot-1"></div>
+      <div class="glow-dot dot-2"></div>
+      <div class="glow-dot dot-3"></div>
+      <div class="glow-dot dot-4"></div>
+    </div>
+    
+    <!-- Logo RS dengan advanced glass effect -->
+    <div class="center-logo">
+      <img src="./images/RSLogo.png" alt="RS Logo">
+    </div>
+  </div>
+  
+  <!-- Ultra modern progress bar -->
+  <div class="progress-container">
+    <div class="progress-bar"></div>
+  </div>
+  
+  <!-- Premium text dengan animated gradient -->
+  <div class="loading-text">
+    LOADING<span class="loading-dots"></span>
+  </div>
+</div>
+
 <!-- NAVBAR -->
 <div class="navbar">
   <div class="brand">
@@ -191,6 +258,13 @@ import { onAuthStateChanged, getAuth, signOut } from
   "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { doc, getDoc } from
   "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// LOADING SCREEN HANDLER
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loadingScreen').classList.add('hidden');
+  }, 2000); // Loading selama 2 detik
+});
 
 const avatar = document.getElementById("avatar");
 const avatarImg = document.getElementById("avatarImg");

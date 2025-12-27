@@ -10,6 +10,279 @@ body{
   margin:0;
   background:var(--bg);
   color:#111827;
+  overflow-x:hidden;
+}
+
+/* ===== LOADING SCREEN ===== */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #6d7cf2 0%, #7c5cf4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.logo-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-rs {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+/* SVG Path Animation */
+.logo-rs {
+  width: 100%;
+  height: 100%;
+  animation: logoZoomIn 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+.logo-rs img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(0) invert(1) drop-shadow(0 0 20px rgba(255,255,255,0.5));
+}
+
+@keyframes logoZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-180deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1) rotate(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Glow effect */
+.logo-rs::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+.loading-text {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.loading-dots {
+  display: inline-block;
+  width: 60px;
+  text-align: left;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}
+
+/* Particles Background */
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: particleFloat 4s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { width: 3px; height: 3px; left: 10%; top: 20%; animation-delay: 0s; }
+.particle:nth-child(2) { width: 5px; height: 5px; left: 20%; top: 40%; animation-delay: 0.5s; }
+.particle:nth-child(3) { width: 4px; height: 4px; left: 30%; top: 60%; animation-delay: 1s; }
+.particle:nth-child(4) { width: 6px; height: 6px; left: 40%; top: 80%; animation-delay: 1.5s; }
+.particle:nth-child(5) { width: 3px; height: 3px; left: 50%; top: 30%; animation-delay: 2s; }
+.particle:nth-child(6) { width: 5px; height: 5px; left: 60%; top: 50%; animation-delay: 2.5s; }
+.particle:nth-child(7) { width: 4px; height: 4px; left: 70%; top: 70%; animation-delay: 3s; }
+.particle:nth-child(8) { width: 3px; height: 3px; left: 80%; top: 25%; animation-delay: 3.5s; }
+.particle:nth-child(9) { width: 6px; height: 6px; left: 90%; top: 45%; animation-delay: 4s; }
+.particle:nth-child(10) { width: 4px; height: 4px; left: 15%; top: 55%; animation-delay: 0.8s; }
+.particle:nth-child(11) { width: 5px; height: 5px; left: 85%; top: 65%; animation-delay: 1.3s; }
+.particle:nth-child(12) { width: 3px; height: 3px; left: 25%; top: 15%; animation-delay: 1.8s; }
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-30px) translateX(20px) scale(1.2);
+    opacity: 0.8;
+  }
+  75% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Loading bar */
+.loading-bar-container {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.loading-bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, white 50%, rgba(255,255,255,0.5) 100%);
+  border-radius: 10px;
+  animation: loadingProgress 2s ease-in-out infinite;
+}
+
+@keyframes loadingProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
 }
 
 /* ===== NAVBAR ===== */
@@ -22,22 +295,30 @@ body{
   background:linear-gradient(135deg,#6d7cf2,#7c5cf4);
   color:white;
   position:relative;
+  animation: fadeInDown 0.6s ease-out;
+  z-index: 999;
 }
 
 .brand h2{
   margin:0;
   font-size:20px;
   font-weight:800;
+  animation: slideInLeft 0.8s ease-out 0.2s both;
 }
+
 .brand span{
   font-size:12px;
   opacity:.85;
+  animation: fadeIn 1s ease-out 0.4s both;
 }
 
 /* avatar */
 .profile{
   position:relative;
+  animation: slideInRight 0.8s ease-out 0.3s both;
+  z-index: 1000;
 }
+
 .avatar{
   width:42px;
   height:42px;
@@ -49,7 +330,15 @@ body{
   justify-content:center;
   font-weight:800;
   cursor:pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
 }
+
+.avatar:hover{
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
 .avatar img{
   width:100%;
   height:100%;
@@ -61,24 +350,34 @@ body{
 .dropdown{
   position:absolute;
   right:0;
-  top:52px;
-  width:180px;
+  top:56px;
+  width:200px;
   background:white;
-  border-radius:14px;
-  box-shadow:0 25px 50px rgba(0,0,0,.15);
+  border-radius:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25);
   overflow:hidden;
   display:none;
+  z-index:9999;
+  animation: fadeInDown 0.3s ease-out;
 }
 
 .dropdown a{
-  display:block;
-  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 18px;
   font-size:14px;
+  font-weight:600;
   text-decoration:none;
   color:#111827;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 }
+
 .dropdown a:hover{
-  background:#f3f4f6;
+  background:#f0f3ff;
+  border-left-color:#6d7cf2;
+  padding-left:22px;
 }
 
 /* ===== HERO ===== */
@@ -95,6 +394,7 @@ body{
   padding:42px;
   color:white;
   box-shadow:0 35px 80px rgba(0,0,0,.25);
+  animation: scaleIn 0.8s ease-out 0.4s both;
 }
 
 .hero h1{
@@ -122,6 +422,7 @@ body{
 /* ===== VIDEO ===== */
 .section{
   margin-top:40px;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
 }
 
 .section h3{
@@ -141,6 +442,27 @@ body{
   grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
   gap:22px;
 }
+
+.card {
+  animation: fadeInUp 0.6s ease-out both;
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.15);
+}
+
+.card:nth-child(1) { animation-delay: 0.8s; }
+.card:nth-child(2) { animation-delay: 0.9s; }
+.card:nth-child(3) { animation-delay: 1s; }
+.card:nth-child(4) { animation-delay: 1.1s; }
+.card:nth-child(5) { animation-delay: 1.2s; }
+.card:nth-child(6) { animation-delay: 1.3s; }
 
 .card iframe{
   width:100%;
@@ -162,13 +484,23 @@ iframe{
 .download{
   display:inline-block;
   margin-top:10px;
-  background:var(--primary);
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
   color:white;
-  padding:10px 16px;
+  padding:12px 20px;
   border-radius:999px;
   font-size:13px;
+  font-weight:700;
   text-decoration:none;
+  transition: all 0.3s ease;
+  border:none;
+  cursor:pointer;
 }
+
+.download:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(99,102,241,.4);
+}
+
 .subscribe-btn {
   display: inline-flex;
   align-items: center;
@@ -179,6 +511,8 @@ iframe{
   color: white;
   font-weight: 700;
   text-decoration: none;
+  animation: slideInRight 0.8s ease-out 0.25s both;
+  transition: all 0.3s ease;
 }
 
 .subscribe-btn:hover{
@@ -215,16 +549,18 @@ iframe{
 .card .badge {
   display: inline-block;
   margin: 8px 0;
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   border-radius: 999px;
   background: linear-gradient(135deg, #ffb347, #ffcc33);
   color: #000;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(255,179,71,.3);
 }
 
 /* Footer */
-/* Additional Footer Styles */
 .footer {
     background: linear-gradient(135deg, #6d7cf2 0%, #7c5cf4 100%);
     border-radius: 28px 28px 0 0;
@@ -232,6 +568,7 @@ iframe{
     margin-top: 80px;
     position: relative;
     overflow: hidden;
+    animation: fadeInUp 0.8s ease-out 1.2s both;
 }
 
 .footer::before {
@@ -244,11 +581,6 @@ iframe{
     background: linear-gradient(90deg, #fff, rgba(255,255,255,0.5), #fff);
     background-size: 200% 100%;
     animation: gradientMove 3s linear infinite;
-}
-
-@keyframes gradientMove {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 200% 0%; }
 }
 
 .footer-content {
@@ -464,4 +796,3 @@ iframe{
         flex-direction: column;
     }
 }
-
