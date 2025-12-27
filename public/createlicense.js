@@ -265,27 +265,31 @@ async function loadLicenses() {
                 : "♾️ Unlimited"
             }</p>
 
-            ${
-              l.revoked && currentRole === "owner"
-                ? `<button class="btn btn-warning btn-sm"
-                    onclick="undoRevoke('${l.licenseId}')">
-                    Undo Revoke
-                  </button>`
-                : !l.revoked &&
-                  (
-                    currentRole === "owner" ||
-                    currentRole === "admin" ||
-                    l.createdBy === currentUser.uid
-                  )
-                ? `<p style="color:#ef4444">
-                    🔥 Revoked by: <b>${await getUserName(l.revokedBy)}</b>
-                    (${l.revokedByRole})
-                  </p>
-                  <p style="font-style:italic">
-                    Reason: "${l.revokedReason}"
-                  </p>`
-                : ""
-            }
+            ${l.revoked ? `
+              <p style="color:#ef4444">
+                🔥 Revoked by:
+                <b>${await getUserName(l.revokedBy)}</b>
+                (${l.revokedByRole})
+              </p>
+              <p style="font-style:italic">
+                Reason: "${l.revokedReason}"
+              </p>
+
+              ${currentRole === "owner" ? `
+                <button class="btn btn-warning btn-sm"
+                  onclick="undoRevoke('${l.licenseId}')">
+                  Undo Revoke
+                </button>
+              ` : ""}
+            `
+            : `
+            ${!l.revoked && canRevoke(l) ? `
+              <button class="btn btn-danger btn-sm"
+                onclick="revokeLicense('${l.licenseId}')">
+                Revoke
+              </button>
+            ` : ""}
+            `}
 
           </div>
         `;
@@ -418,44 +422,52 @@ async function undoRevoke(licenseId) {
 /* ================= LOGS ================= */
 async function refreshLogs() {
   try {
-    const res = await fetch(`${API_BASE}/logs`);
+    const token = await currentUser.getIdToken();
+
+    const res = await fetch(`${API_BASE}/logs`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
     const data = await res.json();
+    if (!data.success) throw new Error();
 
     logs = data.logs || [];
+
     logContainer.innerHTML = logs.map(l => {
-    if (l.type === "revoke") {
-      return `
-        <div class="log-entry error">
-          [${new Date(l.time).toLocaleTimeString()}]
-          🔥 REVOKE —
-          ${l.licenseId} —
-          ${l.mapName}<br>
-          by ${l.revokedByRole.toUpperCase()}
-          — "${l.reason}"
-        </div>
-      `;
-    }
+      if (l.type === "revoke") {
+        return `
+          <div class="log-entry error">
+            [${new Date(l.time).toLocaleTimeString()}]
+            🔥 REVOKE —
+            ${l.licenseId}<br>
+            by ${l.revokedByRole.toUpperCase()}
+            — "${l.reason}"
+          </div>
+        `;
+      }
 
-    if (l.type === "undo_revoke") {
-      return `
-        <div class="log-entry success">
-          [${new Date(l.time).toLocaleTimeString()}]
-          ♻️ UNDO REVOKE —
-          ${l.licenseId} restored by OWNER
-        </div>
-      `;
-    }
+      if (l.type === "undo_revoke") {
+        return `
+          <div class="log-entry success">
+            [${new Date(l.time).toLocaleTimeString()}]
+            ♻️ UNDO REVOKE —
+            ${l.licenseId} restored by OWNER
+          </div>
+        `;
+      }
 
-      // verify / create
       return `
-        <div class="log-entry ${l.success ? "success" : "error"}">
+        <div class="log-entry">
           [${new Date(l.time).toLocaleTimeString()}]
-          ${l.licenseId} — ${l.mapName}
+          ${l.licenseId}
         </div>
       `;
     }).join("");
 
-  } catch {
+  } catch (err) {
+    console.error("LOG ERROR:", err);
     showNotification("Failed load logs", "error");
   }
 }

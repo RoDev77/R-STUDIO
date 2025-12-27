@@ -1,3 +1,4 @@
+//revoke-license.js
 import { getFirestore, getAuth } from "./lib/firebase.js";
 
 export default async function handler(req, res) {
