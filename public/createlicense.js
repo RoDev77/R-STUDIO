@@ -442,8 +442,8 @@ async function refreshLogs() {
             [${new Date(l.time).toLocaleTimeString()}]
             🔥 REVOKE —
             ${l.licenseId}<br>
-            by ${l.revokedByRole.toUpperCase()}
-            — "${l.reason}"
+            by ${(l.revokedByRole || "unknown").toUpperCase()}
+            — "${l.reason || "-"}"
           </div>
         `;
       }
