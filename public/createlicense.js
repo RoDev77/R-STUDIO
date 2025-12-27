@@ -269,7 +269,7 @@ async function loadLicenses() {
               <p style="color:#ef4444">
                 🔥 Revoked by:
                 <b>${await getUserName(l.revokedBy)}</b>
-                (${l.revokedByRole})
+                ${l.revokedByRole}
               </p>
               <p style="font-style:italic">
                 Reason: "${l.revokedReason}"
