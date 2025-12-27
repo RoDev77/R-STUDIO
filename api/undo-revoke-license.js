@@ -1,8 +1,7 @@
-//undo-revoke-license.js
 import { getFirestore, getAuth } from "./lib/firebase.js";
 
 export default async function handler(req, res) {
-    // ===== CORS =====
+  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader(
@@ -10,28 +9,47 @@ export default async function handler(req, res) {
     "Content-Type, Authorization"
   );
 
-  if (req.method !== "POST")
+  // ✅ FIX UTAMA DI SINI
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
+  }
 
   try {
     const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "NO_TOKEN" });
+    }
+
     const auth = getAuth();
     const decoded = await auth.verifyIdToken(
       authHeader.replace("Bearer ", "")
     );
 
     const db = getFirestore();
+
+    // === OWNER ONLY ===
     const userSnap = await db.collection("users").doc(decoded.uid).get();
-    if (userSnap.data()?.role !== "owner")
+    if (!userSnap.exists || userSnap.data().role !== "owner") {
       return res.status(403).json({ error: "OWNER_ONLY" });
+    }
 
     const { licenseId } = req.body;
+    if (!licenseId) {
+      return res.status(400).json({ error: "LICENSE_ID_REQUIRED" });
+    }
 
     const ref = db.collection("licenses").doc(licenseId);
     const snap = await ref.get();
-    if (!snap.exists)
-      return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
 
+    if (!snap.exists) {
+      return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
+    }
+
+    // === UNDO REVOKE ===
     await ref.update({
       revoked: false,
       revokedAt: null,
@@ -40,13 +58,17 @@ export default async function handler(req, res) {
       revokedReason: null,
     });
 
+    // === LOG ===
     await db.collection("connection_logs").add({
       type: "undo_revoke",
       licenseId,
+      userId: decoded.uid,
+      role: "owner",
       time: Date.now(),
     });
 
     return res.json({ success: true });
+
   } catch (err) {
     console.error("UNDO ERROR:", err);
     return res.status(500).json({ error: "SERVER_ERROR" });
