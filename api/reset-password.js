@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const ref = db.collection("password_resets").doc(hash);
     const snap = await ref.get();
 
-    // ✅ SERVER COOLDOWN (FIXED)
+    // ✅ SERVER COOLDOWN
     if (snap.exists && snap.data().lastRequest) {
       const last = snap.data().lastRequest.toMillis();
       if ((Date.now() - last) / 1000 < COOLDOWN_SECONDS) {
@@ -70,53 +70,68 @@ export default async function handler(req, res) {
       return res.json({ ok: true });
     }
 
-    const link = await admin.auth().generatePasswordResetLink(email, {
-      url: process.env.RESET_URL,
-    });
+    // ✅ PENTING: Gunakan action.html sebagai continueUrl
+    const actionCodeSettings = {
+      url: `${process.env.BASE_URL || 'https://rstudiolab.online'}/action.html`,
+      handleCodeInApp: false
+    };
 
-    const name =
-      user.displayName || user.email.split("@")[0];
+    const link = await admin.auth().generatePasswordResetLink(
+      email, 
+      actionCodeSettings
+    );
+
+    const name = user.displayName || user.email.split("@")[0];
 
     const html = `
-<div style="font-family:Inter,Arial;max-width:520px;margin:auto;padding:24px">
-  <h2 style="color:#111827">Reset Password</h2>
+<div style="font-family:Inter,Arial;max-width:520px;margin:auto;padding:24px;background:#f9fafb">
+  <div style="background:white;padding:32px;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,.1)">
+    <div style="text-align:center;margin-bottom:24px">
+      <h1 style="color:#6366f1;margin:0;font-size:28px">R STUDIO</h1>
+      <p style="color:#9ca3af;font-size:12px;margin:4px 0">Creative Dashboard</p>
+    </div>
 
-  <p style="color:#374151">Halo <strong>${name}</strong>,</p>
+    <h2 style="color:#111827;margin:0 0 16px">Reset Password</h2>
 
-  <p style="color:#374151">
-    Kami menerima permintaan untuk mengatur ulang password akun kamu.
-  </p>
+    <p style="color:#374151;line-height:1.6">Halo <strong>${name}</strong>,</p>
 
-  <div style="margin:32px 0;text-align:center">
-    <a href="${link}" style="
-      background:#6366f1;
-      color:white;
-      padding:14px 28px;
-      border-radius:12px;
-      text-decoration:none;
-      font-weight:700;
-      display:inline-block
-    ">
-      Reset Password
-    </a>
+    <p style="color:#374151;line-height:1.6">
+      Kami menerima permintaan untuk mengatur ulang password akun kamu di R Studio.
+    </p>
+
+    <div style="margin:32px 0;text-align:center">
+      <a href="${link}" style="
+        background:linear-gradient(135deg,#6366f1,#7c3aed);
+        color:white;
+        padding:14px 32px;
+        border-radius:12px;
+        text-decoration:none;
+        font-weight:700;
+        display:inline-block;
+        box-shadow:0 4px 6px rgba(99,102,241,.3)
+      ">
+        🔐 Reset Password
+      </a>
+    </div>
+
+    <p style="font-size:13px;color:#6b7280;line-height:1.6">
+      Link ini akan <strong>kedaluwarsa dalam beberapa jam</strong> demi keamanan. 
+      Jika kamu tidak meminta reset password, abaikan email ini dan password kamu akan tetap aman.
+    </p>
+
+    <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb">
+    
+    <p style="font-size:12px;color:#9ca3af;text-align:center;margin:0">
+      © ${new Date().getFullYear()} R Studio — Security Notification
+    </p>
   </div>
-
-  <p style="font-size:14px;color:#6b7280">
-    Jika kamu tidak meminta reset password, abaikan email ini.
-    Link akan kedaluwarsa demi keamanan.
-  </p>
-
-  <hr style="margin:24px 0">
-  <p style="font-size:12px;color:#9ca3af">
-    © R Studio — Security Notification
-  </p>
 </div>
 `;
 
     await transporter.sendMail({
-      from: process.env.MAIL_FROM,
+      from: `"R Studio Security" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Reset Password — R Studio",
+      subject: "🔐 Reset Password — R Studio",
       html,
     });
 
@@ -124,6 +139,7 @@ export default async function handler(req, res) {
       lastRequest: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    console.log(`✅ Reset password email sent to: ${email}`);
     return res.json({ ok: true });
 
   } catch (err) {
