@@ -172,6 +172,26 @@ button,a.button{
 .error{color:#dc2626}
 .loading{color:#6366f1}
 
+.error-details{
+  background:#fee2e2;
+  border:2px solid #ef4444;
+  border-radius:12px;
+  padding:16px;
+  margin:20px 0;
+  text-align:left;
+}
+
+.error-details p{
+  margin:8px 0;
+  font-size:13px;
+  color:#991b1b;
+  text-align:left;
+}
+
+.error-details strong{
+  color:#7f1d1d;
+}
+
 @media (max-width:600px){
   .card{padding:28px 24px}
   h2{font-size:22px}
@@ -255,23 +275,46 @@ async function verifyEmail(code) {
         emailVerified: true,
         emailVerifiedAt: Date.now()
       });
-    } else {
-      // 3. Jika user belum login, cari user berdasarkan email dari link
-      // Sayangnya Firebase tidak menyediakan cara langsung untuk mendapatkan
-      // user dari oobCode, jadi kita perlu user login dulu
-      console.log("User belum login, akan diupdate saat login berikutnya");
     }
 
     showSuccess(
       "Email Terverifikasi!",
-      "Email kamu berhasil diverifikasi. Silakan login kembali untuk melihat perubahan."
+      "Email kamu berhasil diverifikasi."
     );
   } catch (err) {
     console.error("Verifikasi error:", err);
-    showError(
-      "Verifikasi Gagal",
-      "Link tidak valid, sudah digunakan, atau expired."
-    );
+    
+    // Better error handling
+    let errorTitle = "Verifikasi Gagal";
+    let errorMessage = "";
+    let errorDetails = [];
+    
+    if (err.code === "auth/expired-action-code") {
+      errorTitle = "Link Expired";
+      errorMessage = "Link verifikasi sudah kadaluarsa.";
+      errorDetails = [
+        "⏰ Link hanya berlaku selama beberapa jam",
+        "🔄 Kembali ke profile dan klik 'Verifikasi Email' lagi",
+        "📧 Link baru akan dikirim ke email kamu"
+      ];
+    } else if (err.code === "auth/invalid-action-code") {
+      errorTitle = "Link Tidak Valid";
+      errorMessage = "Link sudah digunakan atau tidak valid.";
+      errorDetails = [
+        "✅ Email mungkin sudah terverifikasi sebelumnya",
+        "🔑 Atau link sudah pernah digunakan",
+        "🔄 Coba login untuk cek status verifikasi"
+      ];
+    } else {
+      errorMessage = "Terjadi kesalahan saat memverifikasi email.";
+      errorDetails = [
+        "❌ Error: " + (err.message || "Unknown error"),
+        "🔄 Coba minta link verifikasi baru",
+        "💬 Atau hubungi admin jika masalah berlanjut"
+      ];
+    }
+    
+    showErrorWithDetails(errorTitle, errorMessage, errorDetails);
   }
 }
 
@@ -333,10 +376,37 @@ async function resetPassword(code) {
     };
   } catch (err) {
     console.error("Reset password error:", err);
-    showError(
-      "Link Tidak Valid",
-      "Link reset password expired atau sudah digunakan."
-    );
+    
+    let errorTitle = "Reset Password Gagal";
+    let errorMessage = "";
+    let errorDetails = [];
+    
+    if (err.code === "auth/expired-action-code") {
+      errorTitle = "Link Expired";
+      errorMessage = "Link reset password sudah kadaluarsa.";
+      errorDetails = [
+        "⏰ Link hanya berlaku selama 1 jam",
+        "🔄 Kembali ke halaman login",
+        "🔑 Klik 'Lupa Password' untuk mendapat link baru"
+      ];
+    } else if (err.code === "auth/invalid-action-code") {
+      errorTitle = "Link Tidak Valid";
+      errorMessage = "Link reset sudah digunakan atau tidak valid.";
+      errorDetails = [
+        "✅ Password mungkin sudah direset sebelumnya",
+        "🔑 Atau link sudah pernah digunakan",
+        "🔄 Minta link reset baru dari halaman login"
+      ];
+    } else {
+      errorMessage = "Terjadi kesalahan saat reset password.";
+      errorDetails = [
+        "❌ Error: " + (err.message || "Unknown error"),
+        "🔄 Coba minta link reset baru",
+        "💬 Atau hubungi admin jika masalah berlanjut"
+      ];
+    }
+    
+    showErrorWithDetails(errorTitle, errorMessage, errorDetails);
   }
 }
 
@@ -347,7 +417,8 @@ function showSuccess(title, msg) {
     <h2 class="success">${title}</h2>
     <p>${msg}</p>
     <div class="button-group">
-      <a href="login.html" class="btn-primary">🚀 Login Sekarang</a>
+      <a href="profile.html" class="btn-primary">📱 Ke Profile</a>
+      <a href="login.html" class="btn-secondary">🔑 Login</a>
     </div>
   `;
 }
@@ -359,6 +430,26 @@ function showError(title, msg) {
     <p>${msg}</p>
     <div class="button-group">
       <a href="login.html" class="btn-secondary">← Kembali ke Login</a>
+    </div>
+  `;
+}
+
+function showErrorWithDetails(title, msg, details) {
+  const detailsHTML = details.map(d => `<p>• ${d}</p>`).join("");
+  
+  content.innerHTML = `
+    <div class="status-icon">❌</div>
+    <h2 class="error">${title}</h2>
+    <p>${msg}</p>
+    
+    <div class="error-details">
+      <strong>Kemungkinan penyebab:</strong>
+      ${detailsHTML}
+    </div>
+    
+    <div class="button-group">
+      <a href="profile.html" class="btn-primary">🔄 Coba Lagi</a>
+      <a href="login.html" class="btn-secondary">← Login</a>
     </div>
   `;
 }

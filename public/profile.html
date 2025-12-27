@@ -69,6 +69,10 @@ button{
   cursor:pointer;
   background:linear-gradient(135deg,#facc15,#f59e0b);
 }
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
 hr{
   margin:26px 0;
   border:none;
@@ -195,6 +199,11 @@ body{
   opacity:0.9;
 }
 
+.verify-btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
 .verified-badge{
   color:#10b981;
   font-weight:700;
@@ -202,6 +211,13 @@ body{
   display:flex;
   align-items:center;
   gap:6px;
+}
+
+.info-text{
+  font-size:12px;
+  color:#6b7280;
+  margin-top:8px;
+  font-style:italic;
 }
 
 </style>
@@ -255,6 +271,7 @@ body{
     </div>
     <button class="verify-btn" id="verifyBtn">Verifikasi Email</button>
   </div>
+  <div class="info-text" id="infoText"></div>
 
   <label>Role</label>
   <input id="role" readonly>
@@ -309,12 +326,15 @@ const verificationBox = document.getElementById("verificationBox");
 const verificationIcon = document.getElementById("verificationIcon");
 const verificationText = document.getElementById("verificationText");
 const verifyBtn = document.getElementById("verifyBtn");
+const infoText = document.getElementById("infoText");
 
 const oldPassInput = document.getElementById("oldPass");
 const newPassInput = document.getElementById("newPass");
 const confirmPassInput = document.getElementById("confirmPass");
 
 let currentUser;
+let lastEmailSentTime = 0;
+const COOLDOWN_MS = 60000; // 1 menit cooldown
 
 /* ================= UI ================= */
 function updateVerificationStatus(isVerified) {
@@ -323,11 +343,49 @@ function updateVerificationStatus(isVerified) {
     verificationIcon.textContent = "✅";
     verificationText.textContent = "Email sudah diverifikasi";
     verifyBtn.style.display = "none";
+    infoText.textContent = "";
   } else {
     verificationBox.classList.remove("verified");
     verificationIcon.textContent = "⚠️";
     verificationText.textContent = "Email belum diverifikasi";
     verifyBtn.style.display = "block";
+    infoText.textContent = "💡 Setelah klik link di email, refresh halaman ini";
+  }
+}
+
+/* ================= CHECK STATUS PERIODICALLY ================= */
+let statusCheckInterval;
+
+function startStatusCheck() {
+  // Cek status setiap 3 detik jika belum verified
+  statusCheckInterval = setInterval(async () => {
+    if (!currentUser) return;
+    
+    await currentUser.reload();
+    
+    if (currentUser.emailVerified) {
+      // Update Firestore
+      const userDocRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userDocRef, {
+        emailVerified: true,
+        emailVerifiedAt: Date.now()
+      });
+      
+      // Update UI
+      updateVerificationStatus(true);
+      
+      // Stop checking
+      clearInterval(statusCheckInterval);
+      
+      // Show success message
+      alert("🎉 Email berhasil diverifikasi!");
+    }
+  }, 3000);
+}
+
+function stopStatusCheck() {
+  if (statusCheckInterval) {
+    clearInterval(statusCheckInterval);
   }
 }
 
@@ -377,6 +435,11 @@ onAuthStateChanged(auth, async (user) => {
 
   // ✅ AUTH ADALAH SUMBER KEBENARAN
   updateVerificationStatus(user.emailVerified);
+  
+  // Mulai cek status jika belum verified
+  if (!user.emailVerified) {
+    startStatusCheck();
+  }
 });
 
 /* ================= DROPDOWN NAVBAR ================= */
@@ -420,20 +483,47 @@ document.getElementById("photoInput").onchange = async (e) => {
   reader.readAsDataURL(file);
 };
 
-/* ================= SEND VERIFY EMAIL ================= */
+/* ================= SEND VERIFY EMAIL WITH RATE LIMIT ================= */
 verifyBtn.onclick = async () => {
+  const now = Date.now();
+  const timeSinceLastSent = now - lastEmailSentTime;
+  
+  // Check cooldown
+  if (timeSinceLastSent < COOLDOWN_MS) {
+    const remainingSeconds = Math.ceil((COOLDOWN_MS - timeSinceLastSent) / 1000);
+    alert(`⏳ Tunggu ${remainingSeconds} detik sebelum mengirim ulang`);
+    return;
+  }
+  
   try {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
 
     await sendEmailVerification(currentUser, {
-      url: "https://rstudiolab.online/confirm.html"
+      url: "https://rstudiolab.online/profile.html"
     });
 
-    alert("✅ Email verifikasi dikirim. Cek inbox / spam.");
-    verifyBtn.textContent = "Email terkirim";
+    lastEmailSentTime = now;
+    
+    alert("✅ Email verifikasi dikirim!\n\n📧 Cek inbox atau folder spam\n⚠️ Link hanya bisa digunakan SEKALI\n🔄 Halaman akan auto-refresh setelah verifikasi");
+    
+    verifyBtn.textContent = "Email Terkirim";
+    
+    // Re-enable setelah 60 detik
+    setTimeout(() => {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Kirim Ulang";
+    }, COOLDOWN_MS);
+    
   } catch (err) {
-    alert("❌ Gagal kirim email: " + err.message);
+    console.error("Send email error:", err);
+    
+    if (err.code === "auth/too-many-requests") {
+      alert("❌ Terlalu banyak percobaan. Tunggu beberapa menit.");
+    } else {
+      alert("❌ Gagal kirim email: " + err.message);
+    }
+    
     verifyBtn.disabled = false;
     verifyBtn.textContent = "Verifikasi Email";
   }
@@ -499,9 +589,13 @@ document.getElementById("changePass").onclick = async () => {
 
 /* ================= LOGOUT ================= */
 document.getElementById("logoutBtn").onclick = async () => {
+  stopStatusCheck();
   await signOut(auth);
   location.href = "login.html";
 };
+
+// Cleanup saat tab ditutup
+window.addEventListener("beforeunload", stopStatusCheck);
 </script>
 
 </body>
