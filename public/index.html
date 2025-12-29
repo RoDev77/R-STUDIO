@@ -14,72 +14,69 @@
 
 <body>
 
-<!-- LOADING SCREEN -->
 <div class="loading-screen" id="loadingScreen">
+  <!-- Floating Cubes -->
+  <div class="load-cube"></div>
+  <div class="load-cube"></div>
+  <div class="load-cube"></div>
+  <div class="load-cube"></div>
   
-  <!-- Holographic lines -->
-  <div class="holo-lines">
-    <div class="holo-line"></div>
-    <div class="holo-line"></div>
-    <div class="holo-line"></div>
-    <div class="holo-line"></div>
+  <!-- Particles -->
+  <div class="load-particles">
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
   </div>
   
-  <div class="particles">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-  </div>
-  
-  <!-- Ultra Modern Spinner -->
-  <div class="roblox-spinner">
-    <!-- Multiple rotating rings -->
-    <div class="hex-ring ring-3"></div>
-    <div class="hex-ring ring-2"></div>
-    <div class="hex-ring ring-1"></div>
-    
-    <!-- Glowing orbital trail -->
-    <div class="orbit-trail"></div>
-    
-    <!-- Premium 3D Cubes -->
-    <div class="roblox-cube cube-1"></div>
-    <div class="roblox-cube cube-2"></div>
-    <div class="roblox-cube cube-3"></div>
-    <div class="roblox-cube cube-4"></div>
-    
-    <!-- Enhanced glowing dots -->
-    <div class="glow-dots">
-      <div class="glow-dot dot-1"></div>
-      <div class="glow-dot dot-2"></div>
-      <div class="glow-dot dot-3"></div>
-      <div class="glow-dot dot-4"></div>
+  <!-- Main Content -->
+  <div class="load-content">
+    <!-- Logo Spinner -->
+    <div class="load-spinner">
+      <div class="spin-ring"></div>
+      <div class="spin-ring"></div>
+      <div class="spin-ring"></div>
+      
+      <div class="orbit-dots">
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+      </div>
+      
+      <div class="load-logo">
+        <img src="./images/RSLogo.png" alt="RS Logo" style="width: 70px; height: 70px; object-fit: contain; position: relative; z-index: 1; filter: drop-shadow(0 4px 12px rgba(255,255,255,0.6));">
+      </div>
     </div>
     
-    <!-- Logo RS dengan advanced glass effect -->
-    <div class="center-logo">
-      <img src="./images/RSLogo.png" alt="RS Logo">
+    <!-- Progress Bar -->
+    <div class="load-progress">
+      <div class="progress-track">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+      <div class="progress-percent" id="progressPercent">0%</div>
     </div>
-  </div>
-  
-  <!-- Ultra modern progress bar -->
-  <div class="progress-container">
-    <div class="progress-bar"></div>
-  </div>
-  
-  <!-- Premium text dengan animated gradient -->
-  <div class="loading-text">
-    LOADING<span class="loading-dots"></span>
+    
+    <!-- Title -->
+    <div class="load-title">
+      <span class="load-letter">R</span>
+      <span class="load-letter">S</span>
+      <span class="load-letter">T</span>
+      <span class="load-letter">U</span>
+      <span class="load-letter">D</span>
+      <span class="load-letter">I</span>
+      <span class="load-letter">O</span>
+    </div>
+    
+    <div class="load-subtitle">Learn Roblox Studio Development</div>
   </div>
 </div>
+
 
 <!-- NAVBAR -->
 <div class="navbar">
@@ -260,11 +257,27 @@ import { doc, getDoc } from
   "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 // LOADING SCREEN HANDLER
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('loadingScreen').classList.add('hidden');
-  }, 2000); // Loading selama 2 detik
-});
+let progress = 0;
+const fill = document.getElementById('progressBarFill');
+const text = document.getElementById('progressPercent');
+
+const interval = setInterval(() => {
+  if (progress < 100) {
+    progress += Math.random() * 4 + 2;
+    if (progress > 100) progress = 100;
+    
+    if (fill && text) {
+      fill.style.width = progress + '%';
+      text.textContent = Math.floor(progress) + '%';
+    }
+  } else {
+    clearInterval(interval);
+    // Hide after complete
+    setTimeout(() => {
+      document.getElementById('loadingScreen').classList.add('hidden');
+    }, 500);
+  }
+}, 200);
 
 const avatar = document.getElementById("avatar");
 const avatarImg = document.getElementById("avatarImg");
