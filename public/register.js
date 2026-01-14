@@ -1,9 +1,7 @@
 import { auth, db } from "./firebase.js";
 import {
-  createUserWithEmailAndPassword,
-  deleteUser
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
 import {
   doc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
@@ -14,25 +12,26 @@ const nameInput = document.getElementById("nameInput");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const btn = document.querySelector(".submit");
+const errorBox = document.createElement("div");
 const toggle = document.getElementById("togglePassword");
 
-/* ERROR BOX */
-const errorBox = document.createElement("div");
 errorBox.className = "error-box";
-errorBox.style.display = "none";
+errorBox.style.display = "none"; // ⬅️ PENTING
 form.prepend(errorBox);
 
-/* VALIDASI NAMA */
 function validateName(name) {
   const clean = name.trim();
 
   if (!clean) return "Nama tidak boleh kosong";
   if (clean.length < 3) return "Nama terlalu pendek";
-  if (!/^[A-Za-z\s]+$/.test(clean)) return "Nama hanya boleh huruf";
+  if (!/^[A-Za-z\s]+$/.test(clean))
+    return "Nama hanya boleh huruf";
+
+  // anti spam (aaaa, bbbb, xxxx)
   if (/^(.)\1{2,}$/.test(clean.replace(/\s/g, "")))
     return "Nama tidak valid";
 
-  return null;
+  return null; // VALID
 }
 
 /* HUMAN ERROR */
@@ -40,19 +39,20 @@ function humanError(code = "") {
   if (code.includes("email-already")) return "Email sudah terdaftar";
   if (code.includes("weak-password")) return "Password minimal 6 karakter";
   if (code.includes("invalid-email")) return "Format email tidak valid";
-  if (code.includes("permission-denied"))
-    return "Akses database ditolak";
   return "Terjadi kesalahan, coba lagi";
 }
 
 /* SUBMIT */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   errorBox.style.display = "none";
   errorBox.textContent = "";
 
   // 🚫 BOT CHECK
-  if (form.company && form.company.value) return;
+  if (form.company && form.company.value) {
+    return; // stop silent
+  }
 
   const nameError = validateName(nameInput.value);
   if (nameError) {
@@ -64,66 +64,48 @@ form.addEventListener("submit", async (e) => {
   btn.disabled = true;
   btn.textContent = "Creating...";
 
-  let userCred = null;
-
   try {
-    /* 1️⃣ CREATE AUTH */
-    userCred = await createUserWithEmailAndPassword(
+    const cred = await createUserWithEmailAndPassword(
       auth,
-      emailInput.value.trim(),
+      emailInput.value,
       passwordInput.value
     );
 
-    /* 2️⃣ CREATE FIRESTORE DOC */
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      name: nameInput.value.trim(),
-      email: emailInput.value.trim(),
+    await setDoc(doc(db, "users", cred.user.uid), {
+      name: nameInput.value,
+      email: emailInput.value,
       role: "member",
       isVIP: false,
-      emailVerified: false,
+      emailVerified: false, // ⬅️ TAMBAHAN INI
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp()
     });
 
-    /* 3️⃣ SUCCESS */
-    location.replace("index.html");
+    location.href = "index.html";
 
   } catch (err) {
-    console.error("REGISTER ERROR:", err);
-
-    // 🔥 ROLLBACK USER JIKA FIRESTORE GAGAL
-    if (userCred?.user) {
-      try {
-        await deleteUser(userCred.user);
-        console.warn("Auth user rollbacked");
-      } catch (e) {
-        console.error("Rollback failed:", e);
-      }
-    }
-
-    errorBox.textContent = humanError(err.code || "");
-    errorBox.style.display = "block";
+    errorBox.textContent = humanError(err.code);
+    errorBox.style.display = "block"; // ⬅️ munculkan
 
     btn.disabled = false;
     btn.textContent = "Create Account";
   }
 });
 
-/* HIDE ERROR ON INPUT */
 [nameInput, emailInput, passwordInput].forEach(input => {
   input.addEventListener("input", () => {
     errorBox.style.display = "none";
   });
 });
 
-/* TOGGLE PASSWORD */
 toggle.onclick = () => {
-  const isPass = passwordInput.type === "password";
-  passwordInput.type = isPass ? "text" : "password";
-  toggle.textContent = isPass ? "🙈" : "👁️";
+  passwordInput.type =
+    passwordInput.type === "password" ? "text" : "password";
+
+  toggle.textContent =
+    passwordInput.type === "password" ? "👁️" : "🙈";
 };
 
-/* VALIDASI BLUR */
 nameInput.addEventListener("blur", () => {
   const err = validateName(nameInput.value);
   if (err) {
