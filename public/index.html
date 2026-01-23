@@ -10,6 +10,245 @@
 <link rel="apple-touch-icon" href="./images/RSLogo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+<style>
+/* CSS Tambahan untuk Product Cards */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.product-card {
+  background: #6b7280;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.product-card:hover::before {
+  opacity: 1;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  border-color: transparent;
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.product-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.badge-new {
+  background: linear-gradient(135deg, #15fd00, #80ff00);
+  color: white;
+}
+
+.badge-hot {
+  background: linear-gradient(135deg, #ff3366, #cc0033);
+  color: white;
+  margin-left: 8px;
+}
+
+.badge-all {
+  background: linear-gradient(165deg, #000000, #7c3aed); 
+  color: white;
+}
+
+.badge-comingsoon {
+  background: linear-gradient(135deg, #f5f5f5, #ff0000);
+  color: rgb(0, 0, 0);
+}
+
+.product-video {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: #000;
+}
+
+.product-video iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.product-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.3;
+  color: #fff;
+}
+
+.product-description {
+  color: #f3f4f6;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  font-weight: 400;
+  display: block;
+}
+
+.product-features {
+  list-style: none;
+  margin-bottom: 25px;
+}
+
+.product-features li {
+  padding: 8px 0;
+  font-size: 14px;
+  color: #e5e7eb;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transition: all 0.3s;
+}
+
+.product-features li.hidden-feature {
+  display: none;
+}
+
+.product-features li.show-feature {
+  display: flex;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-features li::before {
+  content: '✓';
+  color: #3dd6ff;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.expand-features {
+  background: transparent;
+  border: none;
+  color: #3dd6ff;
+  padding: 8px 0;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+  display: inline-block;
+  text-align: left;
+}
+
+.expand-features:hover {
+  color: #5ee6ff;
+}
+
+.product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.tag {
+  background: rgba(124, 58, 237, 0.4);
+  border: 1px solid rgba(124, 58, 237, 0.6);
+  padding: 6px 14px;
+  border-radius: 15px;
+  font-size: 12px;
+  color: #ddd6fe;
+}
+
+.asset-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+}
+
+.free-badge {
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: white;
+}
+
+.vip-badge {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: white;
+}
+
+.download-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  text-decoration: none;
+  margin-top: 20px;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(91, 62, 247, 0.4);
+}
+
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 
 <body>
@@ -123,58 +362,138 @@
     <h3>🎬 Video Library</h3>
     <p>Tutorial & konten eksklusif R Studio</p>
 
-    <div class="grid">
+    <div class="products-grid">
 
-      <div class="card">
-        <div class="thumb">
+      <!-- Product 4: ??? -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-comingsoon">COMINGS</span>
+        </div>
+        
+        <div class="product-video">
           <img
             src="./images/comingsoon.avif"
             alt="Coming Soon"
+            style="width: 100%; height: 100%; object-fit: cover;"
           />
         </div>
+        
+        <h3 class="product-title">???</h3>
+        
+        <div class="asset-badge vip-badge">VIP ASSET</div>
 
-        <h4>???</h4>
-        <div class="badge">VIP MODEL</div>
-        <button
-          type="button"
-          class="download vip-download"
-          data-file="???">
+        <ul class="product-features">
+          <li>???</li>
+        </ul>
+
+        <div class="product-tags">
+          <span class="tag">???</span>
+        </div>
+        
+        <button type="button" class="download-btn vip-download" data-file="AdvancedAnticheat.rbxm">
           ⬇ Download File ⬇
         </button>
       </div>
 
-      <div class="card">
-        <div class="thumb">
+      <!-- Product 3: Carry System 2 Pilihan V1 -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-new">NEW</span>
+          <span class="product-badge badge-all">
+          <img src="./images/ForAll.png" style="width: 16px; height: 16px; margin-right: 6px;"> FOR ALL
+          </span>
+        </div>
+        
+        <div class="product-video">
           <img
             src="./images/carrythumb.png"
-            alt="Carry System 2 Pilihan V1"
+            alt="CarrySoon"
+            style="width: 100%; height: 100%; object-fit: cover;"
           />
         </div>
+        
+        <h3 class="product-title">Carry System 2 Pilihan V1</h3>
+        
+        <div class="asset-badge free-badge">FREE ASSET</div>
 
-        <h4>Carry System 2 Pilihan V1</h4>
-        <div class="badge">FREE MODEL</div>
-        <a class="download" href="https://create.roblox.com/store/asset/89467272654433" target="_blank">
+        <ul class="product-features">
+          <li>Carry 2 Choice</li>
+          <li>Max Carry 8 Player</li>
+          <li>Choice Carry Animations</li>
+          <li>Futuristic UI Library Pro</li>
+          <li class="hidden-feature">Anti-Exploit Protection</li>
+          <li class="hidden-feature">Performance Optimizer</li>
+        </ul>
+
+        <button class="expand-features" onclick="toggleFeatures(this)">Show 2 more features...</button>
+
+        <div class="product-tags">
+          <span class="tag">CarrySystem</span>
+          <span class="tag">All-in-One</span>
+          <span class="tag">Premium</span>
+          <span class="tag">Modules</span>
+        </div>
+        
+        <a class="download-btn" href="https://create.roblox.com/store/asset/89467272654433" target="_blank">
           ⬇ Download File ⬇
         </a>
       </div>
 
-      <div class="card">
+      <!-- Product 2: Confession Wall System V1 -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-all">
+          <img src="./images/ForAll.png" style="width: 16px; height: 16px; margin-right: 6px;"> FOR ALL
+          </span>
+        </div>
+        
+        <div class="product-video">
           <iframe 
             src="https://www.youtube.com/embed/pcWO2OjrPMk"
-            title="Confession Wall System"
+            title="Confession Wall System V1"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen>
           </iframe>
+        </div>
+        
+        <h3 class="product-title">Confession Wall System V1</h3>
+        
+        <div class="asset-badge free-badge">FREE ASSET</div>
 
-        <h4>Confession Wall System V1</h4>
-        <div class="badge">FREE MODEL</div>
-        <a class="download" href="https://create.roblox.com/store/asset/109183734627151" target="_blank">
+        <ul class="product-features">
+          <li>Max Create 2 Confession</li>
+          <li>Auto-Save System</li>
+          <li>DataStore Manager</li>
+          <li class="hidden-feature">Futuristic UI Library Pro</li>
+          <li class="hidden-feature">Anti-Exploit Protection</li>
+          <li class="hidden-feature">Performance Optimizer</li>
+        </ul>
+
+        <button class="expand-features" onclick="toggleFeatures(this)">Show 3 more features...</button>
+
+        <div class="product-tags">
+          <span class="tag">ConfessionWallSystem</span>
+          <span class="tag">All-in-One</span>
+          <span class="tag">Premium</span>
+          <span class="tag">Modules</span>
+        </div>
+        
+        <a class="download-btn" href="https://create.roblox.com/store/asset/109183734627151" target="_blank">
           ⬇ Download File ⬇
         </a>
       </div>
 
-      <div class="card">
+      <!-- Product 1: Summit Kit -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-hot">HOT</span>
+          <span class="product-badge badge-all">
+          <img src="./images/ForAll.png" style="width: 16px; height: 16px; margin-right: 6px;"> FOR ALL
+          </span>
+        </div>
+        
+        <div class="product-video">
           <iframe 
             src="https://www.youtube.com/embed/Tnn-pOS2-vo"
             title="Summit Kit V1"
@@ -182,10 +501,38 @@
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen>
           </iframe>
+        </div>
+        
+        <h3 class="product-title">Summit Kit V1</h3>
+        
+        <div class="asset-badge free-badge">FREE ASSET</div>
 
-        <h4>Summit Kit V1</h4>
-        <div class="badge">FREE MODEL</div>
-        <a class="download" href="https://create.roblox.com/store/asset/135286176326484" target="_blank">
+        <ul class="product-features">
+          <li>Premium Lua Modules</li>
+          <li>Advanced Admin System</li>
+          <li>Futuristic UI Library Pro</li>
+          <li>DataStore Manager Premium</li>
+          <li>Anti-Exploit Protection</li>
+          <li>Performance Optimizer</li>
+          <li class="hidden-feature">Custom Commands System</li>
+          <li class="hidden-feature">Player Analytics</li>
+          <li class="hidden-feature">Auto-Save System</li>
+          <li class="hidden-feature">Cross-Server Messaging</li>
+          <li class="hidden-feature">VIP System Integration</li>
+          <li class="hidden-feature">Economy System</li>
+          <li class="hidden-feature">Leaderboard System</li>
+        </ul>
+
+        <button class="expand-features" onclick="toggleFeatures(this)">Show 7 more features...</button>
+
+        <div class="product-tags">
+          <span class="tag">Summit Kit</span>
+          <span class="tag">All-in-One</span>
+          <span class="tag">Premium</span>
+          <span class="tag">Modules</span>
+        </div>
+        
+        <a class="download-btn" href="https://create.roblox.com/store/asset/135286176326484" target="_blank">
           ⬇ Download File ⬇
         </a>
       </div>
@@ -399,6 +746,40 @@ document.getElementById("logoutBtn").onclick = async () => {
   await signOut(auth);
   location.href = "login.html";
 };
+</script>
+
+<script>
+// Toggle Features Function (Global scope for inline onclick)
+function toggleFeatures(button) {
+  const card = button.closest('.product-card');
+  const hiddenFeatures = card.querySelectorAll('.hidden-feature');
+  const isExpanded = button.classList.contains('expanded');
+  
+  if (isExpanded) {
+    // Collapse
+    hiddenFeatures.forEach(feature => {
+      feature.classList.remove('show-feature');
+      setTimeout(() => {
+        feature.style.display = 'none';
+      }, 300);
+    });
+    const count = hiddenFeatures.length;
+    button.textContent = 'Show ' + count + ' more features...';
+    button.classList.remove('expanded');
+  } else {
+    // Expand
+    hiddenFeatures.forEach((feature, index) => {
+      setTimeout(() => {
+        feature.style.display = 'flex';
+        setTimeout(() => {
+          feature.classList.add('show-feature');
+        }, 10);
+      }, index * 50);
+    });
+    button.textContent = 'Show less features...';
+    button.classList.add('expanded');
+  }
+}
 </script>
 
 
