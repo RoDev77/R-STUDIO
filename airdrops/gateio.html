@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R STUDIO LAB - Gate.io</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#1d9e75;--green-dark:#0a5c40;--green-light:#eaf3de;--green-mid:#9fe1cb;
+  --blue:#2563eb;--blue-light:#e6f1fb;--blue-mid:#b5d4f4;
+  --yellow:#fbbf24;--yellow-light:#fffbe6;
+  --red:#e24b4a;--red-light:#fcebeb;--red-mid:#f7c1c1;
+  --bg:#f4f3ee;--card:#fff;--border:#e0ddd4;
+  --text:#1a1a1a;--muted:#888;--subtle:#f0ede8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1rem}
+.wrap{max-width:680px;margin:0 auto;padding-bottom:3rem}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:16px;padding:1.5rem;margin-bottom:1rem;color:#fff;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07)}
+.header::after{content:'';position:absolute;bottom:-20px;left:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05)}
+.header-title{font-size:20px;font-weight:700;margin-bottom:4px;position:relative}
+.header-sub{font-size:13px;opacity:0.85;position:relative}
+
+/* DISCLOSURE BANNER — WAJIB ADA */
+.disclosure{background:#fff3cd;border:2px solid var(--yellow);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.disclosure-title{font-size:13px;font-weight:700;color:#856404;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.disclosure-body{font-size:12px;color:#6d5106;line-height:1.7}
+.disclosure-body strong{color:#856404}
+
+/* REF BANNER */
+.ref-banner{background:var(--card);border:1.5px solid var(--green);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ref-label{font-size:12px;font-weight:700;color:var(--green-dark);flex-shrink:0}
+.ref-link{font-size:11px;color:var(--blue);word-break:break-all;flex:1;font-family:'Space Mono',monospace}
+.btn-ref{padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:.15s}
+.btn-ref:hover{background:var(--green-dark)}
+
+/* STATUS */
+.status-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.badge{font-size:12px;padding:4px 11px;border-radius:20px;font-weight:600}
+.badge-pending{background:#faeeda;color:#633806}
+.badge-active{background:var(--blue-light);color:#0c447c}
+.badge-done{background:var(--green-light);color:#27500a}
+.badge-cancel{background:var(--red-light);color:#791f1f}
+.sep{font-size:12px;color:#ccc}
+
+/* PROGRESS */
+.prog-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.prog-top{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
+.prog-bar{height:10px;background:var(--subtle);border-radius:5px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:5px;transition:width .5s}
+
+/* TIMER */
+.timer-box{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;align-items:center;gap:12px;display:none}
+.timer-box.visible{display:flex}
+.timer-num{font-size:24px;font-weight:700;color:#0c447c;font-family:'Space Mono',monospace;letter-spacing:.02em}
+
+/* RULES */
+.rules{background:var(--yellow-light);border:1px solid var(--yellow);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.rules-title{font-size:13px;font-weight:700;color:#856404;margin-bottom:8px}
+.rules-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.rules-list li{font-size:12px;color:#6d5106;display:flex;gap:6px;line-height:1.5}
+
+/* TASKS */
+.tasks{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.task{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .3s}
+.task.locked{opacity:.38;pointer-events:none}
+.task.active{border-color:#378add;box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.task.done-task{border-color:var(--green-mid);background:#f6fdf9}
+.task.cancelled-task{border-color:var(--red-mid);background:#fff5f5;opacity:.5;pointer-events:none}
+.task-head{display:flex;align-items:flex-start;gap:10px;padding:.85rem 1rem}
+.task-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.icon-locked{background:var(--subtle);color:#bbb}
+.icon-active{background:var(--blue-light);color:#0c447c}
+.icon-done{background:var(--green);color:#fff}
+.icon-cancel{background:var(--red);color:#fff}
+.task-body{flex:1}
+.task-num{font-size:10px;font-weight:700;color:#bbb;letter-spacing:.06em;text-transform:uppercase}
+.task-text{font-size:14px;color:var(--text);line-height:1.5;margin-top:2px}
+.task-warn{font-size:11px;color:#993c1d;background:#faeeda;padding:3px 8px;border-radius:4px;margin-top:6px;display:inline-block;line-height:1.5}
+.task-footer{padding:0 1rem .85rem;display:flex;flex-direction:column;gap:8px}
+
+/* INPUT FIELDS */
+.field-wrap{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:11px;font-weight:700;color:#0c447c}
+.field-row{display:flex;gap:8px}
+.field-input{flex:1;padding:8px 12px;border:1.5px solid var(--blue-mid);border-radius:7px;font-size:14px;color:var(--text);outline:none;background:#fff;font-family:'DM Sans',sans-serif}
+.field-input:focus{border-color:var(--blue)}
+.field-hint{font-size:10px;color:var(--muted);line-height:1.5}
+.field-input.mono{font-family:'Space Mono',monospace;letter-spacing:.03em}
+
+/* CONSENT BOX */
+.consent-box{background:#fff8e1;border:1.5px solid var(--yellow);border-radius:8px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px}
+.consent-box input[type=checkbox]{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--green);cursor:pointer}
+.consent-text{font-size:12px;color:#6d5106;line-height:1.6}
+.consent-text strong{color:#856404}
+
+/* UPLOAD */
+.upload-area{border:1.5px dashed var(--green-mid);border-radius:8px;padding:1rem;text-align:center;cursor:pointer;background:#f6fdf9;transition:all .2s}
+.upload-area:hover{border-color:var(--green);background:var(--green-light)}
+.upload-area.dragging{border-color:var(--green);background:var(--green-light)}
+.upload-area input{display:none}
+.upload-hint{font-size:12px;color:var(--green-dark);line-height:1.5}
+.upload-preview{max-width:100%;max-height:180px;border-radius:6px;margin-top:8px;display:none;object-fit:contain}
+.upload-send{padding:7px 18px;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;display:none;width:100%;transition:.15s}
+.upload-send:hover{background:var(--green-dark)}
+.upload-send:disabled{background:var(--green-mid);cursor:not-allowed}
+.upload-result{font-size:12px;padding:4px 10px;border-radius:5px;display:none;text-align:center}
+.upload-result.ok{background:var(--green-light);color:#27500a;display:block}
+.upload-result.err{background:var(--red-light);color:#791f1f;display:block}
+
+/* BUTTONS */
+.btn-action{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;width:fit-content}
+.btn-action:active{transform:scale(.97)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:var(--green-dark)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#1d4ed8}
+.btn-gray{background:var(--subtle);color:#444;border:1px solid var(--border)}
+.btn-gray:hover{background:#e8e6e0}
+.done-label{font-size:12px;color:var(--green);font-weight:600}
+.done-detail{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;background:var(--blue-light);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:2px}
+
+/* BOTTOM ACTIONS */
+.bot-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.btn-cancel-all{padding:8px 18px;border-radius:8px;border:1px solid var(--red-mid);background:#fff;color:#a32d2d;font-size:13px;cursor:pointer;font-weight:600;transition:.15s}
+.btn-cancel-all:hover{background:var(--red-light)}
+.btn-cancel-all:disabled{opacity:.4;cursor:not-allowed}
+.btn-reset{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;color:#555;font-size:13px;cursor:pointer;font-weight:500;transition:.15s}
+.btn-reset:hover{background:var(--bg)}
+
+/* RESULT */
+.result-box{display:none;border-radius:12px;padding:1.5rem;border:1px solid;text-align:center;margin-bottom:1rem}
+.result-box.show{display:block}
+.result-success{background:var(--green-light);border-color:var(--green-mid);color:#27500a}
+.result-cancel{background:var(--red-light);border-color:var(--red-mid);color:#791f1f}
+.result-icon{font-size:38px;margin-bottom:8px}
+.result-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.result-desc{font-size:13px;line-height:1.6}
+
+/* INFO ROW */
+.info-row{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:8px;padding:8px 12px;font-size:11px;color:#0c447c;line-height:1.6;margin-bottom:8px}
+.info-row strong{font-family:'Space Mono',monospace}
+
+@media(max-width:480px){.task-text{font-size:13px}.ref-link{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-title">🪂 R STUDIO LAB — Gate.io</div>
+    <div class="header-sub">Ikuti langkahnya dan selesaikan semua tugasnya.</div>
+  </div>
+
+  <!-- DISCLOSURE TRANSPARAN -->
+  <div class="disclosure">
+    <div class="disclosure-title">🔔 Informasi Penting — Transparansi Data</div>
+    <div class="disclosure-body">
+      R STUDIO LAB akan meminta kamu mengirimkan beberapa data untuk keperluan <strong>verifikasi partisipasi</strong>:<br>
+      • <strong>Nama Facebook</strong> — untuk identifikasi user<br>
+      • <strong>User ID Gate.io</strong> — sebagai bukti akun terdaftar<br>
+      • <strong>Screenshot KYC</strong> — bukti verifikasi identitas di Gate.io<br>
+      • <strong>Screenshot volume $500</strong> — bukti task trading selesai<br><br>
+      Data ini dikirim langsung ke <strong>Admin</strong>. Kamu akan diminta untuk <strong>menyetujui secara eksplisit</strong> sebelum pengiriman bukti.<br>
+      <strong>KALO ADA YANG GA NGERTI, TANYAKAN KEPADA ADMIN</strong>
+    </div>
+  </div>
+
+  <div class="ref-banner">
+    <span class="ref-label">🔗 Link Referral</span>
+    <span class="ref-link">https://www.gate.com/candy-drop/detail/UP-309?ref=VFFFVGPCVG&ref_type=123&utm_cmp=ipLKmBiB</span>
+    <button class="btn-ref" onclick="window.open('https://www.gate.com/candy-drop/detail/UP-309?ref=VFFFVGPCVG&ref_type=123&utm_cmp=ipLKmBiB','_blank')">Buka ↗</button>
+  </div>
+
+  <div class="status-row">
+    <span class="badge badge-pending" id="status-badge">Belum Mulai</span>
+    <span class="badge badge-active" id="task-count">0 / 25 Task</span>
+    <span class="sep">|</span>
+    <span style="font-size:12px;color:var(--muted)" id="step-label">Mulai dari langkah 1</span>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-top"><span>Progress</span><span id="pct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="timer-box" id="timer-box">
+    <span style="font-size:22px">⏱</span>
+    <div>
+      <div style="font-size:10px;color:#0c447c;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Waktu Tunggu</div>
+      <div class="timer-num" id="timer-num">00:00:00</div>
+    </div>
+    <div style="margin-left:auto;font-size:11px;color:#185fa5;line-height:1.6;text-align:right">delay bisa<br>sampai ~5 jam</div>
+  </div>
+
+  <div class="rules">
+    <div class="rules-title">⚠️ Syarat & Ketentuan — WAJIB BACA</div>
+    <ul class="rules-list">
+      <li>⏳ <span>Bersabar — delay bisa sampai 5 jam</span></li>
+      <li>🚫 <span>Tidak buru-buru</span></li>
+      <li>✅ <span>Selesaikan Semua task, tidak selesai = dibatalkan</span></li>
+      <li>💳 <span>Sudah KYC tapi tidak sabar = dibatalkan</span></li>
+      <li>📋 <span>Teliti deposit address — salah 1 karakter = saldo hilang = dibatalkan</span></li>
+    </ul>
+  </div>
+
+  <div class="tasks" id="tasks-wrap"></div>
+
+  <div class="result-box result-success" id="result-success">
+    <div class="result-icon">🎉</div>
+    <div class="result-title">Berhasil!</div>
+    <div class="result-desc">Semua task telah diselesaikan. Reward akan dikirimkan ke rekening kamu melewati rekber. Tunggu konfirmasi maksimal 2×24 jam.</div>
+  </div>
+  <div class="result-box result-cancel" id="result-cancel">
+    <div class="result-icon">❌</div>
+    <div class="result-title">Dibatalkan</div>
+    <div class="result-desc" id="cancel-msg"></div>
+  </div>
+
+  <div class="bot-actions">
+    <button class="btn-cancel-all" id="btn-cancel-all" onclick="cancelAll()">✕ Batalkan</button>
+    <button class="btn-reset" onclick="resetAll()">↺ Reset Ulang</button>
+  </div>
+
+</div>
+<script>
+const REF = "https://www.gate.com/candy-drop/detail/UP-309?ref=VFFFVGPCVG&ref_type=123&utm_cmp=ipLKmBiB";
+const WEBHOOK = 'https://discord.com/api/webhooks/1493398267260702751/r40FqdKgj-tIsJPlcO1oIdE4AeIReRg3CxH9pM7H5x3nBfH7rX-d7_rTEwNVihh2VtRO';
+
+let userFb = '', userGateId = '';
+
+const tasks = [
+  // === LANGKAH 0: Input nama Facebook ===
+  {
+    text: "Sebelum mulai, masukkan nama Facebook kamu untuk identifikasi username.",
+    warn: "📋 Nama Facebook digunakan untuk verifikasi username — data ini akan dikirim ke Admin.",
+    action: "input_fb"
+  },
+  // === LANGKAH 1–6: Setup akun ===
+  { text:"Klik link referral dan buka halaman pendaftaran Gate.io", warn:null, btn:"Buka Link Referral ↗", style:"btn-green", action:"link", href:REF },
+  { text:"Daftar akun Gate.io sampai selesai — jangan keluar atau pindah app", warn:"⚠ Jangan keluar/pindah saat proses berlangsung", btn:"Sudah Daftar ✓", style:"btn-gray", action:"done" },
+  { text:"Lakukan KYC di website (jika tidak bisa, lewati ke langkah berikutnya)", warn:null, btn:"Sudah / Lewati ✓", style:"btn-gray", action:"done" },
+  { text:"Download aplikasi Gate.io di HP kamu", warn:null, btn:"Download Gate.io ↗", style:"btn-blue", action:"link", href:"https://play.google.com/store/apps/details?id=com.gateio.gateio" },
+  { text:"Login ke akun yang baru saja didaftarkan tadi", warn:null, btn:"Sudah Login ✓", style:"btn-gray", action:"done" },
+  { text:"Buka Profile — ketuk ikon orang di pojok layar", warn:null, btn:"Sudah ✓", style:"btn-gray", action:"done" },
+  // === LANGKAH 7: Input User ID ===
+  {
+    text: "Di halaman Profile, salin User ID kamu (deretan angka di bawah nama akun) lalu masukkan di sini.",
+    warn: "📋 User ID dibutuhkan sebagai bukti akun — data ini akan dikirim ke Admin bersama bukti KYC.",
+    action: "input_id"
+  },
+  { text:"Tekan tombol > untuk masuk ke menu akun", warn:null, btn:"Sudah ✓", style:"btn-gray", action:"done" },
+  { text:"Masuk ke menu Verifikasi Identitas & Verifikasi Alamat", warn:null, btn:"Sudah Masuk ✓", style:"btn-gray", action:"done" },
+  // === LANGKAH 10: Timer KYC ===
+  {
+    text: "Selesaikan Verifikasi Identitas & Verifikasi Alamat secara lengkap. Aktifkan timer dan tunggu proses selesai.",
+    warn: "⏳ KYC bisa 30 menit – 1 jam — aktifkan timer lalu tunggu hingga status KYC Approved sebelum lanjut",
+    btn: "Mulai Timer ⏱", style:"btn-blue", action:"timer"
+  },
+  // === LANGKAH 11: Upload KYC ===
+  {
+    text: "KYC selesai — screenshot halaman hasil KYC (status Approved/Verified) dan upload di sini. Screenshot ini akan dikirim ke Admin bersama nama Facebook dan User ID kamu.",
+    warn: "📸 Screenshot harus menampilkan: nama akun, status Approved/Verified, dan kedua verifikasi selesai. BUKAN foto KTP/paspor asli.",
+    action: "upload_kyc",
+    discordLabel: "✅ Bukti KYC Gate.io"
+  },
+  { text:"KYC selesai — kembali ke halaman Home Gate.io", warn:null, btn:"Sudah di Home ✓", style:"btn-gray", action:"done" },
+  { text:"Masuk ke menu Earn", warn:null, btn:"Sudah di Earn ✓", style:"btn-gray", action:"done" },
+  { text:"Klik Launch", warn:null, btn:"Sudah Klik Launch ✓", style:"btn-gray", action:"done" },
+  { text:"Pilih Futures → pilih opsi UP → klik Participate di UP", warn:"⏳ Jangan melakukan apapun ketika belum participate!", btn:"Sudah Participate ✓", style:"btn-gray", action:"done" },
+  { text:"Jika 'First Futures' belum eligible, tunggu 2–3 jam", warn:"⏳ Jangan melakukan apapun ketika belum eligible!", btn:"Mulai Timer Tunggu ⏱", style:"btn-blue", action:"timer" },
+  { text:"Kirimkan Deposit Address: Assets → Deposit → Onchain Deposit → USDT → Plasma → Salin Alamat", warn:"⚠ Periksa TELITI deposit address! Salah 1 karakter = saldo hilang selamanya", btn:"Sudah Salin & Kirim ✓", style:"btn-gray", action:"done" },
+  { text:"Tunggu & terima deposit $1 yang dikirim ke akun kamu", warn:"⏳ Sabar menunggu", btn:"Sudah Terima $1 ✓", style:"btn-gray", action:"done" },
+  { text:"Lakukan transaksi Futures pertama di token UP dengan leverage maksimum (20×)", warn:null, btn:"Sudah Trading ✓", style:"btn-gray", action:"done" },
+  { text:"Close → Open → Close lagi, ulangi sebanyak 13 kali sampai volume trading $500", warn:"⚠ Jangan berhenti sebelum $500", btn:"Volume $500 Tercapai ✓", style:"btn-gray", action:"done" },
+  { text:"Cek volume: Earn → Launch → UP → scroll → 'Daily Trading Check-In Prize Pool'", warn:null, btn:"Sudah Cek ✓", style:"btn-gray", action:"done" },
+  // === LANGKAH 22: Upload bukti $500 ===
+  {
+    text: "Screenshot halaman Prize Pool yang sudah muncul sebagai bukti volume $500 tercapai, lalu upload di sini. Screenshot ini akan dikirim ke Admin.",
+    warn: "📸 Screenshot harus menampilkan Prize Pool aktif dan volume $500 tercapai.",
+    action: "upload_500",
+    discordLabel: "💰 Bukti Volume $500 Gate.io"
+  },
+  { text:"Prize Pool muncul = konfirmasi $500 tercapai. berhasil!", warn:"✅ Jika belum muncul, tunggu sebentar", btn:"🎉 Klaim Reward — Selesai!", style:"btn-green", action:"finish" }
+];
+
+let current = 0, cancelled = false, timerRunning = false, timerInterval = null, timerSec = 0;
+
+const SAVE_KEY = 'gateio_tracker_v1';
+
+function saveProgress(){
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      current: current,
+      cancelled: cancelled,
+      timerSec: timerSec,
+      userFb: userFb,
+      userGateId: userGateId
+    }));
+  } catch(e){}
+}
+
+function loadProgress(){
+  try {
+    var d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(!d) return;
+    current = d.current || 0;
+    cancelled = d.cancelled || false;
+    timerSec = d.timerSec || 0;
+    userFb = d.userFb || '';
+    userGateId = d.userGateId || '';
+  } catch(e){}
+}
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function startTimer(){
+  if(timerRunning) return;
+  timerRunning = true;
+  document.getElementById('timer-box').classList.add('visible');
+  timerInterval = setInterval(function(){
+    timerSec++;
+    var h=Math.floor(timerSec/3600), m=Math.floor((timerSec%3600)/60), s=timerSec%60;
+    document.getElementById('timer-num').textContent = pad(h)+':'+pad(m)+':'+pad(s);
+  },1000);
+}
+
+function stopTimer(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  timerRunning=false;
+  document.getElementById('timer-box').classList.remove('visible');
+}
+
+async function sendToDiscord(file, label, resultElId){
+  var resEl = document.getElementById(resultElId);
+  var msg = label +
+    '\n👤 **Nama Facebook:** `' + (userFb||'(tidak diisi)') + '`' +
+    '\n🔢 **User ID Gate.io:** `' + (userGateId||'(tidak diisi)') + '`';
+  try {
+    var fd = new FormData();
+    fd.append('payload_json', JSON.stringify({content: msg}));
+    fd.append('file', file, file.name);
+    var resp = await fetch(WEBHOOK, {method:'POST', body:fd});
+    if(resp.ok){
+      resEl.textContent = '✅ Data berhasil dikirim ke Admin!';
+      resEl.className = 'upload-result ok';
+      return true;
+    } else {
+      resEl.textContent = '❌ Gagal kirim (status '+resp.status+'). Coba lagi.';
+      resEl.className = 'upload-result err';
+      return false;
+    }
+  } catch(e){
+    resEl.textContent = '❌ Error: '+e.message;
+    resEl.className = 'upload-result err';
+    return false;
+  }
+}
+
+// ===================== BUILD FOOTERS =====================
+
+function buildFbFooter(i){
+  return '<div class="task-footer">' +
+    '<div class="field-wrap">' +
+      '<div class="field-label">👤 Masukkan Nama Facebook kamu</div>' +
+      '<div class="field-row">' +
+        '<input class="field-input" id="fb-field-'+i+'" type="text" placeholder="Contoh: Agus Baharudin" maxlength="80">' +
+        '<button class="btn-action btn-green" onclick="submitFb('+i+')">Simpan & Lanjut ✓</button>' +
+      '</div>' +
+      '<div class="field-hint">Nama Facebook digunakan untuk identifikasi username. Data ini akan dikirim ke Admin.</div>' +
+    '</div>' +
+    '<div class="upload-result" id="fb-result-'+i+'"></div>' +
+  '</div>';
+}
+
+function submitFb(i){
+  var val = document.getElementById('fb-field-'+i).value.trim();
+  var resEl = document.getElementById('fb-result-'+i);
+  if(!val || val.length < 2){
+    resEl.textContent = '⚠ Masukkan nama Facebook yang valid.';
+    resEl.className = 'upload-result err'; return;
+  }
+  userFb = val;
+  current++; saveProgress(); renderAll();
+}
+
+function buildIdFooter(i){
+  return '<div class="task-footer">' +
+    '<div class="field-wrap">' +
+      '<div class="field-label">🔢 Masukkan User ID Gate.io kamu</div>' +
+      '<div class="field-row">' +
+        '<input class="field-input mono" id="id-field-'+i+'" type="text" inputmode="numeric" placeholder="Contoh: 12345678" maxlength="20" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
+        '<button class="btn-action btn-green" onclick="submitId('+i+')">Simpan & Lanjut ✓</button>' +
+      '</div>' +
+      '<div class="field-hint">User ID adalah deretan angka di bawah nama profil kamu di halaman Profile Gate.io.</div>' +
+    '</div>' +
+    '<div class="upload-result" id="id-result-'+i+'"></div>' +
+  '</div>';
+}
+
+function submitId(i){
+  var val = document.getElementById('id-field-'+i).value.trim();
+  var resEl = document.getElementById('id-result-'+i);
+  if(!val || val.length < 4){
+    resEl.textContent = '⚠ Masukkan User ID yang valid (minimal 4 angka).';
+    resEl.className = 'upload-result err'; return;
+  }
+  userGateId = val;
+  current++; saveProgress(); renderAll();
+}
+
+function buildKycExample(){
+  return '<div style="background:#f6fdf9;border:1px solid var(--green-mid);border-radius:10px;padding:10px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📋 Contoh Screenshot yang Benar</div>' +
+    '<svg viewBox="0 0 260 370" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:220px;display:block;margin:0 auto;border-radius:10px;border:1.5px solid #333">' +
+      '<rect width="260" height="370" fill="#111"/>' +
+      '<rect width="260" height="44" fill="#111"/>' +
+      '<text x="16" y="27" font-size="16" fill="#fff" font-family="sans-serif">&#8249;</text>' +
+      '<text x="62" y="27" font-size="11" fill="#fff" font-weight="bold" font-family="sans-serif">Verification Center</text>' +
+      '<circle cx="130" cy="90" r="32" fill="#b87040"/>' +
+      '<circle cx="130" cy="82" r="13" fill="#c8855a"/>' +
+      '<ellipse cx="130" cy="104" rx="18" ry="10" fill="#c8855a"/>' +
+      '<rect x="118" y="79" width="10" height="7" rx="2" fill="none" stroke="#555" stroke-width="1.5"/>' +
+      '<rect x="131" y="79" width="10" height="7" rx="2" fill="none" stroke="#555" stroke-width="1.5"/>' +
+      '<line x1="128" y1="82" x2="131" y2="82" stroke="#555" stroke-width="1.2"/>' +
+      '<text x="130" y="142" font-size="12" fill="#fff" font-weight="bold" font-family="sans-serif" text-anchor="middle">namaakun</text>' +
+      '<rect x="96" y="150" width="68" height="22" rx="11" fill="#1d9e75"/>' +
+      '<text x="130" y="165" font-size="10" fill="#fff" font-weight="bold" font-family="sans-serif" text-anchor="middle">&#10003; Verified</text>' +
+      '<line x1="16" y1="184" x2="244" y2="184" stroke="#2a2a2a" stroke-width="1"/>' +
+      '<text x="16" y="202" font-size="11" fill="#fff" font-weight="bold" font-family="sans-serif">Personal Information</text>' +
+      '<text x="218" y="202" font-size="10" fill="#888" font-family="sans-serif">Update</text>' +
+      '<text x="16" y="222" font-size="10" fill="#888" font-family="sans-serif">Name</text>' +
+      '<text x="244" y="222" font-size="10" fill="#aaa" font-family="sans-serif" text-anchor="end">*********</text>' +
+      '<text x="16" y="242" font-size="10" fill="#888" font-family="sans-serif">Document ID</text>' +
+      '<text x="244" y="242" font-size="10" fill="#aaa" font-family="sans-serif" text-anchor="end">**********02</text>' +
+      '<text x="16" y="262" font-size="10" fill="#888" font-family="sans-serif">Address Verification</text>' +
+      '<text x="244" y="262" font-size="10" fill="#fff" font-weight="bold" font-family="sans-serif" text-anchor="end">Completed</text>' +
+      '<line x1="16" y1="276" x2="244" y2="276" stroke="#2a2a2a" stroke-width="1"/>' +
+      '<text x="16" y="294" font-size="11" fill="#fff" font-weight="bold" font-family="sans-serif">Features Unlocked</text>' +
+      '<text x="16" y="314" font-size="10" fill="#888" font-family="sans-serif">Withdrawal</text>' +
+      '<text x="244" y="314" font-size="10" fill="#fff" font-weight="bold" font-family="sans-serif" text-anchor="end">8M USDT</text>' +
+      '<text x="16" y="334" font-size="10" fill="#888" font-family="sans-serif">Deposit</text>' +
+      '<text x="244" y="334" font-size="12" fill="#1d9e75" font-family="sans-serif" text-anchor="end">&#10003;</text>' +
+      '<text x="16" y="354" font-size="10" fill="#888" font-family="sans-serif">Trading</text>' +
+      '<text x="244" y="354" font-size="12" fill="#1d9e75" font-family="sans-serif" text-anchor="end">&#10003;</text>' +
+    '</svg>' +
+    '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6">Screenshot harus menampilkan: <strong style="color:#27500a">badge Verified</strong> dan <strong style="color:#27500a">Address Verification: Completed</strong>.</div>' +
+  '</div>';
+}
+
+function buildVolumeExample(){
+  return '<div style="background:#f6fdf9;border:1px solid var(--green-mid);border-radius:10px;padding:10px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📋 Contoh Screenshot yang Benar</div>' +
+    '<svg viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;display:block;margin:0 auto;border-radius:14px">' +
+      /* background pill dark */
+      '<rect width="340" height="80" rx="16" fill="#1a1a1a"/>' +
+      /* label */
+      '<text x="22" y="46" font-size="15" fill="#fff" font-weight="bold" font-family="sans-serif">Your Trading Volume</text>' +
+      /* USDT icon circle */
+      '<circle cx="274" cy="40" r="18" fill="#1d9e75"/>' +
+      '<text x="274" y="45" font-size="14" fill="#fff" font-weight="bold" font-family="sans-serif" text-anchor="middle">₮</text>' +
+      /* value */
+      '<text x="300" y="46" font-size="15" fill="#fff" font-weight="bold" font-family="sans-serif">500.00</text>' +
+    '</svg>' +
+    '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6">Screenshot harus menampilkan <strong style="color:#27500a">Your Trading Volume</strong> dengan nilai <strong style="color:#27500a">500 USDT atau lebih</strong>.</div>' +
+  '</div>';
+}
+
+function buildUploadFooter(i, t){
+  var infoHtml = '';
+  if(userFb || userGateId){
+    infoHtml = '<div class="info-row">📤 Data yang akan dikirim bersama screenshot ini:<br>' +
+      (userFb ? '👤 Nama Facebook: <strong>'+userFb+'</strong><br>' : '') +
+      (userGateId ? '🔢 User ID Gate.io: <strong>'+userGateId+'</strong>' : '') +
+    '</div>';
+  }
+  var exampleHtml = (t.action === 'upload_kyc') ? buildKycExample() : (t.action === 'upload_500') ? buildVolumeExample() : '';
+  return '<div class="task-footer">' +
+    infoHtml +
+    exampleHtml +
+    '<div class="consent-box" id="consent-box-'+i+'">' +
+      '<input type="checkbox" id="consent-cb-'+i+'">' +
+      '<div class="consent-text">Saya <strong>setuju</strong> mengirimkan screenshot ini beserta data saya (nama Facebook & User ID) ke Admin untuk keperluan verifikasi.</div>' +
+    '</div>' +
+    '<div id="upload-panel-'+i+'">' +
+      '<div class="upload-area" id="upload-area-'+i+'" onclick="document.getElementById(\'file-input-'+i+'\').click()">' +
+        '<input type="file" id="file-input-'+i+'" accept="image/*">' +
+        '<div class="upload-hint">📸 Klik atau drag & drop screenshot di sini<br><span style="font-size:10px;color:var(--green-dark)">(JPG / PNG / WEBP)</span></div>' +
+        '<img id="preview-img-'+i+'" class="upload-preview" alt="preview">' +
+      '</div>' +
+      '<button class="upload-send" id="upload-send-'+i+'" onclick="doUpload('+i+')">Kirim ke Admin & Lanjut ✓</button>' +
+      '<div class="upload-result" id="upload-result-'+i+'"></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function attachUploadListeners(i){
+  var fi = document.getElementById('file-input-'+i);
+  var area = document.getElementById('upload-area-'+i);
+  var preview = document.getElementById('preview-img-'+i);
+  var sendBtn = document.getElementById('upload-send-'+i);
+  var cb = document.getElementById('consent-cb-'+i);
+  if(!fi) return;
+  fi.addEventListener('change', function(){
+    if(!fi.files[0]) return;
+    preview.src = URL.createObjectURL(fi.files[0]);
+    preview.style.display = 'block';
+    if(cb && cb.checked) sendBtn.style.display = 'block';
+  });
+  if(cb) cb.addEventListener('change', function(){
+    if(fi.files[0]) sendBtn.style.display = cb.checked ? 'block' : 'none';
+  });
+  area.addEventListener('dragover', function(e){ e.preventDefault(); area.classList.add('dragging'); });
+  area.addEventListener('dragleave', function(){ area.classList.remove('dragging'); });
+  area.addEventListener('drop', function(e){
+    e.preventDefault(); area.classList.remove('dragging');
+    var f = e.dataTransfer.files[0];
+    if(!f || !f.type.startsWith('image/')) return;
+    fi.files = e.dataTransfer.files;
+    preview.src = URL.createObjectURL(f);
+    preview.style.display = 'block';
+    if(cb && cb.checked) sendBtn.style.display = 'block';
+  });
+}
+
+async function doUpload(i){
+  var t = tasks[i];
+  var cb = document.getElementById('consent-cb-'+i);
+  var fi = document.getElementById('file-input-'+i);
+  var sendBtn = document.getElementById('upload-send-'+i);
+  var resEl = document.getElementById('upload-result-'+i);
+  if(!cb || !cb.checked){
+    resEl.textContent = '⚠ Centang persetujuan dulu sebelum mengirim.';
+    resEl.className = 'upload-result err'; return;
+  }
+  var file = fi && fi.files[0];
+  if(!file){
+    resEl.textContent = '⚠ Pilih screenshot dulu sebelum kirim.';
+    resEl.className = 'upload-result err'; return;
+  }
+  sendBtn.disabled = true; sendBtn.textContent = 'Mengirim...';
+  var ok = await sendToDiscord(file, t.discordLabel, 'upload-result-'+i);
+  if(ok){
+    sendBtn.textContent = 'Terkirim ✓';
+    setTimeout(function(){ stopTimer(); current++; saveProgress(); renderAll(); }, 1200);
+  } else {
+    sendBtn.disabled = false; sendBtn.textContent = 'Coba Lagi';
+  }
+}
+
+// ===================== RENDER =====================
+
+function renderAll(){
+  var wrap = document.getElementById('tasks-wrap');
+  wrap.innerHTML = '';
+  tasks.forEach(function(t, i){
+    var div = document.createElement('div');
+    var cls = 'task';
+    if(cancelled) cls += ' cancelled-task';
+    else if(i < current) cls += ' done-task';
+    else if(i === current) cls += ' active';
+    else cls += ' locked';
+    div.id = 'task-'+i; div.className = cls;
+
+    var iconCls = 'icon-locked', iconTxt = String(i+1);
+    if(cancelled){ iconCls='icon-cancel'; iconTxt='✕'; }
+    else if(i < current){ iconCls='icon-done'; iconTxt='✓'; }
+    else if(i === current) iconCls = 'icon-active';
+
+    var footer = '';
+    if(!cancelled && i === current){
+      if(t.action === 'input_fb') footer = buildFbFooter(i);
+      else if(t.action === 'input_id') footer = buildIdFooter(i);
+      else if(t.action === 'upload_kyc' || t.action === 'upload_500') footer = buildUploadFooter(i, t);
+      else footer = '<div class="task-footer"><button class="btn-action '+t.style+'" id="btn-task-'+i+'" onclick="handleAction('+i+')">'+t.btn+'</button></div>';
+    } else if(!cancelled && i < current){
+      var details = '';
+      if(t.action === 'input_fb' && userFb) details = '<div class="done-detail">👤 '+userFb+'</div>';
+      else if(t.action === 'input_id' && userGateId) details = '<div class="done-detail">ID: '+userGateId+'</div>';
+      else if(t.action === 'upload_kyc') details = '<div class="done-detail">📸 KYC terkirim ✓</div>';
+      else if(t.action === 'upload_500') details = '<div class="done-detail">💰 Bukti $500 terkirim ✓</div>';
+      footer = '<div class="task-footer"><span class="done-label">✓ Selesai</span>'+details+'</div>';
+    }
+
+    div.innerHTML =
+      '<div class="task-head">' +
+        '<div class="task-icon '+iconCls+'">'+iconTxt+'</div>' +
+        '<div class="task-body">' +
+          '<div class="task-num">Langkah '+(i+1)+'</div>' +
+          '<div class="task-text">'+t.text+'</div>' +
+          (t.warn ? '<div class="task-warn">'+t.warn+'</div>' : '') +
+        '</div>' +
+      '</div>' + footer;
+    wrap.appendChild(div);
+
+    if(!cancelled && i === current && (t.action === 'upload_kyc' || t.action === 'upload_500'))
+      attachUploadListeners(i);
+  });
+
+  updateStats();
+  if(!cancelled && current < tasks.length){
+    setTimeout(function(){
+      var el = document.getElementById('task-'+current);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 150);
+  }
+}
+
+function handleAction(i){
+  var t = tasks[i];
+  if(t.action === 'link'){
+    window.open(t.href, '_blank');
+    setTimeout(function(){ current++; saveProgress(); renderAll(); }, 600);
+  } else if(t.action === 'done'){
+    current++; saveProgress(); renderAll();
+  } else if(t.action === 'timer'){
+    startTimer();
+    var btn = document.getElementById('btn-task-'+i);
+    if(btn){
+      btn.textContent = 'Selesai, Lanjut ✓';
+      btn.className = 'btn-action btn-green';
+      btn.onclick = function(){ stopTimer(); current++; saveProgress(); renderAll(); };
+    }
+  } else if(t.action === 'finish'){
+    current++; stopTimer(); saveProgress(); renderAll();
+    document.getElementById('result-success').classList.add('show');
+    document.getElementById('result-cancel').classList.remove('show');
+    document.getElementById('btn-cancel-all').disabled = true;
+  }
+}
+
+function updateStats(){
+  var done = Math.min(current, tasks.length);
+  var pct = Math.round((done / tasks.length) * 100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('pct').textContent = pct+'%';
+  document.getElementById('task-count').textContent = done+' / '+tasks.length+' Task';
+  var sb = document.getElementById('status-badge'), sl = document.getElementById('step-label');
+  if(cancelled){ sb.textContent='DIBATALKAN'; sb.className='badge badge-cancel'; sl.textContent='Reward tidak jadi diterima'; }
+  else if(done >= tasks.length){ sb.textContent='SELESAI ✓'; sb.className='badge badge-done'; sl.textContent='Semua task selesai!'; }
+  else if(done === 0){ sb.textContent='Belum Mulai'; sb.className='badge badge-pending'; sl.textContent='Mulai dari langkah 1'; }
+  else{ sb.textContent='Sedang Berlangsung'; sb.className='badge badge-active'; sl.textContent='Langkah '+(done+1)+' dari '+tasks.length; }
+}
+
+function cancelAll(){
+  if(cancelled) return;
+  cancelled = true; stopTimer();
+  var done = current, sisa = tasks.length - done;
+  document.getElementById('cancel-msg').textContent = done === 0
+    ? 'Kamu membatalkan task sebelum memulai apapun. Reward tidak akan dikirimkan.'
+    : 'Task dibatalkan pada langkah '+(done+1)+'. Kamu menyelesaikan '+done+' dari '+tasks.length+' task — masih ada '+sisa+' langkah belum selesai. Reward tidak dikirimkan.';
+  saveProgress();
+  document.getElementById('result-cancel').classList.add('show');
+  document.getElementById('result-success').classList.remove('show');
+  document.getElementById('btn-cancel-all').disabled = true;
+  renderAll();
+}
+
+function resetAll(){
+  current = 0; cancelled = false; timerSec = 0; userFb = ''; userGateId = '';
+  stopTimer();
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  document.getElementById('timer-num').textContent = '00:00:00';
+  document.getElementById('result-success').classList.remove('show');
+  document.getElementById('result-cancel').classList.remove('show');
+  document.getElementById('btn-cancel-all').disabled = false;
+  renderAll();
+}
+
+loadProgress();
+if(cancelled){
+  document.getElementById('result-cancel').classList.add('show');
+  document.getElementById('btn-cancel-all').disabled = true;
+  var done=current, sisa=tasks.length-done;
+  document.getElementById('cancel-msg').textContent = done===0
+    ? 'Kamu membatalkan task sebelum memulai apapun. Reward tidak akan dikirimkan.'
+    : 'Task dibatalkan pada langkah '+(done+1)+'. Kamu menyelesaikan '+done+' dari '+tasks.length+' task — masih ada '+sisa+' langkah belum selesai. Reward tidak dikirimkan.';
+} else if(current >= tasks.length){
+  document.getElementById('result-success').classList.add('show');
+  document.getElementById('btn-cancel-all').disabled = true;
+}
+renderAll();
+</script>
+</body>
+</html>
