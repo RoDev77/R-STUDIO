@@ -161,7 +161,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="disclosure-title">🔔 Informasi Penting — Transparansi Data</div>
     <div class="disclosure-body">
       R STUDIO LAB akan meminta kamu mengirimkan beberapa data untuk keperluan <strong>verifikasi partisipasi</strong>:<br>
-      • <strong>Nama Facebook</strong> — untuk identifikasi user<br>
+      • <strong>Nama Facebook</strong> — untuk identifikasi pemilik<br>
       • <strong>User ID Gate.io</strong> — sebagai bukti akun terdaftar<br>
       • <strong>Screenshot KYC</strong> — bukti verifikasi identitas di Gate.io<br>
       • <strong>Screenshot volume $500</strong> — bukti task trading selesai<br><br>
@@ -237,8 +237,8 @@ let userFb = '', userGateId = '';
 const tasks = [
   // === LANGKAH 0: Input nama Facebook ===
   {
-    text: "Sebelum mulai, masukkan nama Facebook kamu untuk identifikasi username.",
-    warn: "📋 Nama Facebook digunakan untuk verifikasi username — data ini akan dikirim ke Admin.",
+    text: "Sebelum mulai, masukkan nama Facebook kamu untuk identifikasi pemilik.",
+    warn: "📋 Nama Facebook digunakan untuk verifikasi pemilik — data ini akan dikirim ke Admin.",
     action: "input_fb"
   },
   // === LANGKAH 1–6: Setup akun ===
@@ -372,7 +372,7 @@ function buildFbFooter(i){
         '<input class="field-input" id="fb-field-'+i+'" type="text" placeholder="Contoh: Agus Baharudin" maxlength="80">' +
         '<button class="btn-action btn-green" onclick="submitFb('+i+')">Simpan & Lanjut ✓</button>' +
       '</div>' +
-      '<div class="field-hint">Nama Facebook digunakan untuk identifikasi username. Data ini akan dikirim ke Admin.</div>' +
+      '<div class="field-hint">Nama Facebook digunakan untuk identifikasi pemilik. Data ini akan dikirim ke Admin.</div>' +
     '</div>' +
     '<div class="upload-result" id="fb-result-'+i+'"></div>' +
   '</div>';
