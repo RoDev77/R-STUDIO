@@ -145,6 +145,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-action:active{transform:scale(.97)}
 .btn-green{background:var(--green);color:#fff}
 .btn-green:hover{background:var(--green-dark)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:var(--red)}
 .btn-blue{background:var(--blue);color:#fff}
 .btn-blue:hover{background:#1d4ed8}
 .btn-gray{background:var(--subtle);color:#444;border:1px solid var(--border)}
@@ -158,8 +160,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-cancel-all{padding:8px 18px;border-radius:8px;border:1px solid var(--red-mid);background:#fff;color:#a32d2d;font-size:13px;cursor:pointer;font-weight:600;transition:.15s}
 .btn-cancel-all:hover{background:var(--red-light)}
 .btn-cancel-all:disabled{opacity:.4;cursor:not-allowed}
-.btn-reset{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;color:#555;font-size:13px;cursor:pointer;font-weight:500;transition:.15s}
-.btn-reset:hover{background:var(--bg)}
+.btn-reset{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;font-weight:500;transition:.15s}
+.btn-reset:hover{background:var(--red-mid)}
 
 /* RESULT */
 .result-box{display:none;border-radius:12px;padding:1.5rem;border:1px solid;text-align:center;margin-bottom:1rem}
@@ -259,7 +261,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 
   <div class="bot-actions">
-    <button class="btn-cancel-all" id="btn-cancel-all" onclick="cancelAll()">✕ Batalkan</button>
+    <!-- <button class="btn-cancel-all" id="btn-cancel-all" onclick="cancelAll()">✕ Batalkan</button> -->
     <button class="btn-reset" onclick="resetAll()">↺ Reset Ulang</button>
   </div>
 
@@ -487,7 +489,7 @@ function buildFbFooter(i){
 
     /* '<button class="btn-action btn-green" style="width:100%;margin-top:12px" onclick="submitFb('+i+')">Simpan & Lanjut ✓</button>' +
     '<div class="upload-result" id="fb-result-'+i+'"></div>' + */
-    '<button class="btn-action btn-green" style="width:100%;margin-top:12px" onclick="submitFb">Ended</button>' +
+    '<button class="btn-action btn-red" style="width:100%;margin-top:12px" onclick="submitFb">Ended</button>' +
   '</div>';
 }
 
