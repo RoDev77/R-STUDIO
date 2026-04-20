@@ -52,7 +52,7 @@ form.addEventListener("submit", async (e) => {
       passwordInput.value.trim()
     );
 
-    location.href = "index.html";
+    location.href = "home.html";
 
   } catch (err) {
     errorBox.textContent = humanError(err.code);

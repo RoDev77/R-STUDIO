@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="home.css">
+<link rel="icon" type="image/png" href="./images/RSLogo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
+<link rel="apple-touch-icon" href="./images/RSLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* CSS Tambahan untuk Product Cards */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.product-card {
+  background: #6b7280;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.product-card:hover::before {
+  opacity: 1;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  border-color: transparent;
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.product-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.badge-new {
+  background: linear-gradient(135deg, #15fd00, #80ff00);
+  color: white;
+}
+
+.badge-hot {
+  background: linear-gradient(135deg, #ff3366, #cc0033);
+  color: white;
+  margin-left: 8px;
+}
+
+.badge-all {
+  background: linear-gradient(165deg, #000000, #7c3aed); 
+  color: white;
+}
+
+.badge-comingsoon {
+  background: linear-gradient(135deg, #f5f5f5, #ff0000);
+  color: rgb(0, 0, 0);
+}
+
+.product-video {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: #000;
+}
+
+.product-video iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.product-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.3;
+  color: #fff;
+}
+
+.product-description {
+  color: #f3f4f6;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  font-weight: 400;
+  display: block;
+}
+
+.product-features {
+  list-style: none;
+  margin-bottom: 25px;
+}
+
+.product-features li {
+  padding: 8px 0;
+  font-size: 14px;
+  color: #e5e7eb;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transition: all 0.3s;
+}
+
+.product-features li.hidden-feature {
+  display: none;
+}
+
+.product-features li.show-feature {
+  display: flex;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-features li::before {
+  content: '✓';
+  color: #3dd6ff;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.expand-features {
+  background: transparent;
+  border: none;
+  color: #3dd6ff;
+  padding: 8px 0;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+  display: inline-block;
+  text-align: left;
+}
+
+.expand-features:hover {
+  color: #5ee6ff;
+}
+
+.product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.tag {
+  background: rgba(124, 58, 237, 0.4);
+  border: 1px solid rgba(124, 58, 237, 0.6);
+  padding: 6px 14px;
+  border-radius: 15px;
+  font-size: 12px;
+  color: #ddd6fe;
+}
+
+.asset-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+}
+
+.free-badge {
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: white;
+}
+
+.vip-badge {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: white;
+}
+
+.download-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  text-decoration: none;
+  margin-top: 20px;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(91, 62, 247, 0.4);
+}
+
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <!-- Floating Cubes -->
+  <div class="load-cube"></div>
+  <div class="load-cube"></div>
+  <div class="load-cube"></div>
+  <div class="load-cube"></div>
+  
+  <!-- Particles -->
+  <div class="load-particles">
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+    <div class="load-particle"></div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="load-content">
+    <!-- Logo Spinner -->
+    <div class="load-spinner">
+      <div class="spin-ring"></div>
+      <div class="spin-ring"></div>
+      <div class="spin-ring"></div>
+      
+      <div class="orbit-dots">
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+      </div>
+      
+      <div class="load-logo">
+        <img src="./images/RSLogo.png" alt="RS Logo" style="width: 70px; height: 70px; object-fit: contain; position: relative; z-index: 1; filter: drop-shadow(0 4px 12px rgba(255,255,255,0.6));">
+      </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="load-progress">
+      <div class="progress-track">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+      <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+    
+    <!-- Title -->
+    <div class="load-title">
+      <span class="load-letter">R</span>
+      <span class="load-letter">S</span>
+      <span class="load-letter">T</span>
+      <span class="load-letter">U</span>
+      <span class="load-letter">D</span>
+      <span class="load-letter">I</span>
+      <span class="load-letter">O</span>
+    </div>
+    
+    <div class="load-subtitle">Learn Roblox Studio Development</div>
+  </div>
+</div>
+
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="brand">
+    <h2>R STUDIO</h2>
+    <span>Learn Roblox Studio Development</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:16px">
+
+    <!-- BERLANGGANAN -->
+    <a href="subscribe.html" class="subscribe-btn">
+      💎 Berlangganan
+    </a>
+
+    <!-- PROFILE -->
+    <div class="profile">
+      <div class="avatar" id="avatar">
+        <img id="avatarImg" style="display:none">
+        <span id="avatarText">R</span>
+      </div>
+
+      <div class="dropdown" id="dropdown">
+        <a href="profile.html">👤 Profile</a>
+        <a href="license.html">🔐 License</a>
+        <a href="admin.html" id="adminMenu" style="display:none">🛠 Admin Panel</a>
+        <a href="login.html" id="logoutBtn">🚪 Logout</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+
+  <div class="hero">
+    <h1>Welcome to R STUDIO 🚀</h1>
+    <p>Creative dashboard for Roblox developers & creators</p>
+    <div class="status" id="roleBadge">👤 Member</div>
+  </div>
+
+  <div class="section" id="content">
+    <h3>🎬 Video Library</h3>
+    <p>Tutorial & konten eksklusif R Studio</p>
+
+    <div class="products-grid">
+
+      <!-- Product 3: ??? -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-comingsoon">COMINGS</span>
+        </div>
+        
+        <div class="product-video">
+          <img
+            src="./images/comingsoon.avif"
+            alt="Coming Soon"
+            style="width: 100%; height: 100%; object-fit: cover;"
+          />
+        </div>
+        
+        <h3 class="product-title">???</h3>
+        
+        <div class="asset-badge vip-badge">VIP ASSET</div>
+
+        <ul class="product-features">
+          <li>???</li>
+        </ul>
+
+        <div class="product-tags">
+          <span class="tag">???</span>
+        </div>
+        
+        <button type="button" class="download-btn vip-download" data-file="AdvancedAnticheat.rbxm">
+          ⬇ Download File ⬇
+        </button>
+      </div>
+
+      <!-- Product 3: Carry System 2 Pilihan V1 -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-all">
+          <img src="./images/ForAll.png" style="width: 16px; height: 16px; margin-right: 6px;"> FOR ALL
+          </span>
+          <span class="product-badge badge-new">NEW</span>
+        </div>
+        
+        <div class="product-video">
+          <iframe 
+            src="https://youtu.be/hn--cWGn1Ng"
+            title="Carry System 2 Pilihan V1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+        
+        <h3 class="product-title">Carry System 2 Pilihan V1</h3>
+        
+        <div class="asset-badge free-badge">FREE ASSET</div>
+
+        <ul class="product-features">
+          <li>Carry 2 Choice</li>
+          <li>Max Carry 8 Player</li>
+          <li>Choice Carry Animations</li>
+          <li>Futuristic UI Library Pro</li>
+          <li class="hidden-feature">Anti-Exploit Protection</li>
+          <li class="hidden-feature">Performance Optimizer</li>
+        </ul>
+
+        <button class="expand-features" onclick="toggleFeatures(this)">Show 2 more features...</button>
+
+        <div class="product-tags">
+          <span class="tag">CarrySystem</span>
+          <span class="tag">All-in-One</span>
+          <span class="tag">Premium</span>
+          <span class="tag">Modules</span>
+        </div>
+        
+        <a class="download-btn" href="https://create.roblox.com/store/asset/89467272654433" target="_blank">
+          ⬇ Download File ⬇
+        </a>
+      </div>
+
+      <!-- Product 2: Confession Wall System V1 -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-all">
+          <img src="./images/ForAll.png" style="width: 16px; height: 16px; margin-right: 6px;"> FOR ALL
+          </span>
+        </div>
+        
+        <div class="product-video">
+          <iframe 
+            src="https://www.youtube.com/embed/pcWO2OjrPMk"
+            title="Confession Wall System V1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+        
+        <h3 class="product-title">Confession Wall System V1</h3>
+        
+        <div class="asset-badge free-badge">FREE ASSET</div>
+
+        <ul class="product-features">
+          <li>Max Create 2 Confession</li>
+          <li>Auto-Save System</li>
+          <li>DataStore Manager</li>
+          <li>Futuristic UI Library Pro</li>
+          <li class="hidden-feature">Anti-Exploit Protection</li>
+          <li class="hidden-feature">Performance Optimizer</li>
+        </ul>
+
+        <button class="expand-features" onclick="toggleFeatures(this)">Show 2 more features...</button>
+
+        <div class="product-tags">
+          <span class="tag">ConfessionWallSystem</span>
+          <span class="tag">All-in-One</span>
+          <span class="tag">Premium</span>
+          <span class="tag">Modules</span>
+        </div>
+        
+        <a class="download-btn" href="https://create.roblox.com/store/asset/109183734627151" target="_blank">
+          ⬇ Download File ⬇
+        </a>
+      </div>
+
+      <!-- Product 1: Summit Kit -->
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-badge badge-all">
+          <img src="./images/ForAll.png" style="width: 16px; height: 16px; margin-right: 6px;"> FOR ALL
+          </span>
+          <span class="product-badge badge-hot">HOT</span>
+        </div>
+        
+        <div class="product-video">
+          <iframe 
+            src="https://www.youtube.com/embed/Tnn-pOS2-vo"
+            title="Summit Kit V1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+        
+        <h3 class="product-title">Summit Kit V1</h3>
+        
+        <div class="asset-badge free-badge">FREE ASSET</div>
+
+        <ul class="product-features">
+          <li>Premium Lua Modules</li>
+          <li>Advanced Admin System</li>
+          <li>Futuristic UI Library Pro</li>
+          <li>DataStore Manager Premium</li>
+          <li>Anti-Exploit Protection</li>
+          <li>Performance Optimizer</li>
+          <li class="hidden-feature">Custom Commands System</li>
+          <li class="hidden-feature">Player Analytics</li>
+          <li class="hidden-feature">Auto-Save System</li>
+          <li class="hidden-feature">Cross-Server Messaging</li>
+          <li class="hidden-feature">VIP System Integration</li>
+          <li class="hidden-feature">Economy System</li>
+          <li class="hidden-feature">Leaderboard System</li>
+        </ul>
+
+        <button class="expand-features" onclick="toggleFeatures(this)">Show 7 more features...</button>
+
+        <div class="product-tags">
+          <span class="tag">Summit Kit</span>
+          <span class="tag">All-in-One</span>
+          <span class="tag">Premium</span>
+          <span class="tag">Modules</span>
+        </div>
+        
+        <a class="download-btn" href="https://create.roblox.com/store/asset/135286176326484" target="_blank">
+          ⬇ Download File ⬇
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<!-- Modern Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <!-- About Section -->
+        <div class="footer-section">
+            <h3>R STUDIO</h3>
+            <p>Building the future of Roblox development with cutting-edge tools and solutions. Join thousands of developers creating amazing experiences.</p>
+            <div class="social-links">
+                <a href="https://www.roblox.com/communities/13174452/R-TEAMX#!/about" class="social-link" title="Roblox">
+                  <img src="./images/roblox-icon.png" alt="Roblox" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+                <a href="https://discord.gg/AUAzsxPP27" class="social-link" title="Discord">
+                    <img src="./images/discord-icon.jpg" alt="Discord" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+                <a href="https://www.youtube.com/@ahmadrodiii" class="social-link" title="YouTube">
+                    <img src="./images/youtube-icon.png" alt="YouTube" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+                <a href="https://www.instagram.com/ahmadrodiii" class="social-link" title="Instagram">
+                    <img src="./images/instagram-icon.png" alt="Instagram" style="width: 24px; height: 24px; position: relative; z-index: 1;">
+                </a>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="footer-section">
+            <h3>Resources</h3>
+            <div class="footer-links">
+                <a href="#content">Tutorials</a>
+                <a href="license.html">License</a>
+                <a href="https://discord.gg/AUAzsxPP27">Community</a>
+                <a href="subscribe.html">Support</a>
+            </div>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="footer-section">
+            <h3>Stay Updated</h3>
+            <p>Get the latest updates and news delivered to your inbox.</p>
+            <form class="newsletter-form" onsubmit="return false;">
+                <input type="email" class="newsletter-input" placeholder="Enter your email" required>
+                <button type="submit" class="newsletter-btn">Subscribe</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2025 R STUDIO. All rights reserved. Made with ❤️ in Indonesia</p>
+        <div class="footer-bottom-links">
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms of Service</a>
+            <a href="#cookies">Cookies</a>
+        </div>
+    </div>
+</footer>
+
+<script type="module">
+import { auth, db, checkMaintenance } from "./firebase.js";
+import { onAuthStateChanged, getAuth, signOut } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// LOADING SCREEN HANDLER
+let progress = 0;
+const fill = document.getElementById('progressBarFill');
+const text = document.getElementById('progressPercent');
+
+const interval = setInterval(() => {
+  if (progress < 100) {
+    progress += Math.random() * 4 + 2;
+    if (progress > 100) progress = 100;
+    
+    if (fill && text) {
+      fill.style.width = progress + '%';
+      text.textContent = Math.floor(progress) + '%';
+    }
+  } else {
+    clearInterval(interval);
+    // Hide after complete
+    setTimeout(() => {
+      document.getElementById('loadingScreen').classList.add('hidden');
+    }, 500);
+  }
+}, 200);
+
+const avatar = document.getElementById("avatar");
+const avatarImg = document.getElementById("avatarImg");
+const avatarText = document.getElementById("avatarText");
+const dropdown = document.getElementById("dropdown");
+const adminMenu = document.getElementById("adminMenu");
+const roleBadge = document.getElementById("roleBadge");
+const subscribeBtn = document.querySelector(".subscribe-btn");
+const vipButtons = document.querySelectorAll(".vip-download");
+
+let HAS_VIP_ACCESS = false;
+
+vipButtons.forEach(btn => {
+  btn.onclick = async () => {
+
+    // ⛔ STOP SEBELUM FETCH
+    if (!HAS_VIP_ACCESS) {
+      alert("💎 Konten VIP — Silakan berlangganan dulu");
+      return;
+    }
+
+    try {
+      const user = getAuth().currentUser;
+      
+      const token = await user.getIdToken();
+
+      const res = await fetch("/api/download", {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      });
+
+      if (!res.ok) {
+        alert("Gagal download");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "???";
+      a.click();
+
+      URL.revokeObjectURL(url);
+
+    } catch (e) {
+      alert("Server error");
+    }
+  };
+});
+
+
+avatar.onclick = () => {
+  dropdown.style.display =
+    dropdown.style.display === "block" ? "none" : "block";
+};
+
+// DEFAULT (SEBELUM AUTH)
+subscribeBtn.style.display = "inline-flex";
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
+
+  await checkMaintenance();
+  
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()) return;
+
+  const data = snap.data();
+  const role = data.role || "member";
+  const isVIP = data.isVIP === true;
+
+  const hasVIPAccess =
+    isVIP || role === "admin" || role === "owner";
+  
+  HAS_VIP_ACCESS = hasVIPAccess;
+
+  // BADGE
+  roleBadge.textContent =
+    role === "owner" ? "👑 Owner" :
+    role === "admin" ? "🛠 Admin" :
+    hasVIPAccess ? "💎 VIP" :
+    "👤 Member";
+
+  // ADMIN MENU
+  adminMenu.style.display =
+    role === "admin" || role === "owner"
+      ? "block"
+      : "none";
+
+  // ===== AVATAR SYNC =====
+  if (data.photoBase64) {
+    avatarImg.src = data.photoBase64;
+    avatarImg.style.display = "block";
+    avatarText.style.display = "none";
+  } else {
+    avatarText.textContent =
+      (user.displayName || user.email)[0].toUpperCase();
+    avatarImg.style.display = "none";
+    avatarText.style.display = "block";
+  }
+
+  // SUBSCRIBE BUTTON RULE
+  let showSubscribe = true;
+
+  if (isVIP) showSubscribe = false;
+  if (role === "admin" && isVIP) showSubscribe = false;
+  if (role === "owner") showSubscribe = true;
+
+  subscribeBtn.style.display =
+    showSubscribe ? "inline-flex" : "none";
+
+  });
+
+
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  location.href = "login.html";
+};
+</script>
+
+<script>
+// Toggle Features Function (Global scope for inline onclick)
+function toggleFeatures(button) {
+  const card = button.closest('.product-card');
+  const hiddenFeatures = card.querySelectorAll('.hidden-feature');
+  const isExpanded = button.classList.contains('expanded');
+  
+  if (isExpanded) {
+    // Collapse
+    hiddenFeatures.forEach(feature => {
+      feature.classList.remove('show-feature');
+      setTimeout(() => {
+        feature.style.display = 'none';
+      }, 300);
+    });
+    const count = hiddenFeatures.length;
+    button.textContent = 'Show ' + count + ' more features...';
+    button.classList.remove('expanded');
+  } else {
+    // Expand
+    hiddenFeatures.forEach((feature, index) => {
+      setTimeout(() => {
+        feature.style.display = 'flex';
+        setTimeout(() => {
+          feature.classList.add('show-feature');
+        }, 10);
+      }, index * 50);
+    });
+    button.textContent = 'Show less features...';
+    button.classList.add('expanded');
+  }
+}
+</script>
+
+
+
+</body>
+</html>
