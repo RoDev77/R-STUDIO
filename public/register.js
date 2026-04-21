@@ -1,10 +1,16 @@
 import { auth, db } from "./firebase.js";
 import {
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  onAuthStateChanged  // ← tambahkan ini
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
   doc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// ✅ Kalau sudah login, langsung ke home
+onAuthStateChanged(auth, user => {
+  if (user) location.href = "home.html";
+});
 
 /* ELEMENT */
 const form = document.getElementById("registerForm");

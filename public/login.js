@@ -1,7 +1,13 @@
 import { auth } from "./firebase.js";
 import {
+  onAuthStateChanged,
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+// ✅ Kalau sudah login, langsung ke home
+onAuthStateChanged(auth, user => {
+  if (user) location.href = "home.html";
+});
 
 /* ELEMENT */
 const form = document.getElementById("loginForm");
