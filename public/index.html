@@ -33,7 +33,12 @@
     }
     .logo { width: 80px; margin-bottom: 24px; }
     h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
-    h1 span { background: linear-gradient(135deg, #00d4ff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    h1 span {
+      background: linear-gradient(135deg, #00d4ff, #7c3aed);
+      background-clip: text;                  /* ← tambahkan ini */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
     p { color: #9ca3af; font-size: 1.1rem; max-width: 500px; line-height: 1.7; margin-bottom: 32px; }
     .btn-group { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
     .btn {
@@ -82,5 +87,15 @@
     </div>
   </div>
 
+  <!-- Auto redirect kalau sudah login -->
+<script type="module">
+  import { auth } from "./firebase.js";
+  import { onAuthStateChanged } from
+    "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+  onAuthStateChanged(auth, user => {
+    if (user) location.href = "home.html";
+  });
+</script>
 </body>
 </html>
