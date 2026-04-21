@@ -4,205 +4,399 @@
 <meta charset="UTF-8">
 <title>Admin Panel — R Studio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="./images/RSLogo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,system-ui;
-  background:#f8fafc;
-  color:#111827;
+:root {
+  --bg: #0a0a14;
+  --surface: #111122;
+  --surface2: #1a1a2e;
+  --border: rgba(99,102,241,0.15);
+  --accent: #6366f1;
+  --accent2: #8b5cf6;
+  --cyan: #00d4ff;
+  --green: #10b981;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --card-glow: 0 0 40px rgba(99,102,241,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Space Grotesk', system-ui;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Subtle grid bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ===== NAVBAR ===== */
-.navbar{
-  height:64px;
-  padding:0 28px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:linear-gradient(135deg,#6366f1,#7c5cf4);
-  color:white;
-}
-.brand h2{margin:0;font-size:20px;font-weight:800}
-.brand span{font-size:12px;opacity:.85}
-
-/* ===== AVATAR ===== */
-.profile{
-  position:relative;
-}
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:white;
-  color:#6d7cf2;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  cursor:pointer;
-}
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:50%;
+.navbar {
+  height: 64px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(17,17,34,0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-/* dropdown */
-.dropdown{
-  position:absolute;
-  right:0;
-  top:52px;
-  width:180px;
-  background:white;
-  border-radius:14px;
-  box-shadow:0 25px 50px rgba(0,0,0,.15);
-  overflow:hidden;
-  display:none;
-  z-index:99;
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-logo {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px;
+}
+.brand h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.brand span {
+  font-size: 11px;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
 }
 
-.dropdown a{
-  display:block;
-  padding:14px 16px;
-  font-size:14px;
-  text-decoration:none;
-  color:#111827;
+.navbar-right { display: flex; align-items: center; gap: 16px; }
+
+/* ===== PROFILE ===== */
+.profile { position: relative; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; cursor: pointer;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.2s;
 }
-.dropdown a:hover{
-  background:#f3f4f6;
+.avatar:hover { border-color: var(--accent); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.dropdown {
+  position: absolute; right: 0; top: 52px;
+  width: 180px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+  overflow: hidden; display: none; z-index: 99;
 }
+.dropdown a {
+  display: block; padding: 12px 16px; font-size: 13px;
+  text-decoration: none; color: var(--text);
+  transition: background 0.15s;
+}
+.dropdown a:hover { background: rgba(99,102,241,0.1); }
 
 /* ===== CONTAINER ===== */
-.container{
-  max-width:1200px;
-  margin:auto;
-  padding:28px;
+.container {
+  max-width: 1280px; margin: auto;
+  padding: 28px; position: relative; z-index: 1;
+}
+
+/* ===== STATS GRID ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-glow);
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 16px 16px 0 0;
+}
+.stat-card.blue::after { background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+.stat-card.green::after { background: linear-gradient(90deg, var(--green), #34d399); }
+.stat-card.yellow::after { background: linear-gradient(90deg, var(--yellow), #fbbf24); }
+.stat-card.red::after { background: linear-gradient(90deg, var(--red), #f87171); }
+
+.stat-icon {
+  font-size: 24px; margin-bottom: 10px;
+}
+.stat-value {
+  font-size: 32px; font-weight: 800;
+  letter-spacing: -1px;
+}
+.stat-label {
+  font-size: 12px; color: var(--muted); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;
 }
 
 /* ===== TABS ===== */
-.tabs{
-  display:flex;gap:10px;flex-wrap:wrap;
-  margin-bottom:20px;
+.tabs {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 6px;
+  width: fit-content;
 }
-.tab{
-  padding:10px 16px;
-  border-radius:999px;
-  background:#e5e7eb;
-  font-size:13px;
-  font-weight:600;
-  cursor:pointer;
-  transition:all .2s;
+.tab {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--muted);
 }
-.tab:hover{
-  background:#d1d5db;
-}
-.tab.active{
-  background:#6366f1;
-  color:white;
+.tab:hover { color: var(--text); background: rgba(99,102,241,0.1); }
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
 }
 
 /* ===== CARD ===== */
-.card{
-  background:white;
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 20px 40px rgba(0,0,0,.05);
-  margin-bottom:24px;
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--card-glow);
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.card-title {
+  font-size: 16px; font-weight: 700;
 }
 
 /* ===== TABLE ===== */
-table{width:100%;border-collapse:separate;border-spacing:0 10px}
-thead th{
-  font-size:12px;text-transform:uppercase;
-  color:#6b7280;text-align:left;padding:10px;
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+thead th {
+  font-size: 11px; text-transform: uppercase;
+  color: var(--muted); text-align: left; padding: 8px 12px;
+  letter-spacing: 0.5px; font-weight: 600;
 }
-tbody tr{background:#f9fafb;transition:all .2s}
-tbody tr:hover{background:#eef2ff}
-td{padding:14px}
+tbody tr {
+  background: var(--surface2);
+  transition: all 0.15s;
+}
+tbody tr:hover { background: rgba(99,102,241,0.08); }
+td {
+  padding: 14px 12px;
+  font-size: 14px;
+}
+td:first-child { border-radius: 10px 0 0 10px; }
+td:last-child { border-radius: 0 10px 10px 0; }
 
 /* ===== USER CELL ===== */
-.user{
-  display:flex;align-items:center;gap:12px;
+.user-cell { display: flex; align-items: center; gap: 12px; }
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  border: 2px solid var(--border);
 }
-.user img{
-  width:38px;height:38px;border-radius:50%;
-}
-.user small{display:block;color:#6b7280;font-size:12px}
+.user-name { font-weight: 600; font-size: 14px; }
+.user-email { color: var(--muted); font-size: 12px; }
 
 /* ===== BADGE ===== */
-.badge{
-  padding:6px 12px;border-radius:999px;
-  font-size:12px;font-weight:700;
+.badge {
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
 }
-.vip{background:#dcfce7;color:#166534}
-.free{background:#e5e7eb;color:#374151}
-.admin{background:#fef3c7;color:#92400e}
-.owner{background:#fde68a;color:#92400e}
-.member{background:#e5e7eb;color:#374151}
+.badge-vip { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-free { background: rgba(100,116,139,0.15); color: var(--muted); border: 1px solid rgba(100,116,139,0.2); }
+.badge-admin { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge-owner { background: rgba(99,102,241,0.15); color: #a78bfa; border: 1px solid rgba(99,102,241,0.3); }
+.badge-member { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid rgba(100,116,139,0.15); }
+.badge-pending { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge-approved { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
 
-/* ===== BUTTON ===== */
-button{
-  padding:8px 14px;border-radius:12px;
-  border:none;font-size:12px;
-  font-weight:700;cursor:pointer;
-  transition:all .2s;
+/* ===== BUTTONS ===== */
+button {
+  padding: 8px 14px; border-radius: 10px;
+  border: none; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  font-family: inherit;
 }
-button:hover{
-  opacity:0.8;
-}
-button:disabled{
-  opacity:0.5;
-  cursor:not-allowed;
-}
-.primary{background:#6366f1;color:white}
-.danger{background:#ef4444;color:white}
-.success{background:#10b981;color:white}
-.gray{background:#e5e7eb}
+button:hover { transform: translateY(-1px); opacity: 0.9; }
+button:active { transform: translateY(0); }
+button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+.btn-danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.btn-danger:hover { background: var(--red); color: white; }
+.btn-success { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.btn-success:hover { background: var(--green); color: white; }
+.btn-gray { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-cyan { background: rgba(0,212,255,0.1); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
+.btn-cyan:hover { background: var(--cyan); color: #0a0a14; }
+
+.btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
 
 /* ===== INPUT ===== */
-input{
-  padding:12px 14px;border-radius:12px;
-  border:1px solid #e5e7eb;font-size:14px;
+input, select {
+  padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px; font-family: inherit;
+  transition: border-color 0.2s;
 }
-input:focus{outline:none;border-color:#6366f1}
+input:focus, select:focus {
+  outline: none; border-color: var(--accent);
+}
+input::placeholder { color: var(--muted); }
 
-/* ===== HIDDEN ===== */
-.hidden{display:none}
-.center{text-align:center;color:#6b7280;padding:20px}
+/* ===== SEARCH BAR ===== */
+.search-bar {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap;
+}
+.search-input {
+  flex: 1; min-width: 200px;
+}
+
+/* ===== SYSTEM CARD ===== */
+.system-section {
+  margin-bottom: 24px;
+}
+.system-section h4 {
+  font-size: 14px; font-weight: 700;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.mt-status {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 10px;
+  font-weight: 700; font-size: 14px; margin-top: 12px;
+  border: 1px solid;
+}
+.mt-on { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.3); }
+.mt-off { background: rgba(16,185,129,0.1); color: #34d399; border-color: rgba(16,185,129,0.3); }
+
+/* ===== HIDDEN / CENTER ===== */
+.hidden { display: none !important; }
+.center { text-align: center; color: var(--muted); padding: 32px 20px; font-size: 14px; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 14px; font-weight: 600;
+  z-index: 9999;
+  animation: slideUp 0.3s ease;
+  border: 1px solid;
+  backdrop-filter: blur(10px);
+}
+.toast.success { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
+.toast.error { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+.toast.info { background: rgba(99,102,241,0.15); color: #a78bfa; border-color: rgba(99,102,241,0.3); }
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .container { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .card-header { flex-direction: column; align-items: flex-start; }
+}
 </style>
 </head>
 
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
   <div class="brand">
-    <h2>R STUDIO</h2>
-    <span>Admin Panel</span>
+    <div class="brand-logo">RS</div>
+    <div>
+      <h2>R STUDIO</h2>
+      <span>Admin Panel</span>
+    </div>
   </div>
 
-  <!-- PROFILE -->
-  <div class="profile">
-    <div class="avatar" id="avatar">
-      <img id="avatarImg" style="display:none">
-      <span id="avatarText">R</span>
-    </div>
-
-    <div class="dropdown" id="dropdown">
-      <a href="https://rstudiolab.online/">🚀 Home</a>
-      <a href="license.html">🔐 License</a>
-      <a href="profile.html">👤 Profile</a>
-      <a href="#" id="logoutBtn">🚪 Logout</a>
+  <div class="navbar-right">
+    <div class="profile">
+      <div class="avatar" id="avatar">
+        <img id="avatarImg" style="display:none">
+        <span id="avatarText">R</span>
+      </div>
+      <div class="dropdown" id="dropdown">
+        <a href="home.html">🚀 Home</a>
+        <a href="license.html">🔐 License</a>
+        <a href="profile.html">👤 Profile</a>
+        <a href="#" id="logoutBtn">🚪 Logout</a>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="container">
+
+  <!-- STATS GRID -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card blue">
+      <div class="stat-icon">👥</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">💎</div>
+      <div class="stat-value" id="statVIP">—</div>
+      <div class="stat-label">VIP Members</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-icon">🆓</div>
+      <div class="stat-value" id="statFree">—</div>
+      <div class="stat-label">Free Members</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value" id="statPending">—</div>
+      <div class="stat-label">VIP Pending</div>
+    </div>
+  </div>
 
   <!-- TABS -->
   <div class="tabs">
@@ -212,88 +406,136 @@ input:focus{outline:none;border-color:#6366f1}
     <div class="tab" data-tab="logs">🧾 Logs</div>
   </div>
 
-  <!-- USERS -->
+  <!-- USERS TAB -->
   <div id="users" class="card">
-    <input id="searchUser" placeholder="Cari nama atau email..." style="width:100%;margin-bottom:16px">
-    <table>
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Role</th>
-          <th>VIP</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="userList"></tbody>
-    </table>
-    <p id="userEmpty" class="center hidden">Tidak ada user</p>
-  </div>
-
-  <!-- VIP REQUESTS -->
-  <div id="vip" class="card hidden">
-    <table>
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Total</th>
-          <th>ID Transaksi</th>
-          <th>Status</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="vipList"></tbody>
-    </table>
-    <p id="vipEmpty" class="center hidden">Tidak ada request VIP</p>
-  </div>
-
-  <!-- SYSTEM -->
-  <div id="system" class="card hidden">
-    <h3>⚙️ Maintenance Mode</h3>
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="danger" id="mtOn">🔴 Aktifkan</button>
-      <button class="success" id="mtOff">🟢 Matikan</button>
+    <div class="card-header">
+      <div class="card-title">👥 Manajemen User</div>
+      <div class="btn-group">
+        <button class="btn-cyan" id="exportBtn">📥 Export CSV</button>
+      </div>
     </div>
-    <p id="mtStatus" style="margin-top:12px;font-weight:600"></p>
+    <div class="search-bar" style="margin-bottom:16px">
+      <input id="searchUser" class="search-input" placeholder="🔍 Cari nama atau email...">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>VIP</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="userList"></tbody>
+      </table>
+    </div>
+    <p id="userEmpty" class="center hidden">😶 Tidak ada user ditemukan</p>
   </div>
 
-  <!-- LOGS -->
+  <!-- VIP REQUESTS TAB -->
+  <div id="vip" class="card hidden">
+    <div class="card-header">
+      <div class="card-title">💎 VIP Requests</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Total</th>
+            <th>ID Transaksi</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="vipList"></tbody>
+      </table>
+    </div>
+    <p id="vipEmpty" class="center hidden">✅ Tidak ada VIP request</p>
+  </div>
+
+  <!-- SYSTEM TAB -->
+  <div id="system" class="card hidden">
+    <div class="system-section">
+      <h4>⚙️ Maintenance Mode</h4>
+      <div class="btn-group">
+        <button class="btn-danger" id="mtOn">🔴 Aktifkan</button>
+        <button class="btn-success" id="mtOff">🟢 Matikan</button>
+      </div>
+      <div id="mtStatus" class="mt-status mt-off" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- LOGS TAB -->
   <div id="logs" class="card hidden">
-    <h3>📋 Activity Logs</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Action</th>
-          <th>Target</th>
-          <th>Admin</th>
-          <th>Time</th>
-        </tr>
-      </thead>
-      <tbody id="logList"></tbody>
-    </table>
-    <p id="logEmpty" class="center hidden">Tidak ada logs</p>
+    <div class="card-header">
+      <div class="card-title">🧾 Activity Logs</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Admin</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="logList"></tbody>
+      </table>
+    </div>
+    <p id="logEmpty" class="center hidden">📋 Belum ada aktivitas</p>
   </div>
 
 </div>
 
+<!-- RESET PASSWORD MODAL -->
+<div id="resetModal" style="
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.7); z-index:999;
+  align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+">
+  <div style="
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:20px; padding:28px; max-width:400px; width:90%;
+  ">
+    <h3 style="margin-bottom:6px">🔑 Reset Password</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
+      Link reset password akan dikirim ke email user
+    </p>
+    <p id="resetEmail" style="
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:10px; padding:12px; font-size:14px;
+      margin-bottom:20px; word-break:break-all;
+    "></p>
+    <div class="btn-group">
+      <button class="btn-primary" id="confirmReset">📨 Kirim Link Reset</button>
+      <button class="btn-gray" id="cancelReset">Batal</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { auth, db } from "./firebase.js";
-import { 
-  onAuthStateChanged, 
-  signOut 
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
 import {
-  collection, 
-  getDocs, 
-  getDoc, 
-  doc,
-  updateDoc, 
-  addDoc, 
-  serverTimestamp,
-  query,
-  orderBy,
-  limit
+  onAuthStateChanged, signOut, sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  collection, getDocs, getDoc, doc,
+  updateDoc, addDoc, serverTimestamp,
+  query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+/* ===== TOAST ===== */
+function toast(msg, type = "success") {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
 
 /* ===== AVATAR DROPDOWN ===== */
 const avatar = document.getElementById("avatar");
@@ -304,12 +546,8 @@ const dropdown = document.getElementById("dropdown");
 avatar.onclick = () => {
   dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 };
-
-// Close dropdown when clicking outside
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".profile")) {
-    dropdown.style.display = "none";
-  }
+document.addEventListener("click", e => {
+  if (!e.target.closest(".profile")) dropdown.style.display = "none";
 });
 
 /* ===== TABS ===== */
@@ -323,42 +561,27 @@ document.querySelectorAll(".tab").forEach(t => {
 });
 
 /* ===== AUTH ===== */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    location.href = "login.html";
-    return;
-  }
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.href = "login.html"; return; }
 
-  const userDocRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userDocRef);
-  
-  if (!snap.exists()) {
-    alert("❌ User data tidak ditemukan");
-    location.href = "/";
-    return;
-  }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) { location.href = "/"; return; }
 
   const userData = snap.data();
-
-  // Check admin/owner
   if (!["admin", "owner"].includes(userData.role)) {
-    alert("❌ Akses ditolak. Hanya admin/owner yang bisa mengakses panel ini.");
+    toast("❌ Akses ditolak", "error");
     location.href = "/";
     return;
   }
 
-  /* ===== AVATAR SYNC ===== */
   if (userData.photoBase64) {
     avatarImg.src = userData.photoBase64;
     avatarImg.style.display = "block";
     avatarText.style.display = "none";
   } else {
     avatarText.textContent = (userData.name || user.email)[0].toUpperCase();
-    avatarImg.style.display = "none";
-    avatarText.style.display = "block";
   }
 
-  // Load data
   loadUsers();
   loadVip();
   loadMaintenance();
@@ -366,7 +589,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 /* ===== LOGOUT ===== */
-document.getElementById("logoutBtn").onclick = async (e) => {
+document.getElementById("logoutBtn").onclick = async e => {
   e.preventDefault();
   if (confirm("Logout dari admin panel?")) {
     await signOut(auth);
@@ -375,19 +598,20 @@ document.getElementById("logoutBtn").onclick = async (e) => {
 };
 
 /* ===== USERS ===== */
+let users = [];
 const userList = document.getElementById("userList");
 const searchUser = document.getElementById("searchUser");
-let users = [];
 
 async function loadUsers() {
-  try {
-    const snap = await getDocs(collection(db, "users"));
-    users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-    renderUsers();
-  } catch (err) {
-    console.error("Load users error:", err);
-    alert("❌ Gagal load users: " + err.message);
-  }
+  const snap = await getDocs(collection(db, "users"));
+  users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+
+  // Update stats
+  document.getElementById("statTotal").textContent = users.length;
+  document.getElementById("statVIP").textContent = users.filter(u => u.isVIP).length;
+  document.getElementById("statFree").textContent = users.filter(u => !u.isVIP && u.role === "member").length;
+
+  renderUsers();
 }
 
 searchUser.oninput = renderUsers;
@@ -396,59 +620,132 @@ function renderUsers() {
   userList.innerHTML = "";
   const q = searchUser.value.toLowerCase();
   const filtered = users.filter(u =>
-    !q || u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
   );
 
   document.getElementById("userEmpty").classList.toggle("hidden", filtered.length > 0);
 
   filtered.forEach(u => {
     const tr = document.createElement("tr");
+    const roleBadge = {
+      owner: "badge-owner", admin: "badge-admin", member: "badge-member"
+    }[u.role] || "badge-member";
+
     tr.innerHTML = `
-      <td class="user">
-        <img src="${u.photoBase64 || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}">
-        <div>
-          <strong>${u.name || "-"}</strong>
-          <small>${u.email}</small>
+      <td>
+        <div class="user-cell">
+          <img class="user-avatar" src="${u.photoBase64 || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+          <div>
+            <div class="user-name">${u.name || "—"}</div>
+            <div class="user-email">${u.email}</div>
+          </div>
         </div>
       </td>
-      <td><span class="badge ${u.role}">${u.role.toUpperCase()}</span></td>
-      <td><span class="badge ${u.isVIP ? "vip" : "free"}">${u.isVIP ? "VIP" : "FREE"}</span></td>
+      <td><span class="badge ${roleBadge}">${(u.role || "member").toUpperCase()}</span></td>
+      <td><span class="badge ${u.isVIP ? "badge-vip" : "badge-free"}">${u.isVIP ? "VIP" : "FREE"}</span></td>
       <td>
-        ${u.role === "member"
-          ? `<button class="primary" data-uid="${u.uid}">Toggle VIP</button>`
-          : "—"}
+        <div class="btn-group">
+          ${u.role === "member" || u.role === "admin"
+            ? `<button class="btn-primary btn-vip" data-uid="${u.uid}">${u.isVIP ? "Cabut VIP" : "Beri VIP"}</button>`
+            : ""}
+          <button class="btn-gray btn-reset" data-email="${u.email}">🔑 Reset PW</button>
+        </div>
       </td>
     `;
-    
-    const btn = tr.querySelector("button");
-    if (btn) {
-      btn.onclick = () => toggleVIP(u);
-    }
-    
+
+    const vipBtn = tr.querySelector(".btn-vip");
+    if (vipBtn) vipBtn.onclick = () => toggleVIP(u);
+
+    const resetBtn = tr.querySelector(".btn-reset");
+    if (resetBtn) resetBtn.onclick = () => openResetModal(u.email);
+
     userList.appendChild(tr);
   });
 }
 
 async function toggleVIP(u) {
-  if (!confirm(`Ubah status VIP untuk ${u.email}?`)) return;
-  
+  if (!confirm(`${u.isVIP ? "Cabut" : "Berikan"} VIP untuk ${u.email}?`)) return;
   try {
     await updateDoc(doc(db, "users", u.uid), { isVIP: !u.isVIP });
     await log("TOGGLE_VIP", u.uid);
-    alert(`✅ Status VIP ${u.email} berhasil diubah`);
+    toast(`✅ Status VIP ${u.email} diperbarui`);
     loadUsers();
   } catch (err) {
-    alert("❌ Gagal update VIP: " + err.message);
+    toast("❌ Gagal update VIP", "error");
   }
 }
+
+/* ===== RESET PASSWORD ===== */
+let resetTarget = null;
+const resetModal = document.getElementById("resetModal");
+
+function openResetModal(email) {
+  resetTarget = email;
+  document.getElementById("resetEmail").textContent = email;
+  resetModal.style.display = "flex";
+}
+
+document.getElementById("cancelReset").onclick = () => {
+  resetModal.style.display = "none";
+  resetTarget = null;
+};
+
+document.getElementById("confirmReset").onclick = async () => {
+  if (!resetTarget) return;
+  const btn = document.getElementById("confirmReset");
+  btn.disabled = true;
+  btn.textContent = "Mengirim...";
+  try {
+    await sendPasswordResetEmail(auth, resetTarget);
+    await log("RESET_PASSWORD", resetTarget);
+    toast(`📨 Link reset dikirim ke ${resetTarget}`);
+    resetModal.style.display = "none";
+    resetTarget = null;
+  } catch (err) {
+    toast("❌ Gagal kirim reset: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📨 Kirim Link Reset";
+  }
+};
+
+/* ===== EXPORT CSV ===== */
+document.getElementById("exportBtn").onclick = () => {
+  if (!users.length) { toast("Tidak ada data untuk diekspor", "info"); return; }
+
+  const headers = ["Nama", "Email", "Role", "VIP", "Dibuat"];
+  const rows = users.map(u => [
+    u.name || "",
+    u.email || "",
+    u.role || "member",
+    u.isVIP ? "VIP" : "FREE",
+    u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString("id-ID") : ""
+  ]);
+
+  const csv = [headers, ...rows]
+    .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rstudiolab_users_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("📥 CSV berhasil diekspor");
+};
 
 /* ===== VIP REQUESTS ===== */
 async function loadVip() {
   try {
     const snap = await getDocs(collection(db, "vip_requests"));
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const pending = list.filter(v => v.status === "pending");
+
+    document.getElementById("statPending").textContent = pending.length;
+
     const tbody = document.getElementById("vipList");
-    
     tbody.innerHTML = "";
     document.getElementById("vipEmpty").classList.toggle("hidden", list.length > 0);
 
@@ -456,54 +753,39 @@ async function loadVip() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>
-          <strong>${v.name || "-"}</strong><br>
-          <small>${v.email}</small>
+          <div class="user-name">${v.name || "—"}</div>
+          <div class="user-email">${v.email}</div>
         </td>
-        <td>Rp ${(v.amount || 0).toLocaleString("id-ID")}</td>
-        <td><small>${v.transactionId || "-"}</small></td>
-        <td><span class="badge ${v.status === "approved" ? "vip" : "free"}">${v.status.toUpperCase()}</span></td>
+        <td style="font-weight:700">Rp ${(v.amount || 0).toLocaleString("id-ID")}</td>
+        <td style="font-family:monospace;font-size:12px">${v.transactionId || "—"}</td>
+        <td><span class="badge badge-${v.status}">${(v.status || "").toUpperCase()}</span></td>
         <td>
           ${v.status === "pending"
-            ? `<button class="success" data-id="${v.id}">✅ Approve</button>`
+            ? `<button class="btn-success btn-approve" data-id="${v.id}">✅ Approve</button>`
             : "—"}
         </td>
       `;
-      
-      const btn = tr.querySelector("button");
-      if (btn) {
-        btn.onclick = () => approveVIP(v);
-      }
-      
+      const btn = tr.querySelector(".btn-approve");
+      if (btn) btn.onclick = () => approveVIP(v);
       tbody.appendChild(tr);
     });
   } catch (err) {
-    console.error("Load VIP error:", err);
-    alert("❌ Gagal load VIP requests: " + err.message);
+    console.error(err);
   }
 }
 
 async function approveVIP(v) {
-  if (!confirm(`Approve VIP request dari ${v.email}?`)) return;
-  
+  if (!confirm(`Approve VIP untuk ${v.email}?`)) return;
   try {
-    // Update request status
     await updateDoc(doc(db, "vip_requests", v.id), {
-      status: "approved",
-      approvedAt: serverTimestamp()
+      status: "approved", approvedAt: serverTimestamp()
     });
-    
-    // Set user VIP
     await updateDoc(doc(db, "users", v.uid), { isVIP: true });
-    
-    // Log activity
     await log("APPROVE_VIP", v.uid);
-    
-    alert(`✅ VIP request untuk ${v.email} berhasil diapprove!`);
-    
-    loadVip();
-    loadUsers();
+    toast(`✅ VIP ${v.email} diapprove`);
+    loadVip(); loadUsers();
   } catch (err) {
-    alert("❌ Gagal approve VIP: " + err.message);
+    toast("❌ Gagal approve VIP", "error");
   }
 }
 
@@ -514,87 +796,66 @@ async function loadMaintenance() {
   try {
     const snap = await getDoc(mtRef);
     const isEnabled = snap.exists() && snap.data().enabled;
-    
-    document.getElementById("mtStatus").textContent = isEnabled
-      ? "🔴 Maintenance Mode: AKTIF"
-      : "🟢 Maintenance Mode: NONAKTIF";
-  } catch (err) {
-    console.error("Load maintenance error:", err);
-  }
+    const el = document.getElementById("mtStatus");
+    el.style.display = "inline-flex";
+    el.className = `mt-status ${isEnabled ? "mt-on" : "mt-off"}`;
+    el.textContent = isEnabled ? "🔴 Maintenance Mode: AKTIF" : "🟢 Maintenance Mode: NONAKTIF";
+  } catch (err) { console.error(err); }
 }
 
 document.getElementById("mtOn").onclick = async () => {
-  if (!confirm("Aktifkan maintenance mode? Website akan tidak bisa diakses.")) return;
-  
+  if (!confirm("Aktifkan maintenance mode?")) return;
   try {
     await updateDoc(mtRef, { enabled: true });
-    alert("✅ Maintenance mode diaktifkan");
+    toast("🔴 Maintenance mode diaktifkan", "info");
     loadMaintenance();
-  } catch (err) {
-    alert("❌ Gagal: " + err.message);
-  }
+  } catch (err) { toast("❌ " + err.message, "error"); }
 };
 
 document.getElementById("mtOff").onclick = async () => {
   try {
     await updateDoc(mtRef, { enabled: false });
-    alert("✅ Maintenance mode dinonaktifkan");
+    toast("🟢 Maintenance mode dimatikan");
     loadMaintenance();
-  } catch (err) {
-    alert("❌ Gagal: " + err.message);
-  }
+  } catch (err) { toast("❌ " + err.message, "error"); }
 };
 
 /* ===== LOGS ===== */
 async function loadLogs() {
   try {
-    const q = query(
-      collection(db, "admin_logs"),
-      orderBy("timestamp", "desc"),
-      limit(50)
-    );
-    
+    const q = query(collection(db, "admin_logs"), orderBy("timestamp", "desc"), limit(50));
     const snap = await getDocs(q);
     const tbody = document.getElementById("logList");
-    
     tbody.innerHTML = "";
-    document.getElementById("logEmpty")?.classList.toggle("hidden", snap.docs.length > 0);
+    document.getElementById("logEmpty").classList.toggle("hidden", snap.docs.length > 0);
 
     snap.docs.forEach(l => {
       const d = l.data();
       const tr = document.createElement("tr");
-      
-      const timestamp = d.timestamp?.toDate 
+      const time = d.timestamp?.toDate
         ? d.timestamp.toDate().toLocaleString("id-ID")
-        : "-";
-      
+        : "—";
       tr.innerHTML = `
         <td><strong>${d.action}</strong></td>
-        <td><small>${d.targetUid}</small></td>
-        <td><small>${d.adminEmail}</small></td>
-        <td><small>${timestamp}</small></td>
+        <td style="font-size:12px;color:var(--muted)">${d.targetUid}</td>
+        <td style="font-size:12px">${d.adminEmail}</td>
+        <td style="font-size:12px;color:var(--muted)">${time}</td>
       `;
-      
       tbody.appendChild(tr);
     });
-  } catch (err) {
-    console.error("Load logs error:", err);
-  }
+  } catch (err) { console.error(err); }
 }
 
 /* ===== LOG HELPER ===== */
 async function log(action, targetUid) {
   try {
     await addDoc(collection(db, "admin_logs"), {
-      action,
-      targetUid,
+      action, targetUid,
       adminUid: auth.currentUser.uid,
       adminEmail: auth.currentUser.email,
       timestamp: serverTimestamp()
     });
-  } catch (err) {
-    console.error("Log error:", err);
-  }
+  } catch (err) { console.error(err); }
 }
 </script>
 
