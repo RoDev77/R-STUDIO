@@ -158,7 +158,7 @@
       box-shadow: 0 0 10px rgba(0,212,255,0.5);
       animation: fillProgress 2s 0.8s ease forwards;
     }
-    @keyframes fillProgress { to { width: 35%; } }
+    @keyframes fillProgress { to { width: 2%; } } /* progress */
 
     .teaser {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -277,7 +277,7 @@
   let cur = 0;
   setTimeout(() => {
     const iv = setInterval(() => {
-      if (cur >= 35) { clearInterval(iv); return; }
+      if (cur >= 2) { clearInterval(iv); return; } // progress
       val.textContent = ++cur + "%";
     }, 50);
   }, 800);
