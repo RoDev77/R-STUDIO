@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>404 — Halaman Tidak Ditemukan | R Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="./images/RSLogo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #060610;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --cyan: #00d4ff;
+      --red: #ef4444;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* BG */
+    .bg-canvas { position: fixed; inset: 0; z-index: 0; }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: 0.15;
+      animation: blobFloat 10s ease-in-out infinite;
+    }
+    .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, #ef4444, transparent); top: -150px; left: -150px; }
+    .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, #6366f1, transparent); bottom: -100px; right: -100px; animation-delay: -5s; }
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0,0); }
+      50% { transform: translate(20px,-15px); }
+    }
+
+    /* CONTENT */
+    .content {
+      position: relative; z-index: 2;
+      max-width: 480px; width: 100%;
+    }
+
+    /* Logo */
+    .logo-wrap {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 32px;
+      animation: fadeIn 0.5s ease both;
+    }
+    .logo-img { width: 30px; height: 30px; border-radius: 8px; overflow: hidden; }
+    .logo-img img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-name {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 14px; font-weight: 800; letter-spacing: 2px;
+    }
+
+    /* 404 Number */
+    .error-num {
+      font-family: 'Oxanium', sans-serif;
+      font-size: clamp(5rem, 18vw, 9rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -4px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      background-clip: text; -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: fadeIn 0.5s 0.1s ease both, glitch 4s 1s infinite;
+      position: relative;
+    }
+
+    /* Glitch effect */
+    @keyframes glitch {
+      0%, 92%, 100% { transform: translate(0); }
+      93% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
+      94% { transform: translate(3px, -1px); }
+      95% { transform: translate(0); filter: none; }
+      96% { transform: translate(2px, 2px); filter: hue-rotate(180deg); }
+      97% { transform: translate(0); filter: none; }
+    }
+
+    .error-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 999px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      font-size: 10px; font-weight: 700;
+      color: #f87171; letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 16px;
+      animation: fadeIn 0.5s 0.2s ease both;
+    }
+
+    h1 {
+      font-family: 'Oxanium', sans-serif;
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      font-weight: 800; margin-bottom: 10px;
+      animation: fadeIn 0.5s 0.25s ease both;
+    }
+
+    .subtitle {
+      color: var(--muted); font-size: 0.88rem; line-height: 1.6;
+      max-width: 340px; margin: 0 auto 28px;
+      animation: fadeIn 0.5s 0.3s ease both;
+    }
+
+    /* URL display */
+    .url-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 12px; color: var(--muted);
+      font-family: monospace;
+      margin-bottom: 28px;
+      word-break: break-all;
+      animation: fadeIn 0.5s 0.35s ease both;
+    }
+
+    /* Buttons */
+    .cta-wrap {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      animation: fadeIn 0.5s 0.4s ease both;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 11px 20px; border-radius: 11px;
+      font-weight: 700; font-size: 13px;
+      text-decoration: none; transition: all 0.25s;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; border: none;
+    }
+    .btn-home {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; box-shadow: 0 0 24px rgba(99,102,241,0.25);
+    }
+    .btn-home:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(99,102,241,0.4); }
+    .btn-back {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    }
+    .btn-back:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-grid"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+</div>
+
+<div class="content">
+
+  <div class="logo-wrap">
+    <div class="logo-img"><img src="./images/RSLogo.png" alt="RS"></div>
+    <span class="logo-name">R STUDIO</span>
+  </div>
+
+  <div class="error-num">404</div>
+
+  <div class="error-tag">Halaman Tidak Ditemukan</div>
+
+  <h1>Oops! Salah Jalan 👀</h1>
+
+  <p class="subtitle">
+    Halaman yang kamu cari tidak ada atau sudah dipindahkan.
+    Cek kembali URL-nya atau kembali ke halaman utama.
+  </p>
+
+  <div class="url-box" id="urlBox"></div>
+
+  <div class="cta-wrap">
+    <a href="/index.html" class="btn btn-home">🏠 Ke Home</a>
+    <button class="btn btn-back" onclick="history.back()">← Kembali</button>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById("urlBox").textContent = "❌  " + window.location.href;
+</script>
+
+</body>
+</html>
