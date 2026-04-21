@@ -87,7 +87,7 @@
     </div>
   </div>
 
-  <!-- Auto redirect kalau sudah login -->
+  <!-- Auto redirect kalau sudah login 
 <script type="module">
   import { auth } from "./firebase.js";
   import { onAuthStateChanged } from
@@ -95,7 +95,8 @@
 
   onAuthStateChanged(auth, user => {
     if (user) location.href = "home.html";
-  });
+  }); -->
+  
 </script>
 </body>
 </html>
