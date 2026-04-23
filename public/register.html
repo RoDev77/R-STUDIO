@@ -2,58 +2,223 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Register</title>
-  <!-- Tambahkan di <head> index.html, home.html, login.html, dll -->
+  <title>Daftar - R Studio Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Daftar akun R Studio Lab - Platform belajar Roblox Studio">
   <link rel="canonical" href="https://www.rstudiolab.online/register.html">
-  <link rel="stylesheet" href="register.css">
   <link rel="icon" type="image/png" href="./images/RSLogo.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
-  <link rel="apple-touch-icon" href="./images/RSLogo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0a0a14;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: rgba(20, 20, 40, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 44px 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .auth-header h1 {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00d4ff, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .auth-header p {
+      color: #8a8aa0;
+      font-size: 14px;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field {
+      position: relative;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      color: white;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .field label {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8a8aa0;
+      font-size: 14px;
+      pointer-events: none;
+      transition: 0.2s;
+    }
+
+    .field input:focus ~ label,
+    .field input:valid ~ label {
+      top: 0;
+      transform: translateY(-50%) scale(0.85);
+      background: #0a0a14;
+      padding: 0 6px;
+      color: #6366f1;
+    }
+
+    .password-field {
+      position: relative;
+    }
+
+    #togglePassword {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #8a8aa0;
+      font-size: 18px;
+    }
+
+    .strength {
+      margin-top: -10px;
+      height: 4px;
+    }
+
+    .strength .bar {
+      height: 4px;
+      border-radius: 4px;
+      width: 0%;
+      transition: 0.3s;
+    }
+
+    .submit {
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .submit:disabled {
+      opacity: 0.6;
+      transform: none;
+    }
+
+    .error-box {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      color: #f87171;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 13px;
+      color: #8a8aa0;
+    }
+
+    .auth-footer a {
+      color: #6366f1;
+      text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="auth-card">
-    <div class="auth-header">
-      <h1>✨ Register</h1>
-      <p>Create a new Account</p>
-    </div>
-
-    <form id="registerForm" class="auth-form">
-        <!-- ANTI BOT (HIDDEN FIELD) -->
-      <input type="text" name="company" tabindex="-1" autocomplete="off" style="display:none">
-      <div class="field">
-        <!-- <input type="text" name="company" style="display:none"> -->
-        <input id="nameInput" type="text" required />
-        <label>Nama Lengkap</label>
-      </div>
-
-      <div class="field">
-        <input id="emailInput" type="email" required />
-        <label>Email</label>
-      </div>
-
-      <div class="field password-field">
-        <input id="passwordInput" type="password" required />
-        <label>Password</label>
-
-        <span id="togglePassword">👁️</span>
-      </div>
-
-      <div class="strength">
-        <div class="bar"></div>
-      </div>
-
-      <button type="submit" class="submit">
-        Create Account
-      </button>
-
-    </form>
-
-    <div class="auth-footer">
-      Sudah punya akun? <a href="login.html">Login</a>
-    </div>
+<div class="auth-card">
+  <div class="auth-header">
+    <h1>✨ Daftar</h1>
+    <p>Buat akun baru untuk mulai belajar</p>
   </div>
 
-  <script type="module" src="register.js"></script>
+  <form id="registerForm" class="auth-form">
+    <div class="field">
+      <input id="nameInput" type="text" required autocomplete="name">
+      <label>Nama Lengkap</label>
+    </div>
+
+    <div class="field">
+      <input id="emailInput" type="email" required autocomplete="email">
+      <label>Email</label>
+    </div>
+
+    <div class="field password-field">
+      <input id="passwordInput" type="password" required autocomplete="new-password">
+      <label>Password</label>
+      <span id="togglePassword">👁️</span>
+    </div>
+
+    <div class="strength">
+      <div class="bar" id="strengthBar"></div>
+    </div>
+
+    <button type="submit" class="submit" id="submitBtn">Buat Akun</button>
+  </form>
+
+  <div class="auth-footer">
+    Sudah punya akun? <a href="login.html">Masuk</a>
+  </div>
+</div>
+
+<script type="module" src="register.js"></script>
+
 </body>
 </html>

@@ -2,550 +2,492 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>R Studio Lab – Learn Roblox Studio Development</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="R Studio Lab adalah platform belajar Roblox Studio Development. Dapatkan akses ke tutorial, asset gratis, dan konten eksklusif untuk developer Roblox.">
+  <!-- Title yang menarik (60 karakter maksimal) -->
+  <title>R Studio Lab - Belajar Roblox Studio Development Indonesia</title>
+  <!-- Meta Description (160 karakter maksimal, muncul di bawah judul) -->
+  <meta name="description" content="Platform belajar Roblox Studio terlengkap. Dapatkan tutorial gratis, asset eksklusif, script premium, dan komunitas developer Roblox Indonesia.">
+  <!-- Meta Keywords (opsional) -->
+  <meta name="keywords" content="Roblox Studio, belajar Roblox, tutorial Roblox, developer Roblox, asset Roblox, script Roblox">
+  <!-- Author -->
+  <meta name="author" content="R Studio Lab">
+  <!-- Google agar mengindex halaman -->
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="R Studio Lab – Learn Roblox Studio Development">
-  <meta property="og:description" content="Platform belajar Roblox Studio Development dengan tutorial, asset gratis, dan konten eksklusif.">
+  <!-- Open Graph (untuk tampilan di sosial media & Google) -->
+  <meta property="og:title" content="R Studio Lab - Belajar Roblox Studio Development">
+  <meta property="og:description" content="Tutorial gratis, asset eksklusif, dan komunitas untuk developer Roblox Indonesia.">
   <meta property="og:image" content="https://www.rstudiolab.online/images/RSLogo.png">
   <meta property="og:url" content="https://www.rstudiolab.online">
   <meta property="og:type" content="website">
-  <meta property="og:image:width" content="512">
-  <meta property="og:image:height" content="512">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="R Studio Lab - Belajar Roblox Studio">
+  <meta name="twitter:description" content="Platform belajar Roblox Studio terlengkap di Indonesia">
+  <!-- Canonical URL (biar tidak dianggap duplicate content) -->
   <link rel="canonical" href="https://www.rstudiolab.online/">
-  <link rel="icon" type="image/png" href="./images/RSLogo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="R Studio Lab adalah platform belajar Roblox Studio Development. Dapatkan akses ke tutorial, asset gratis, dan konten eksklusif untuk developer Roblox.">
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #060610;
-      --surface: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.08);
-      --accent: #6366f1;
-      --accent2: #8b5cf6;
-      --cyan: #00d4ff;
-      --text: #f1f5f9;
-      --muted: #64748b;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
 
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
+      background: #0a0a14;
+      color: #ffffff;
     }
 
-    /* ===== BACKGROUND ===== */
-    .bg-canvas {
-      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 80px;
+      background: rgba(10, 10, 20, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
     }
 
-    /* Radial glow blobs */
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.25;
-      animation: blobFloat 8s ease-in-out infinite;
-    }
-    .blob-1 {
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, #6366f1, transparent);
-      top: -200px; left: -100px;
-      animation-delay: 0s;
-    }
-    .blob-2 {
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, #00d4ff, transparent);
-      bottom: -100px; right: -100px;
-      animation-delay: -4s;
-    }
-    .blob-3 {
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, #8b5cf6, transparent);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      animation-delay: -2s;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    @keyframes blobFloat {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(30px, -20px) scale(1.05); }
-      66% { transform: translate(-20px, 15px) scale(0.95); }
-    }
-
-    /* Grid overlay */
-    .bg-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-    }
-
-    /* Particles */
-    .particles {
-      position: absolute; inset: 0;
-    }
-    .particle {
-      position: absolute;
-      width: 2px; height: 2px;
-      background: var(--cyan);
-      border-radius: 50%;
-      opacity: 0;
-      animation: particleFade 4s ease-in-out infinite;
-    }
-    @keyframes particleFade {
-      0% { opacity: 0; transform: translateY(0); }
-      50% { opacity: 0.6; }
-      100% { opacity: 0; transform: translateY(-40px); }
-    }
-
-    /* ===== NAVBAR ===== */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 40px;
-      background: rgba(6,6,16,0.6);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-brand {
-      display: flex; align-items: center; gap: 10px;
-      text-decoration: none;
-    }
-    .nav-logo {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Oxanium', sans-serif;
-      font-weight: 800; font-size: 13px;
-      color: white;
-      overflow: hidden;
-    }
-    .nav-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .nav-name {
-      font-family: 'Oxanium', sans-serif;
-      font-weight: 800; font-size: 16px;
-      letter-spacing: 1px;
-      color: var(--text);
-    }
-    .nav-links {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .nav-link {
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 14px; font-weight: 500;
-      text-decoration: none;
-      color: var(--muted);
-      transition: all 0.2s;
-    }
-    .nav-link:hover { color: var(--text); background: var(--surface); }
-    .nav-cta {
-      padding: 9px 20px;
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
       border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white;
-      font-size: 13px; font-weight: 700;
-      text-decoration: none;
-      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      font-family: 'Oxanium', monospace;
+    }
+
+    .logo-text {
       font-family: 'Oxanium', sans-serif;
-      letter-spacing: 0.5px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 1px;
     }
-    .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
 
-    /* ===== HERO ===== */
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #a0a0b0;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+    }
+
+    .btn-login {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      padding: 8px 20px;
+      border-radius: 8px;
+      color: white !important;
+    }
+
+    /* Hero Section */
     .hero {
-      position: relative; z-index: 1;
-      min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
       text-align: center;
-      padding: 120px 24px 80px;
+      padding: 160px 24px 80px;
+      max-width: 900px;
+      margin: 0 auto;
     }
 
-    /* Badge */
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 16px;
-      border-radius: 999px;
-      background: rgba(99,102,241,0.1);
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99,102,241,0.12);
       border: 1px solid rgba(99,102,241,0.3);
-      font-size: 12px; font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 600;
       color: #a78bfa;
-      letter-spacing: 0.5px;
       margin-bottom: 28px;
-      animation: fadeDown 0.6s ease both;
     }
+
     .badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--cyan);
-      animation: pulse 2s ease-in-out infinite;
+      width: 6px;
+      height: 6px;
+      background: #00d4ff;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
     }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.5; transform: scale(0.8); }
     }
 
-    /* Heading */
-    .hero-title {
+    h1 {
       font-family: 'Oxanium', sans-serif;
-      font-size: clamp(3rem, 8vw, 6rem);
+      font-size: 64px;
       font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -2px;
+      line-height: 1.1;
       margin-bottom: 24px;
-      animation: fadeDown 0.6s 0.1s ease both;
-    }
-    .hero-title .line-1 { display: block; color: var(--text); }
-    .hero-title .line-2 {
-      display: block;
-      background: linear-gradient(135deg, var(--cyan) 0%, var(--accent) 50%, var(--accent2) 100%);
-      background-clip: text; -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-size: 200% 200%;
-      animation: gradShift 4s ease infinite, fadeDown 0.6s 0.1s ease both;
-    }
-    @keyframes gradShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
     }
 
-    .hero-sub {
-      font-size: clamp(1rem, 2.5vw, 1.2rem);
-      color: var(--muted);
+    .gradient {
+      background: linear-gradient(135deg, #00d4ff, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #8a8aa0;
       max-width: 520px;
-      line-height: 1.7;
-      margin-bottom: 44px;
-      animation: fadeDown 0.6s 0.2s ease both;
+      margin: 0 auto 40px;
+      line-height: 1.6;
     }
 
     /* Buttons */
-    .hero-btns {
-      display: flex; gap: 12px; flex-wrap: wrap;
+    .buttons {
+      display: flex;
+      gap: 16px;
       justify-content: center;
-      margin-bottom: 64px;
-      animation: fadeDown 0.6s 0.3s ease both;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
     }
 
     .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px;
+      padding: 12px 28px;
       border-radius: 12px;
-      font-weight: 700; font-size: 15px;
+      font-weight: 600;
+      font-size: 14px;
       text-decoration: none;
-      transition: all 0.25s;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer; border: none;
+      transition: all 0.2s;
     }
+
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
-      box-shadow: 0 0 30px rgba(99,102,241,0.3);
     }
+
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 0 50px rgba(99,102,241,0.5);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.3);
     }
+
     .btn-store {
-      background: linear-gradient(135deg, #0ea5e9, var(--cyan));
-      color: #0a0a20;
-      font-weight: 800;
-      box-shadow: 0 0 30px rgba(0,212,255,0.25);
+      background: rgba(0,212,255,0.15);
+      border: 1px solid #00d4ff;
+      color: #00d4ff;
     }
+
     .btn-store:hover {
+      background: rgba(0,212,255,0.25);
       transform: translateY(-2px);
-      box-shadow: 0 0 50px rgba(0,212,255,0.45);
     }
+
     .btn-outline {
       background: transparent;
-      border: 1.5px solid rgba(255,255,255,0.15);
-      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: white;
     }
+
     .btn-outline:hover {
-      border-color: var(--accent);
+      border-color: #6366f1;
       background: rgba(99,102,241,0.1);
       transform: translateY(-2px);
     }
 
-    /* ===== STATS ROW ===== */
-    .stats-row {
-      display: flex; gap: 0;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: var(--surface);
-      backdrop-filter: blur(10px);
+    /* Stats Row */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      max-width: 700px;
+      margin: 0 auto;
       overflow: hidden;
-      margin-bottom: 80px;
-      animation: fadeDown 0.6s 0.4s ease both;
     }
-    .stat-item {
-      flex: 1; padding: 20px 28px;
-      text-align: center;
-      border-right: 1px solid var(--border);
-    }
-    .stat-item:last-child { border-right: none; }
-    .stat-num {
-      font-family: 'Oxanium', sans-serif;
-      font-size: 28px; font-weight: 800;
-      background: linear-gradient(135deg, var(--cyan), var(--accent));
-      background-clip: text; -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-    /* ===== FEATURES ===== */
-    .features {
-      position: relative; z-index: 1;
-      max-width: 1000px; margin: 0 auto;
-      padding: 0 24px 100px;
+    .stat-item {
+      flex: 1;
+      padding: 20px 24px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.08);
     }
-    .features-title {
+
+    .stat-item:last-child {
+      border-right: none;
+    }
+
+    .stat-number {
       font-family: 'Oxanium', sans-serif;
-      font-size: 14px; font-weight: 700;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 2px; text-align: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #00d4ff;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #8a8aa0;
+      margin-top: 4px;
+    }
+
+    /* Features Section */
+    .features {
+      max-width: 1100px;
+      margin: 80px auto;
+      padding: 0 24px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-family: 'Oxanium', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #8a8aa0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
       margin-bottom: 40px;
     }
-    .features-grid {
+
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
     }
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       padding: 28px;
       transition: all 0.3s;
-      position: relative;
-      overflow: hidden;
     }
-    .feature-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .feature-card:hover {
-      border-color: rgba(99,102,241,0.3);
+
+    .card:hover {
+      border-color: rgba(99,102,241,0.4);
       transform: translateY(-4px);
-      background: rgba(99,102,241,0.06);
+      background: rgba(99,102,241,0.05);
     }
-    .feature-card:hover::before { opacity: 1; }
 
-    .feature-icon {
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      margin-bottom: 16px;
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      background: rgba(99,102,241,0.15);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 18px;
     }
-    .icon-blue { background: rgba(99,102,241,0.15); }
-    .icon-cyan { background: rgba(0,212,255,0.12); }
-    .icon-purple { background: rgba(139,92,246,0.15); }
-    .icon-green { background: rgba(16,185,129,0.12); }
 
-    .feature-name {
+    .card h3 {
       font-family: 'Oxanium', sans-serif;
-      font-size: 16px; font-weight: 700;
+      font-size: 18px;
+      font-weight: 700;
       margin-bottom: 8px;
     }
-    .feature-desc {
-      font-size: 13px; color: var(--muted); line-height: 1.6;
+
+    .card p {
+      font-size: 13px;
+      color: #8a8aa0;
+      line-height: 1.6;
     }
 
-    /* ===== CTA BOTTOM ===== */
-    .cta-section {
-      position: relative; z-index: 1;
+    /* CTA Section */
+    .cta {
       text-align: center;
-      padding: 60px 24px 100px;
-      border-top: 1px solid var(--border);
+      padding: 60px 24px 80px;
+      border-top: 1px solid rgba(255,255,255,0.08);
     }
-    .cta-section h2 {
+
+    .cta h2 {
       font-family: 'Oxanium', sans-serif;
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-size: 36px;
       font-weight: 800;
       margin-bottom: 16px;
-      letter-spacing: -1px;
-    }
-    .cta-section p {
-      color: var(--muted); font-size: 15px; margin-bottom: 32px;
     }
 
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-16px); }
-      to { opacity: 1; transform: translateY(0); }
+    .cta p {
+      color: #8a8aa0;
+      margin-bottom: 32px;
     }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 640px) {
-      nav { padding: 14px 20px; }
-      .nav-links { display: none; }
-      .stats-row { flex-direction: column; }
-      .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
-      .stat-item:last-child { border-bottom: none; }
+    /* Responsive */
+    @media (max-width: 900px) {
+      .navbar {
+        padding: 16px 24px;
+      }
+      
+      h1 {
+        font-size: 44px;
+      }
+      
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .nav-links {
+        display: none;
+      }
+      
+      h1 {
+        font-size: 36px;
+      }
+      
+      .stats {
+        flex-direction: column;
+      }
+      
+      .stat-item {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+      
+      .stat-item:last-child {
+        border-bottom: none;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .buttons {
+        gap: 12px;
+      }
+      
+      .btn {
+        padding: 10px 20px;
+        font-size: 13px;
+      }
+      
+      .cta h2 {
+        font-size: 28px;
+      }
     }
   </style>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "R STUDIO LAB",
-  "url": "https://www.rstudiolab.online",
-  "logo": "https://www.rstudiolab.online/images/RSLogo.png",
-  "description": "Platform belajar Roblox Studio Development",
-  "sameAs": [
-    "https://discord.gg/AUAzsxPP27",
-    "https://www.youtube.com/@ahmadrodiii",
-    "https://www.instagram.com/ahmadrodiii"
-  ]
-}
-</script>
-
 </head>
 <body>
 
-<!-- BG -->
-<div class="bg-canvas">
-  <div class="bg-grid"></div>
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-  <div class="particles" id="particles"></div>
-</div>
-
-<!-- NAVBAR -->
-<nav>
-  <a href="#" class="nav-brand">
-    <div class="nav-logo"><img src="./images/RSLogo.png" alt="RS"></div>
-    <span class="nav-name">R STUDIO</span>
-  </a>
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon">R</div>
+    <span class="logo-text">R STUDIO</span>
+  </div>
   <div class="nav-links">
-    <a href="#features" class="nav-link">Fitur</a>
-    <a href="https://discord.gg/AUAzsxPP27" class="nav-link" target="_blank">Community</a>
-    <a href="login.html" class="nav-cta">Masuk →</a>
+    <a href="#features">Fitur</a>
+    <a href="#">Komunitas</a>
+    <a href="#" class="btn-login">Masuk →</a>
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- Hero -->
 <section class="hero">
-  <div class="hero-badge">
+  <div class="badge">
     <div class="badge-dot"></div>
     Platform Roblox Studio Indonesia
   </div>
-
-  <h1 class="hero-title">
-    <span class="line-1">Belajar</span>
-    <span class="line-2">Roblox Studio</span>
+  
+  <h1>
+    Belajar <span class="gradient">Roblox Studio</span>
   </h1>
-
-  <p class="hero-sub">
-    Tutorial, asset gratis, dan konten eksklusif untuk developer Roblox. 
+  
+  <p class="subtitle">
+    Tutorial, asset gratis, dan konten eksklusif untuk developer Roblox.
     Tingkatkan skill kamu bersama komunitas R Studio Lab.
   </p>
-
-  <div class="hero-btns">
-    <a href="login.html" class="btn btn-primary">🚀 Masuk</a>
-    <a href="./rstore/maintenance.html" class="btn btn-store">🛒 R STORE</a>
-    <a href="register.html" class="btn btn-outline">✨ Daftar Gratis</a>
+  
+  <div class="buttons">
+    <a href="#" class="btn btn-primary">🚀 Masuk</a>
+    <a href="#" class="btn btn-store">🛒 R STORE</a>
+    <a href="#" class="btn btn-outline">✨ Daftar Gratis</a>
   </div>
-
-  <div class="stats-row">
+  
+  <div class="stats">
     <div class="stat-item">
-      <div class="stat-num">100+</div>
+      <div class="stat-number">100+</div>
       <div class="stat-label">Members</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">Free</div>
+      <div class="stat-number">Free</div>
       <div class="stat-label">Assets</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">VIP</div>
+      <div class="stat-number">VIP</div>
       <div class="stat-label">Content</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">24/7</div>
+      <div class="stat-number">24/7</div>
       <div class="stat-label">Community</div>
     </div>
   </div>
 </section>
 
-<!-- FEATURES -->
+<!-- Features -->
 <section class="features" id="features">
-  <p class="features-title">Apa yang kamu dapatkan</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon icon-blue">🎬</div>
-      <div class="feature-name">Video Tutorial</div>
-      <div class="feature-desc">Konten eksklusif Roblox Studio dari dasar hingga tingkat lanjut.</div>
+  <div class="section-title">Apa yang kamu dapatkan</div>
+  
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">🎬</div>
+      <h3>Video Tutorial</h3>
+      <p>Konten eksklusif Roblox Studio dari dasar hingga tingkat lanjut.</p>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon icon-cyan">📦</div>
-      <div class="feature-name">Free Assets</div>
-      <div class="feature-desc">Download asset gratis untuk semua member tanpa batas.</div>
+    
+    <div class="card">
+      <div class="card-icon">📦</div>
+      <h3>Free Assets</h3>
+      <p>Download asset gratis untuk semua member tanpa batas.</p>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon icon-purple">💎</div>
-      <div class="feature-name">VIP Content</div>
-      <div class="feature-desc">Akses konten premium dan asset eksklusif untuk subscriber VIP.</div>
+    
+    <div class="card">
+      <div class="card-icon">💎</div>
+      <h3>VIP Content</h3>
+      <p>Akses konten premium dan asset eksklusif untuk subscriber VIP.</p>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon icon-green">🛒</div>
-      <div class="feature-name">R STORE</div>
-      <div class="feature-desc">Temukan koleksi script dan tools terbaik untuk game Roblox kamu.</div>
+    
+    <div class="card">
+      <div class="card-icon">🛒</div>
+      <h3>R STORE</h3>
+      <p>Temukan koleksi script dan tools terbaik untuk game Roblox kamu.</p>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<section class="cta-section">
+<section class="cta">
   <h2>Siap mulai belajar?</h2>
   <p>Bergabung sekarang dan akses semua konten R Studio Lab secara gratis.</p>
-  <div class="hero-btns" style="justify-content:center">
-    <a href="register.html" class="btn btn-primary">✨ Daftar Gratis</a>
-    <a href="login.html" class="btn btn-outline">Sudah punya akun →</a>
+  <div class="buttons">
+    <a href="#" class="btn btn-primary">✨ Daftar Gratis</a>
+    <a href="#" class="btn btn-outline">Sudah punya akun →</a>
   </div>
 </section>
-<!--
-<script type="module">
-  import { auth } from "./firebase.js";
-  import { onAuthStateChanged } from
-    "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-  onAuthStateChanged(auth, user => {
-    if (user) location.href = "home.html";
-  });
-</script> -->
-
-<script>
-  // Generate particles
-  const container = document.getElementById("particles");
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
-    p.style.cssText = `
-      left: ${Math.random() * 100}%;
-      top: ${Math.random() * 100}%;
-      animation-delay: ${Math.random() * 4}s;
-      animation-duration: ${3 + Math.random() * 3}s;
-      width: ${Math.random() > 0.5 ? 2 : 3}px;
-      height: ${Math.random() > 0.5 ? 2 : 3}px;
-      background: ${Math.random() > 0.5 ? '#00d4ff' : '#8b5cf6'};
-    `;
-    container.appendChild(p);
-  }
-</script>
 
 </body>
 </html>
