@@ -1,23 +1,38 @@
-import { cors } from "./_cors.js";
+// /api/meta.js
+import { getFirestore } from './lib/firebase.js';
 
-export default function handler(req, res) {
-  if (cors(req, res)) return;
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   
-  const { type } = req.query;
-
-  if (type === "copyright") {
-    return res.json({
-      success: true,
-      text: "© rstudiolab.online"
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  try {
+    const db = getFirestore();
+    
+    // Test Firestore connection
+    await db.collection('licenses').limit(1).get();
+    
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: Date.now(),
+      version: '1.0.0',
+      endpoints: [
+        '/api/create-license.js',
+        '/api/licenses.js',
+        '/api/revoke-license.js',
+        '/api/undo-revoke-license.js',
+        '/api/verify-license.js',
+        '/api/logs.js',
+        '/api/meta.js'
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message
     });
   }
-
-  if (type === "health") {
-    return res.json({
-      success: true,
-      status: "ok"
-    });
-  }
-
-  return res.status(404).json({ error: "INVALID_META_TYPE" });
 }
