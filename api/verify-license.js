@@ -1,105 +1,76 @@
-//verify-license.js
-import { cors } from "./_cors.js";
-import { getFirestore } from "./lib/firebase.js";
+// verify-license.js
+const admin = require('firebase-admin');
 
-export default async function handler(req, res) {
-  // ✅ CORS PALING ATAS
-  if (cors(req, res)) return;
-
-  if (req.method !== "GET") {
-    return res.status(405).json({ valid: false });
+module.exports = async (req, res) => {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
-    const { licenseId, universeId } = req.query;
+    const { licenseId, universeId, placeId } = req.query;
 
     if (!licenseId || !universeId) {
-      return res.status(400).json({
-        valid: false,
-        reason: "MISSING_PARAMS",
+      return res.status(400).json({ 
+        valid: false, 
+        reason: 'License ID and Universe ID required' 
       });
     }
 
-    const db = getFirestore();
-    const ref = db.collection("licenses").doc(licenseId);
-    const snap = await ref.get();
-
-    if (!snap.exists) {
-      return res.json({ valid: false, reason: "LICENSE_NOT_FOUND" });
-    }
-
-    const license = snap.data();
-
-    if (license.revoked && Date.now() > license.revoked) {
-
-      await db.collection("connection_logs").add({
-        type: "verify",
-        licenseId,
-        mapName: license.mapName || "-",
-        valid: false,
-        reason: "REVOKED",
-        universeId: Number(universeId),
-        time: Date.now(),
-      });
-
-      return res.json({ valid: false, reason: "REVOKED" });
-    }
-
-    if (license.expiresAt && Date.now() > license.expiresAt) {
-
-      await db.collection("connection_logs").add({
-        type: "verify",
-        licenseId,
-        mapName: license.mapName || "-",
-        valid: false,
-        reason: "EXPIRED",
-        universeId: Number(universeId),
-        time: Date.now(),
-      });
-
-      return res.json({ valid: false, reason: "EXPIRED" });
-    }
-
-    // 🔐 AUTO-BIND UNIVERSE (1x SAJA)
-    if (!license.universeId) {
-      await ref.update({
-        universeId: Number(universeId),
-        boundAt: Date.now(),
-      });
-    } else if (Number(license.universeId) !== Number(universeId)) {
-      return res.json({
-        valid: false,
-        reason: "UNIVERSE_MISMATCH",
-      });
-    }
+    const licenseDoc = await admin.firestore().collection('licenses').doc(licenseId).get();
     
-    // CONNECTION LOGS
-    await db.collection("connection_logs").add({
-      type: "verify",
+    if (!licenseDoc.exists) {
+      return res.status(200).json({ valid: false, reason: 'License not found' });
+    }
+
+    const license = licenseDoc.data();
+    const now = Date.now();
+
+    // Check if revoked
+    if (license.revoked) {
+      return res.status(200).json({ valid: false, reason: 'License has been revoked' });
+    }
+
+    // Check expiration
+    if (license.expiresAt !== null && license.expiresAt <= now) {
+      return res.status(200).json({ valid: false, reason: 'License has expired' });
+    }
+
+    // Check universe ID match
+    if (Number(license.gameId) !== Number(universeId)) {
+      return res.status(200).json({ 
+        valid: false, 
+        reason: `Game ID mismatch. Expected: ${license.gameId}` 
+      });
+    }
+
+    // Optional: check place ID if provided
+    if (placeId && Number(license.placeId) !== Number(placeId)) {
+      return res.status(200).json({ 
+        valid: false, 
+        reason: `Place ID mismatch. Expected: ${license.placeId}` 
+      });
+    }
+
+    // Log successful verification
+    await admin.firestore().collection('logs').add({
       licenseId,
-      mapName: license.mapName || "-",
-      userId: license.createdBy,
-      role: license.role || "unknown",
-      valid: true,
-      gameId: license.gameId,
-      placeId: license.placeId,
+      action: 'VERIFY_SUCCESS',
+      type: 'verify',
       universeId: Number(universeId),
-      time: Date.now(),
+      placeId: placeId ? Number(placeId) : null,
+      time: Date.now()
     });
 
-    return res.json({
+    res.status(200).json({
       valid: true,
-      mapName: license.mapName || null, // ✅ FIX UTAMA
+      mapName: license.mapName,
       gameId: license.gameId,
       placeId: license.placeId,
-      universeId: license.universeId ?? Number(universeId),
       expiresAt: license.expiresAt,
+      message: 'License is valid'
     });
-  } catch (err) {
-    console.error("VERIFY LICENSE ERROR:", err);
-    return res.status(500).json({
-      valid: false,
-      reason: "SERVER_ERROR",
-    });
+  } catch (error) {
+    console.error('Verify license error:', error);
+    res.status(500).json({ valid: false, reason: 'Internal server error' });
   }
-}
+};

@@ -3,227 +3,564 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Profile</title>
+<title>Profile — R Studio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/images/RSLogo.png">
 <link rel="icon" type="image/png" sizes="32x32" href="./images/RSLogo.png">
 <link rel="apple-touch-icon" href="./images/RSLogo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne+Mono&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box;font-family:Inter}
-body{
-  margin:0;
-  min-height:100vh;
-  background:linear-gradient(135deg,#6366f1,#7c3aed);
-  display:flex;
-  justify-content:center;
-  align-items:center;
+/* ── Reset & base ─────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:        #03030a;
+  --bg2:       #08081a;
+  --surface:   rgba(255,255,255,0.04);
+  --surface2:  rgba(255,255,255,0.07);
+  --surface3:  rgba(255,255,255,0.11);
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.14);
+  --accent:    #5d4fff;
+  --accent2:   #9b59f5;
+  --gold:      #f59e0b;
+  --gold2:     #f97316;
+  --cyan:      #00d4ff;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --text:      #f0f0ff;
+  --muted:     #5a5a7a;
+  --muted2:    #8888aa;
+  --radius:    16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
 }
 
-.card{
-  background:#fff;
-  width:100%;
-  max-width:520px;
-  padding:32px;
-  border-radius:24px;
-  box-shadow:0 30px 70px rgba(0,0,0,.25);
-}
-h1{margin:0 0 20px}
-.avatar{
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  background:#e5e7eb;
-  margin:auto;
-  overflow:hidden;
-  cursor:pointer;
-}
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-label{
-  font-weight:700;
-  font-size:13px;
-  margin-top:14px;
-  display:block;
-}
-input{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:2px solid #e5e7eb;
-}
-input[readonly]{
-  background:#f3f4f6;
-}
-button{
-  margin-top:20px;
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  font-weight:800;
-  cursor:pointer;
-  background:linear-gradient(135deg,#facc15,#f59e0b);
-}
-button:disabled{
-  opacity:0.5;
-  cursor:not-allowed;
-}
-hr{
-  margin:26px 0;
-  border:none;
-  border-top:1px solid #e5e7eb;
-}
-.small{font-size:12px;color:#555}
-
-/* ===== NAVBAR ===== */
-.navbar{
-  height:64px;
-  padding:0 32px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:linear-gradient(135deg,#6d7cf2,#7c5cf4);
-  color:white;
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  z-index:99;
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+  padding-top: 64px;
 }
 
-.brand h2{
-  margin:0;
-  font-size:20px;
-  font-weight:800;
-}
-.brand span{
-  font-size:12px;
-  opacity:.85;
-}
-
-.profile-nav{
-  position:relative;
-}
-
-.avatar-nav{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:#fff;
-  overflow:hidden;
-  cursor:pointer;
+/* Fixed background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(93,79,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(93,79,255,0.035) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
 }
 
-.avatar-nav img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+/* ═══════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════ */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 64px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(3,3,10,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border2);
+  z-index: 999;
+  animation: fadeInDown 0.5s ease-out both;
+}
+.navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(93,79,255,0.5), transparent);
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.dropdown{
-  position:absolute;
-  right:0;
-  top:52px;
-  width:180px;
-  background:white;
-  border-radius:14px;
-  box-shadow:0 25px 50px rgba(0,0,0,.15);
-  overflow:hidden;
-  display:none;
+.brand { display: flex; flex-direction: column; gap: 1px; }
+.brand h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin: 0;
+}
+.brand span {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 1px;
 }
 
-.dropdown a{
-  display:block;
-  padding:14px 16px;
-  font-size:14px;
-  text-decoration:none;
-  color:#111827;
+/* Avatar nav */
+.profile-nav { position: relative; z-index: 1000; }
+.avatar-nav {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border: 2px solid rgba(93,79,255,0.3);
+  overflow: hidden;
+  box-shadow: 0 0 16px rgba(93,79,255,0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.dropdown a:hover{
-  background:#f3f4f6;
+.avatar-nav:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 24px rgba(93,79,255,0.45);
+}
+.avatar-nav img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* Dropdown */
+.dropdown {
+  position: absolute;
+  right: 0; top: 52px;
+  width: 196px;
+  background: #0d0d20;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: none;
+  z-index: 9999;
+  animation: dropIn 0.2s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--muted2);
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+.dropdown a:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-left-color: var(--accent);
+  padding-left: 20px;
 }
 
-/* kasih jarak karena navbar fixed */
-body{
-  padding-top:90px;
+/* ═══════════════════════════════════════════════
+   PAGE LAYOUT
+   ═══════════════════════════════════════════════ */
+.page-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
 }
 
-/* ===== EMAIL VERIFICATION BOX ===== */
-.verification-box{
-  background:#fef3c7;
-  border:2px solid #fbbf24;
-  border-radius:12px;
-  padding:16px;
-  margin-top:16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+/* Page title eyebrow */
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent2);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  animation: fadeInUp 0.5s 0.1s ease-out both;
+}
+.eyebrow-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent2);
+  box-shadow: 0 0 8px var(--accent2);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(0.6); opacity: 0.4; }
 }
 
-.verification-box.verified{
-  background:#d1fae5;
-  border-color:#10b981;
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 32px;
+  animation: fadeInUp 0.5s 0.15s ease-out both;
 }
 
-.verification-text{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:14px;
-  font-weight:600;
+/* ═══════════════════════════════════════════════
+   CARD
+   ═══════════════════════════════════════════════ */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s 0.2s ease-out both;
+  margin-bottom: 24px;
+}
+/* Top glow line */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+  opacity: 0.6;
+}
+/* Ambient glow */
+.card::after {
+  content: '';
+  position: absolute;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(93,79,255,0.07) 0%, transparent 70%);
+  top: -100px; right: -80px;
+  pointer-events: none;
 }
 
-.verification-icon{
-  font-size:24px;
+/* Card section title */
+.card-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-section-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  background: rgba(93,79,255,0.12);
+  border: 1px solid rgba(93,79,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
 }
 
-.verify-btn{
-  padding:10px 20px;
-  background:linear-gradient(135deg,#f59e0b,#d97706);
-  color:white;
-  border:none;
-  border-radius:10px;
-  font-weight:700;
-  font-size:13px;
-  cursor:pointer;
-  margin:0;
-  width:auto;
+/* ═══════════════════════════════════════════════
+   AVATAR UPLOAD
+   ═══════════════════════════════════════════════ */
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 10px;
+}
+.avatar-wrap {
+  position: relative;
+  width: 96px; height: 96px;
+  cursor: pointer;
+}
+.avatar-img-circle {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid rgba(93,79,255,0.3);
+  box-shadow: 0 0 28px rgba(93,79,255,0.2);
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.avatar-wrap:hover .avatar-img-circle {
+  border-color: rgba(93,79,255,0.6);
+  box-shadow: 0 0 40px rgba(93,79,255,0.35);
+}
+.avatar-img-circle img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+/* Overlay on hover */
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(93,79,255,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(4px);
+}
+.avatar-wrap:hover .avatar-overlay { opacity: 1; }
+
+.avatar-hint {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.verify-btn:hover{
-  opacity:0.9;
+/* ═══════════════════════════════════════════════
+   FORM FIELDS
+   ═══════════════════════════════════════════════ */
+.field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.field-group:last-of-type { margin-bottom: 0; }
+
+label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted2);
+  font-weight: 400;
 }
 
-.verify-btn:disabled{
-  opacity:0.5;
-  cursor:not-allowed;
+input {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  outline: none;
+}
+input::placeholder { color: var(--muted); }
+input:focus {
+  border-color: rgba(93,79,255,0.55);
+  box-shadow: 0 0 0 3px rgba(93,79,255,0.12);
+  background: var(--surface3);
+}
+input[readonly] {
+  background: var(--surface);
+  color: var(--muted2);
+  cursor: default;
+}
+input[readonly]:focus {
+  border-color: var(--border2);
+  box-shadow: none;
 }
 
-.verified-badge{
-  color:#10b981;
-  font-weight:700;
-  font-size:14px;
-  display:flex;
-  align-items:center;
-  gap:6px;
+/* Role badge inside readonly */
+.role-wrap { position: relative; }
+.role-badge-pill {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: rgba(93,79,255,0.15);
+  border: 1px solid rgba(93,79,255,0.3);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #a5b4fc;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Syne Mono', monospace;
+  pointer-events: none;
 }
 
-.info-text{
-  font-size:12px;
-  color:#6b7280;
-  margin-top:8px;
-  font-style:italic;
+/* ═══════════════════════════════════════════════
+   VERIFICATION BOX
+   ═══════════════════════════════════════════════ */
+.verification-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245,158,11,0.3);
+  background: rgba(245,158,11,0.06);
+  margin-top: 4px;
+  transition: all 0.3s;
+}
+.verification-box.verified {
+  border-color: rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.06);
 }
 
+.verification-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.verification-icon { font-size: 18px; line-height: 1; }
+
+.info-text {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════ */
+/* Primary (gradient accent) */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  margin-top: 22px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 4px 16px rgba(93,79,255,0.25);
+  letter-spacing: 0.5px;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(93,79,255,0.4);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Secondary (gold) */
+.btn-gold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  margin-top: 22px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: white;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.25);
+  letter-spacing: 0.5px;
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(245,158,11,0.4);
+}
+.btn-gold:active { transform: translateY(0); }
+.btn-gold:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Verify button (inline small) */
+.verify-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: white;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 3px 12px rgba(245,158,11,0.2);
+}
+.verify-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245,158,11,0.35);
+}
+.verify-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* Verified badge */
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 28px 0;
+  position: relative;
+}
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(93,79,255,0.3), transparent);
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .navbar { padding: 0 20px; }
+  .page-wrap { padding: 28px 16px 60px; }
+  .card { padding: 24px 20px; }
+  .verification-box { flex-direction: column; align-items: flex-start; }
+  .verify-btn { width: 100%; justify-content: center; }
+}
 </style>
 </head>
 
 <body>
+<!-- ═══ NAVBAR ═══ -->
 <div class="navbar">
   <div class="brand">
     <h2>R STUDIO</h2>
@@ -234,7 +571,6 @@ body{
     <div class="avatar-nav" id="navAvatar">
       <img id="navAvatarImg">
     </div>
-
     <div class="dropdown" id="dropdown">
       <a href="https://rstudiolab.online/">🚀 Home</a>
       <a href="license.html">🔐 License</a>
@@ -244,54 +580,91 @@ body{
   </div>
 </div>
 
-<div class="card">
-  <h1>👤 Profile</h1>
-
-  <!-- FOTO -->
-  <input type="file" id="photoInput" accept="image/*" hidden>
-  <div class="avatar" id="avatar">
-    <img id="avatarImg">
+<!-- ═══ PAGE ═══ -->
+<div class="page-wrap">
+  <div class="page-eyebrow">
+    <span class="eyebrow-dot"></span>
+    Akun Saya
   </div>
-  <div class="small" style="text-align:center;margin-top:6px">
-    Klik foto untuk mengganti
-  </div>
+  <h1 class="page-title">Profile</h1>
 
-  <!-- INFO -->
-  <label>Nama</label>
-  <input id="name">
-
-  <label>Email</label>
-  <input id="email" readonly>
-
-  <!-- EMAIL VERIFICATION BOX -->
-  <div class="verification-box" id="verificationBox">
-    <div class="verification-text">
-      <span class="verification-icon" id="verificationIcon">⚠️</span>
-      <span id="verificationText">Email belum diverifikasi</span>
+  <!-- CARD: INFO UTAMA -->
+  <div class="card">
+    <div class="card-section-title">
+      <div class="card-section-icon">👤</div>
+      Informasi Akun
     </div>
-    <button class="verify-btn" id="verifyBtn">Verifikasi Email</button>
+
+    <!-- Avatar upload -->
+    <input type="file" id="photoInput" accept="image/*" hidden>
+    <div class="avatar-section">
+      <div class="avatar-wrap" id="avatar">
+        <div class="avatar-img-circle">
+          <img id="avatarImg">
+        </div>
+        <div class="avatar-overlay">📷</div>
+      </div>
+      <span class="avatar-hint">Klik untuk mengganti foto</span>
+    </div>
+
+    <!-- Nama -->
+    <div class="field-group">
+      <label>Nama</label>
+      <input id="name" placeholder="Nama lengkap kamu">
+    </div>
+
+    <!-- Email -->
+    <div class="field-group">
+      <label>Email</label>
+      <input id="email" readonly>
+    </div>
+
+    <!-- Verification box -->
+    <div class="verification-box" id="verificationBox">
+      <div class="verification-text">
+        <span class="verification-icon" id="verificationIcon">⚠️</span>
+        <span id="verificationText">Email belum diverifikasi</span>
+      </div>
+      <button class="verify-btn" id="verifyBtn">Verifikasi Email</button>
+    </div>
+    <div class="info-text" id="infoText"></div>
+
+    <!-- Role -->
+    <div class="field-group" style="margin-top:18px">
+      <label>Role</label>
+      <div class="role-wrap">
+        <input id="role" readonly>
+        <span class="role-badge-pill" id="rolePill"></span>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="saveProfile">💾 Simpan Profile</button>
   </div>
-  <div class="info-text" id="infoText"></div>
 
-  <label>Role</label>
-  <input id="role" readonly>
+  <!-- CARD: GANTI PASSWORD -->
+  <div class="card" style="animation-delay:0.3s">
+    <div class="card-section-title">
+      <div class="card-section-icon">🔒</div>
+      Ganti Password
+    </div>
 
-  <button id="saveProfile">💾 Simpan Profile</button>
+    <div class="field-group">
+      <label>Password Lama</label>
+      <input type="password" id="oldPass" placeholder="••••••••">
+    </div>
 
-  <hr>
+    <div class="field-group">
+      <label>Password Baru</label>
+      <input type="password" id="newPass" placeholder="Min. 6 karakter">
+    </div>
 
-  <h3>🔒 Ganti Password</h3>
+    <div class="field-group">
+      <label>Konfirmasi Password Baru</label>
+      <input type="password" id="confirmPass" placeholder="Ulangi password baru">
+    </div>
 
-  <label>Password Lama</label>
-  <input type="password" id="oldPass">
-
-  <label>Password Baru</label>
-  <input type="password" id="newPass">
-
-  <label>Confirm Password Baru</label>
-  <input type="password" id="confirmPass">
-
-  <button id="changePass">🔁 Update Password</button>
+    <button class="btn-gold" id="changePass">🔁 Update Password</button>
+  </div>
 </div>
 
 <script type="module">
@@ -305,7 +678,6 @@ import {
   sendEmailVerification,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
 import {
   doc,
   getDoc,
@@ -314,29 +686,30 @@ import {
 
 await checkMaintenance();
 
-/* ================= DOM ================= */
-const avatarImg = document.getElementById("avatarImg");
-const navAvatarImg = document.getElementById("navAvatarImg");
-const nameInput = document.getElementById("name");
-const emailInput = document.getElementById("email");
-const roleInput = document.getElementById("role");
-const adminMenu = document.getElementById("adminMenu");
+/* ─── DOM refs ─── */
+const avatarImg      = document.getElementById("avatarImg");
+const navAvatarImg   = document.getElementById("navAvatarImg");
+const nameInput      = document.getElementById("name");
+const emailInput     = document.getElementById("email");
+const roleInput      = document.getElementById("role");
+const rolePill       = document.getElementById("rolePill");
+const adminMenu      = document.getElementById("adminMenu");
 
-const verificationBox = document.getElementById("verificationBox");
+const verificationBox  = document.getElementById("verificationBox");
 const verificationIcon = document.getElementById("verificationIcon");
 const verificationText = document.getElementById("verificationText");
-const verifyBtn = document.getElementById("verifyBtn");
-const infoText = document.getElementById("infoText");
+const verifyBtn        = document.getElementById("verifyBtn");
+const infoText         = document.getElementById("infoText");
 
-const oldPassInput = document.getElementById("oldPass");
-const newPassInput = document.getElementById("newPass");
+const oldPassInput     = document.getElementById("oldPass");
+const newPassInput     = document.getElementById("newPass");
 const confirmPassInput = document.getElementById("confirmPass");
 
 let currentUser;
 let lastEmailSentTime = 0;
-const COOLDOWN_MS = 60000; // 1 menit cooldown
+const COOLDOWN_MS = 60000;
 
-/* ================= UI ================= */
+/* ─── Verification UI ─── */
 function updateVerificationStatus(isVerified) {
   if (isVerified) {
     verificationBox.classList.add("verified");
@@ -348,255 +721,151 @@ function updateVerificationStatus(isVerified) {
     verificationBox.classList.remove("verified");
     verificationIcon.textContent = "⚠️";
     verificationText.textContent = "Email belum diverifikasi";
-    verifyBtn.style.display = "block";
+    verifyBtn.style.display = "";
     infoText.textContent = "💡 Setelah klik link di email, refresh halaman ini";
   }
 }
 
-/* ================= CHECK STATUS PERIODICALLY ================= */
+/* ─── Auto-check status ─── */
 let statusCheckInterval;
-
 function startStatusCheck() {
-  // Cek status setiap 3 detik jika belum verified
   statusCheckInterval = setInterval(async () => {
     if (!currentUser) return;
-    
     await currentUser.reload();
-    
     if (currentUser.emailVerified) {
-      // Update Firestore
-      const userDocRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userDocRef, {
-        emailVerified: true,
-        emailVerifiedAt: Date.now()
-      });
-      
-      // Update UI
+      const ref = doc(db, "users", currentUser.uid);
+      await updateDoc(ref, { emailVerified: true, emailVerifiedAt: Date.now() });
       updateVerificationStatus(true);
-      
-      // Stop checking
       clearInterval(statusCheckInterval);
-      
-      // Show success message
       alert("🎉 Email berhasil diverifikasi!");
     }
   }, 3000);
 }
-
 function stopStatusCheck() {
-  if (statusCheckInterval) {
-    clearInterval(statusCheckInterval);
-  }
+  if (statusCheckInterval) clearInterval(statusCheckInterval);
 }
 
-/* ================= AUTH ================= */
+/* ─── Auth ─── */
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    location.href = "login.html";
-    return;
-  }
-
+  if (!user) { location.href = "login.html"; return; }
   currentUser = user;
-  
-  // 🔥 PENTING: Reload untuk mendapatkan status terbaru
   await user.reload();
 
   emailInput.value = user.email;
-  nameInput.value = user.displayName || "";
+  nameInput.value  = user.displayName || "";
 
   const userDocRef = doc(db, "users", user.uid);
   const snap = await getDoc(userDocRef);
   const data = snap.exists() ? snap.data() : {};
 
-  roleInput.value = data.role || "member";
+  const role = data.role || "member";
+  roleInput.value = role;
+  rolePill.textContent = role;
 
   if (data.role === "admin" || data.role === "owner") {
     adminMenu.style.display = "block";
   }
 
-  const photo =
-    data.photoBase64 ||
-    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-  avatarImg.src = photo;
+  const photo = data.photoBase64 || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  avatarImg.src    = photo;
   navAvatarImg.src = photo;
 
-  // 🔥 SINKRONISASI: Jika Auth verified tapi Firestore belum, update Firestore
   if (user.emailVerified && !data.emailVerified) {
-    console.log("🔄 Sinkronisasi status verifikasi ke Firestore...");
-    
-    await updateDoc(userDocRef, {
-      emailVerified: true,
-      emailVerifiedAt: Date.now()
-    });
-    
-    console.log("✅ Firestore berhasil diupdate");
+    await updateDoc(userDocRef, { emailVerified: true, emailVerifiedAt: Date.now() });
   }
 
-  // ✅ AUTH ADALAH SUMBER KEBENARAN
   updateVerificationStatus(user.emailVerified);
-  
-  // Mulai cek status jika belum verified
-  if (!user.emailVerified) {
-    startStatusCheck();
-  }
+  if (!user.emailVerified) startStatusCheck();
 });
 
-/* ================= DROPDOWN NAVBAR ================= */
+/* ─── Dropdown navbar ─── */
 document.getElementById("navAvatar").onclick = () => {
-  const dropdown = document.getElementById("dropdown");
-  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+  const d = document.getElementById("dropdown");
+  d.style.display = d.style.display === "block" ? "none" : "block";
 };
-
-// Close dropdown when clicking outside
 document.addEventListener("click", (e) => {
-  if (!e.target.closest(".profile-nav")) {
-    document.getElementById("dropdown").style.display = "none";
-  }
+  if (!e.target.closest(".profile-nav")) document.getElementById("dropdown").style.display = "none";
 });
 
-/* ================= UPLOAD FOTO ================= */
-document.getElementById("avatar").onclick = () => {
-  document.getElementById("photoInput").click();
-};
-
+/* ─── Upload foto ─── */
+document.getElementById("avatar").onclick = () => document.getElementById("photoInput").click();
 document.getElementById("photoInput").onchange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = async (event) => {
-    const base64 = event.target.result;
-    
-    // Update UI immediately
-    avatarImg.src = base64;
-    navAvatarImg.src = base64;
-
-    // Save to Firestore
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      photoBase64: base64
-    });
-
+  reader.onload = async (ev) => {
+    const base64 = ev.target.result;
+    avatarImg.src = navAvatarImg.src = base64;
+    await updateDoc(doc(db, "users", currentUser.uid), { photoBase64: base64 });
     alert("✅ Foto profile diperbarui");
   };
-  
   reader.readAsDataURL(file);
 };
 
-/* ================= SEND VERIFY EMAIL WITH RATE LIMIT ================= */
+/* ─── Kirim email verifikasi ─── */
 verifyBtn.onclick = async () => {
   const now = Date.now();
-  const timeSinceLastSent = now - lastEmailSentTime;
-  
-  // Check cooldown
-  if (timeSinceLastSent < COOLDOWN_MS) {
-    const remainingSeconds = Math.ceil((COOLDOWN_MS - timeSinceLastSent) / 1000);
-    alert(`⏳ Tunggu ${remainingSeconds} detik sebelum mengirim ulang`);
+  const elapsed = now - lastEmailSentTime;
+  if (elapsed < COOLDOWN_MS) {
+    const rem = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+    alert(`⏳ Tunggu ${rem} detik sebelum mengirim ulang`);
     return;
   }
-  
   try {
     verifyBtn.disabled = true;
     verifyBtn.textContent = "Mengirim...";
-
-    await sendEmailVerification(currentUser, {
-      url: "https://rstudiolab.online/profile.html"
-    });
-
+    await sendEmailVerification(currentUser, { url: "https://rstudiolab.online/profile.html" });
     lastEmailSentTime = now;
-    
     alert("✅ Email verifikasi dikirim!\n\n📧 Cek inbox atau folder spam\n⚠️ Link hanya bisa digunakan SEKALI\n🔄 Halaman akan auto-refresh setelah verifikasi");
-    
     verifyBtn.textContent = "Email Terkirim";
-    
-    // Re-enable setelah 60 detik
-    setTimeout(() => {
-      verifyBtn.disabled = false;
-      verifyBtn.textContent = "Kirim Ulang";
-    }, COOLDOWN_MS);
-    
+    setTimeout(() => { verifyBtn.disabled = false; verifyBtn.textContent = "Kirim Ulang"; }, COOLDOWN_MS);
   } catch (err) {
-    console.error("Send email error:", err);
-    
-    if (err.code === "auth/too-many-requests") {
-      alert("❌ Terlalu banyak percobaan. Tunggu beberapa menit.");
-    } else {
-      alert("❌ Gagal kirim email: " + err.message);
-    }
-    
+    if (err.code === "auth/too-many-requests") alert("❌ Terlalu banyak percobaan. Tunggu beberapa menit.");
+    else alert("❌ Gagal kirim email: " + err.message);
     verifyBtn.disabled = false;
     verifyBtn.textContent = "Verifikasi Email";
   }
 };
 
-/* ================= SAVE PROFILE ================= */
+/* ─── Save profile ─── */
 document.getElementById("saveProfile").onclick = async () => {
   try {
-    await updateProfile(currentUser, {
-      displayName: nameInput.value
-    });
-
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      name: nameInput.value
-    });
-
+    await updateProfile(currentUser, { displayName: nameInput.value });
+    await updateDoc(doc(db, "users", currentUser.uid), { name: nameInput.value });
     alert("✅ Profile diperbarui");
   } catch (err) {
     alert("❌ Gagal update profile: " + err.message);
   }
 };
 
-/* ================= CHANGE PASSWORD ================= */
+/* ─── Change password ─── */
 document.getElementById("changePass").onclick = async () => {
   const oldPass = oldPassInput.value;
   const newPass = newPassInput.value;
   const confirm = confirmPassInput.value;
-
-  if (!oldPass || !newPass || !confirm) {
-    alert("⚠️ Semua field harus diisi");
-    return;
-  }
-
-  if (newPass !== confirm) {
-    alert("❌ Password baru tidak cocok");
-    return;
-  }
-
-  if (newPass.length < 6) {
-    alert("❌ Password minimal 6 karakter");
-    return;
-  }
-
+  if (!oldPass || !newPass || !confirm) { alert("⚠️ Semua field harus diisi"); return; }
+  if (newPass !== confirm) { alert("❌ Password baru tidak cocok"); return; }
+  if (newPass.length < 6) { alert("❌ Password minimal 6 karakter"); return; }
   try {
     const cred = EmailAuthProvider.credential(currentUser.email, oldPass);
     await reauthenticateWithCredential(currentUser, cred);
     await updatePassword(currentUser, newPass);
-
     alert("🔐 Password berhasil diubah");
-    
-    // Clear inputs
-    oldPassInput.value = "";
-    newPassInput.value = "";
-    confirmPassInput.value = "";
+    oldPassInput.value = newPassInput.value = confirmPassInput.value = "";
   } catch (err) {
-    if (err.code === "auth/wrong-password") {
-      alert("❌ Password lama salah");
-    } else {
-      alert("❌ Gagal update password: " + err.message);
-    }
+    if (err.code === "auth/wrong-password") alert("❌ Password lama salah");
+    else alert("❌ Gagal update password: " + err.message);
   }
 };
 
-/* ================= LOGOUT ================= */
+/* ─── Logout ─── */
 document.getElementById("logoutBtn").onclick = async () => {
   stopStatusCheck();
   await signOut(auth);
   location.href = "login.html";
 };
 
-// Cleanup saat tab ditutup
 window.addEventListener("beforeunload", stopStatusCheck);
 </script>
-
 </body>
 </html>

@@ -1,28 +1,28 @@
-import { cors } from "./_cors.js";
-import { getFirestore } from "./lib/firebase.js";
+// licenses.js
+const admin = require('firebase-admin');
 
-export default async function handler(req, res) {
-  if (cors(req, res)) return;
-
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+module.exports = async (req, res) => {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
-    const db = getFirestore(); // 🔑 FIX UTAMA
-    const snap = await db.collection("licenses").get();
-
-    const licenses = snap.docs.map(doc => ({
-      licenseId: doc.id,
-      ...doc.data(),
-    }));
-
-    return res.status(200).json({
-      success: true,
-      licenses,
+    const licensesSnapshot = await admin.firestore().collection('licenses').get();
+    const licenses = [];
+    
+    licensesSnapshot.forEach(doc => {
+      licenses.push(doc.data());
     });
-  } catch (err) {
-    console.error("LICENSE LIST ERROR:", err);
-    return res.status(500).json({ success: false });
+
+    // Sort by createdAt descending
+    licenses.sort((a, b) => b.createdAt - a.createdAt);
+
+    res.status(200).json({
+      success: true,
+      licenses
+    });
+  } catch (error) {
+    console.error('Get licenses error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
-}
+};

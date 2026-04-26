@@ -1,98 +1,76 @@
-//revoke-license.js
-import { getFirestore, getAuth } from "./lib/firebase.js";
+// revoke-license.js
+const admin = require('firebase-admin');
 
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
-  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
 
   try {
-    const authHeader = req.headers.authorization || "";
-    if (!authHeader.startsWith("Bearer "))
-      return res.status(401).json({ error: "NO_TOKEN" });
-
-    const auth = getAuth();
-    const decoded = await auth.verifyIdToken(
-      authHeader.replace("Bearer ", "")
-    );
-
-    const { licenseId, reason } = req.body;
-    if (!reason || reason.trim().length < 3)
-      return res.status(400).json({ error: "REASON_REQUIRED" });
-
-    const db = getFirestore();
-
-    const licenseSnap = await db.collection("licenses").doc(licenseId).get();
-    if (!licenseSnap.exists)
-      return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
-
-    const license = licenseSnap.data();
-
-    const creatorSnap = await db
-      .collection("users")
-      .doc(license.createdBy)
-      .get();
-    if (!creatorSnap.exists)
-      return res.status(403).json({ error: "CREATOR_NOT_FOUND" });
-
-    const creator = creatorSnap.data();
-
-    const userSnap = await db.collection("users").doc(decoded.uid).get();
-    const user = userSnap.data();
-
-    const getRole = u =>
-      u.role === "owner"
-        ? "👑 Owner"
-        : u.role === "admin"
-        ? "🛠 Admin"
-        : u.isVIP
-        ? "💎 VIP"
-        : "👤 Member";
-
-    const creatorRole = getRole(creator);
-    const userRole = getRole(user);
-
-    let canRevoke = false;
-
-    if (userRole === "owner") canRevoke = true;
-    else if (userRole === "admin") {
-      if (license.createdBy === decoded.uid) canRevoke = true;
-      else if (["member", "vip"].includes(creatorRole)) canRevoke = true;
-    } else {
-      if (license.createdBy === decoded.uid) canRevoke = true;
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, error: 'No token provided' });
     }
 
-    if (!canRevoke)
-      return res.status(403).json({ error: "NO_PERMISSION" });
+    const token = authHeader.split(' ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
 
-    await licenseSnap.ref.update({
+    const { licenseId, reason } = req.body;
+    if (!licenseId || !reason || reason.trim().length < 3) {
+      return res.status(400).json({ success: false, error: 'License ID and reason (min 3 chars) required' });
+    }
+
+    // Get license data
+    const licenseDoc = await admin.firestore().collection('licenses').doc(licenseId).get();
+    if (!licenseDoc.exists) {
+      return res.status(404).json({ success: false, error: 'License not found' });
+    }
+
+    const license = licenseDoc.data();
+    if (license.revoked) {
+      return res.status(400).json({ success: false, error: 'License already revoked' });
+    }
+
+    // Get user role for permission check
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    const userRole = userDoc.data()?.role || 'member';
+
+    // Permission check
+    let canRevoke = false;
+    if (userRole === 'owner') canRevoke = true;
+    else if (userRole === 'admin') {
+      if (license.createdBy === userId) canRevoke = true;
+      else if (license.creatorRole === 'member' || license.creatorRole === 'vip') canRevoke = true;
+    } else if (license.createdBy === userId) canRevoke = true;
+
+    if (!canRevoke) {
+      return res.status(403).json({ success: false, error: 'Permission denied' });
+    }
+
+    // Update license
+    await admin.firestore().collection('licenses').doc(licenseId).update({
       revoked: true,
-      revokedAt: Date.now(),
-      revokedBy: decoded.uid,
+      revokedReason: reason,
+      revokedBy: userId,
       revokedByRole: userRole,
-      revokedReason: reason.trim(),
+      revokedAt: Date.now()
     });
 
-    await db.collection("connection_logs").add({
-      type: "revoke",
+    // Log revoke action
+    await admin.firestore().collection('logs').add({
       licenseId,
-      mapName: license.mapName || "-",
-      revokedBy: decoded.uid,
+      action: 'REVOKE_LICENSE',
+      type: 'revoke',
+      reason,
       revokedByRole: userRole,
-      reason: reason.trim(),
       time: Date.now(),
+      userId
     });
 
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("REVOKE ERROR:", err);
-    return res.status(500).json({ error: "SERVER_ERROR" });
+    res.status(200).json({ success: true, message: 'License revoked' });
+  } catch (error) {
+    console.error('Revoke license error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
-}
+};

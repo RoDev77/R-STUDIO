@@ -1,19 +1,16 @@
 // createlicense.js
 /* ================= FIREBASE ================= */
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from
-  "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 /* ================= CONFIG ================= */
 const API_BASE = "https://api.rstudiolab.online/api";
 
 /* ================= STATE ================= */
-let currentUser = null;     // firebase auth user
-let currentRole = "member"; // role dari Firestore
-let isEmailVerified = false; // status verifikasi email
-let logs = [];
+let currentUser = null;
+let currentRole = "member";
+let isEmailVerified = false;
 
 /* ================= INIT ================= */
 document.getElementById("apiEndpoint").textContent = API_BASE;
@@ -28,74 +25,25 @@ function showNotification(message, type = "success") {
 
 /* ================= EMAIL VERIFICATION BANNER ================= */
 function showVerificationBanner(isVerified) {
-  // Hapus banner lama jika ada
   const oldBanner = document.getElementById("verificationBanner");
   if (oldBanner) oldBanner.remove();
+  if (isVerified) return;
 
-  if (isVerified) return; // Jangan tampilkan jika sudah verified
-
-  // Buat banner warning
   const banner = document.createElement("div");
   banner.id = "verificationBanner";
   banner.innerHTML = `
-    <div style="
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      color: white;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 6px rgba(0,0,0,.1);
-      border-radius: 12px;
-      margin-bottom: 24px;
-      animation: slideDown 0.3s ease-out;
-    ">
+    <div style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; margin-bottom: 24px;">
       <div style="display: flex; align-items: center; gap: 12px;">
         <span style="font-size: 24px;">⚠️</span>
         <div>
           <div style="font-weight: 700; font-size: 15px;">Email Belum Diverifikasi</div>
-          <div style="font-size: 13px; opacity: 0.9;">
-            Verifikasi email kamu untuk menggunakan semua fitur dengan aman.
-          </div>
+          <div style="font-size: 13px;">Verifikasi email kamu untuk menggunakan semua fitur dengan aman.</div>
         </div>
       </div>
-      <a href="profile.html" style="
-        background: white;
-        color: #f59e0b;
-        padding: 10px 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 14px;
-        white-space: nowrap;
-        box-shadow: 0 2px 4px rgba(0,0,0,.1);
-      ">
-        Verifikasi Sekarang
-      </a>
+      <a href="profile.html" style="background: white; color: #f59e0b; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">Verifikasi Sekarang</a>
     </div>
   `;
-
-  // Tambahkan CSS animation
-  if (!document.getElementById("verificationBannerStyle")) {
-    const style = document.createElement("style");
-    style.id = "verificationBannerStyle";
-    style.textContent = `
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  // Insert banner di awal konten
-  const mainContent = document.querySelector(".container") || document.body;
+  const mainContent = document.querySelector(".page-wrap") || document.body;
   mainContent.insertBefore(banner, mainContent.firstChild);
 }
 
@@ -104,7 +52,6 @@ onAuthStateChanged(auth, async user => {
   if (!user) return location.href = "login.html";
 
   currentUser = user;
-
   const snap = await getDoc(doc(db, "users", user.uid));
   if (!snap.exists()) {
     showNotification("User data not found", "error");
@@ -112,29 +59,17 @@ onAuthStateChanged(auth, async user => {
   }
 
   const data = snap.data();
-
-  // Cek status verifikasi email
   isEmailVerified = data.emailVerified || false;
-
-  // Tampilkan banner jika belum verified
   showVerificationBanner(isEmailVerified);
 
-  // Tampilkan notifikasi toast
   if (!isEmailVerified) {
-    setTimeout(() => {
-      showNotification("⚠️ Email belum diverifikasi. Silakan verifikasi di halaman Profile.", "warning");
-    }, 1000);
+    setTimeout(() => showNotification("⚠️ Email belum diverifikasi. Silakan verifikasi di halaman Profile.", "warning"), 1000);
   }
 
-  if (data.role === "owner") {
-    currentRole = "owner";
-  } else if (data.role === "admin") {
-    currentRole = "admin";
-  } else if (data.isVIP === true) {
-    currentRole = "vip";
-  } else {
-    currentRole = "member";
-  }
+  if (data.role === "owner") currentRole = "owner";
+  else if (data.role === "admin") currentRole = "admin";
+  else if (data.isVIP === true) currentRole = "vip";
+  else currentRole = "member";
 
   renderUserRole(currentRole);
   checkServerStatus();
@@ -145,149 +80,148 @@ onAuthStateChanged(auth, async user => {
 function renderUserRole(role) {
   const badge = document.getElementById("userRoleBadge");
   if (!badge) return;
-
-  badge.className = "role-badge"; // reset
-
-  switch (role) {
-    case "owner":
-      badge.textContent = "👑 Owner";
-      badge.classList.add("role-owner");
-      break;
-
-    case "admin":
-      badge.textContent = "🛠 Admin";
-      badge.classList.add("role-admin");
-      break;
-
-    case "vip":
-      badge.textContent = "💎 VIP";
-      badge.classList.add("role-vip");
-      break;
-
-    default:
-      badge.textContent = "👤 Member";
-      badge.classList.add("role-member");
-  }
+  badge.className = "role-badge";
+  
+  const roleMap = {
+    owner: "👑 Owner",
+    admin: "🛠 Admin",
+    vip: "💎 VIP",
+    member: "👤 Member"
+  };
+  badge.textContent = roleMap[role] || "👤 Member";
 }
 
 /* ================= PERMISSION ================= */
 function canRevoke(license) {
   if (!license) return false;
-
-  // OWNER → semua
   if (currentRole === "owner") return true;
-
-  // ADMIN
   if (currentRole === "admin") {
-    // license sendiri
     if (license.createdBy === currentUser.uid) return true;
-
-    // revoke member / vip
     return license.creatorRole === "member" || license.creatorRole === "vip";
   }
-
-  // MEMBER / VIP → hanya license sendiri
   return license.createdBy === currentUser.uid;
 }
 
-// ================= CREATE LICENSE =================
-document
-  .getElementById("createLicenseForm")
-  .addEventListener("submit", async e => {
-    e.preventDefault();
+/* ================= CREATE LICENSE ================= */
+document.getElementById("createLicenseForm").addEventListener("submit", async e => {
+  e.preventDefault();
 
-    // ⚠️ CEK VERIFIKASI EMAIL SEBELUM CREATE LICENSE
-    if (!isEmailVerified) {
-      if (confirm("Email kamu belum diverifikasi. Verifikasi dulu untuk keamanan akun.\n\nKe halaman Profile sekarang?")) {
-        location.href = "profile.html";
-      }
-      return;
+  if (!isEmailVerified) {
+    if (confirm("Email kamu belum diverifikasi. Verifikasi dulu untuk keamanan akun.\n\nKe halaman Profile sekarang?")) {
+      location.href = "profile.html";
     }
+    return;
+  }
 
-    try {
-      const token = await currentUser.getIdToken();
+  try {
+    const token = await currentUser.getIdToken();
+    const gameId = Number(document.getElementById("gameId").value);
+    const placeId = Number(document.getElementById("placeId").value);
+    const mapName = document.getElementById("mapName").value;
+    const duration = Number(document.getElementById("duration").value);
 
-      const payload = {
-        gameId: Number(gameId.value),
-        placeId: Number(placeId.value),
-        mapName: mapName.value,
-        duration: Number(duration.value),
-      };
-      
-      const res = await fetch(`${API_BASE}/create-license`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token
-        },
-        body: JSON.stringify(payload),
-      });
+    const res = await fetch(`${API_BASE}/create-license.js`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ gameId, placeId, mapName, duration })
+    });
 
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "FAILED");
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "FAILED");
 
-      // === LOG CREATE LICENSE ===
-      await fetch(`${API_BASE}/logs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token
-        },
-        body: JSON.stringify({
-          licenseId: data.licenseId,
-          action: "CREATE_LICENSE",
-          valid: true
-        })
-      });
-
-      licenseKeyDisplay.textContent = `
-      License ID : ${data.licenseId}
-      Map Name   : ${data.mapName}
-      Game ID    : ${data.gameId}
-      Place ID   : ${data.placeId}
-      Expires At : ${
-        data.expiresAt
-          ? new Date(data.expiresAt).toLocaleDateString()
-          : "♾️ Unlimited"
-      }
-      `;
-
-      newLicenseInfo.style.display = "block";
-      showNotification("✅ License created");
-
-      loadLicenses();
-
-    } catch (err) {
-      showNotification(err.message, "error");
-    }
-  });
+    document.getElementById("licenseKeyDisplay").textContent = `
+License ID : ${data.licenseId}
+Map Name   : ${data.mapName}
+Game ID    : ${data.gameId}
+Place ID   : ${data.placeId}
+Expires At : ${data.expiresAt ? new Date(data.expiresAt).toLocaleDateString() : "♾️ Unlimited"}
+    `;
+    document.getElementById("newLicenseInfo").style.display = "block";
+    showNotification("✅ License created");
+    loadLicenses();
+  } catch (err) {
+    showNotification(err.message, "error");
+  }
+});
 
 /* ================= SERVER STATUS ================= */
 async function checkServerStatus() {
   const el = document.getElementById("serverStatus");
   try {
-    const res = await fetch(`${API_BASE}/meta?type=health`);
-    if (!res.ok) throw new Error();
-    el.textContent = "Online";
-    el.className = "status online";
+    const res = await fetch(`${API_BASE}/licenses.js`);
+    if (res.ok) {
+      el.innerHTML = '<span class="dot"></span> Online';
+      el.className = "status-pill online";
+    } else throw new Error();
   } catch {
-    el.textContent = "Offline";
-    el.className = "status offline";
+    el.innerHTML = '<span class="dot"></span> Offline';
+    el.className = "status-pill offline";
   }
 }
 
-const userCache = {};
+/* ================= LOAD LICENSES ================= */
+async function loadLicenses() {
+  try {
+    const res = await fetch(`${API_BASE}/licenses.js`);
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.licenses)) throw new Error();
 
+    const licenses = data.licenses;
+    const now = Date.now();
+
+    document.getElementById("totalLicenses").textContent = licenses.length;
+    document.getElementById("activeLicenses").textContent = licenses.filter(l => !l.revoked && (l.expiresAt === null || l.expiresAt > now)).length;
+    document.getElementById("expiredLicenses").textContent = licenses.filter(l => l.expiresAt !== null && l.expiresAt <= now).length;
+
+    if (!licenses.length) {
+      document.getElementById("licenseList").innerHTML = '<div class="empty-state">No licenses yet</div>';
+      return;
+    }
+
+    const licenseList = document.getElementById("licenseList");
+    licenseList.innerHTML = await Promise.all(licenses.map(async l => {
+      let badge = l.revoked ? "revoked" : (l.expiresAt === null ? "unlimited" : (l.expiresAt <= now ? "expired" : "active"));
+      const creatorName = await getUserName(l.createdBy);
+      
+      return `
+        <div class="license-item ${badge}">
+          <div class="license-key">
+            <strong>${l.mapName}</strong>
+            <span class="badge badge-${badge}">${badge.toUpperCase()}</span>
+          </div>
+          <div class="license-meta">
+            <div class="meta-row"><strong>License ID:</strong> ${l.licenseId}</div>
+            <div class="meta-row"><strong>Created by:</strong> ${creatorName}</div>
+            <div class="meta-row"><strong>Game ID:</strong> ${l.gameId}</div>
+            <div class="meta-row"><strong>Place ID:</strong> ${l.placeId}</div>
+            <div class="meta-row"><strong>Expires:</strong> ${l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "♾️ Unlimited"}</div>
+          </div>
+          <div class="license-actions">
+            ${l.revoked ? `
+              ${currentRole === "owner" ? `<button class="btn btn-sm" style="background:#6c5ce7;" onclick="undoRevoke('${l.licenseId}')">↻ Undo Revoke</button>` : ""}
+            ` : `
+              ${canRevoke(l) ? `<button class="btn btn-danger btn-sm" onclick="revokeLicense('${l.licenseId}')">🗑 Revoke</button>` : ""}
+            `}
+          </div>
+        </div>
+      `;
+    })).then(html => html.join(""));
+  } catch (err) {
+    console.error(err);
+    showNotification("Failed load licenses", "error");
+  }
+}
+
+/* ================= GET USER NAME ================= */
+const userCache = {};
 async function getUserName(uid) {
   if (userCache[uid]) return userCache[uid];
-
   try {
     const snap = await getDoc(doc(db, "users", uid));
-    if (!snap.exists()) return "Unknown";
-
-    const data = snap.data();
-    const name = data.username || data.name || data.email || "Unknown";
-
+    const name = snap.data()?.username || snap.data()?.name || snap.data()?.email || "Unknown";
     userCache[uid] = name;
     return name;
   } catch {
@@ -295,107 +229,7 @@ async function getUserName(uid) {
   }
 }
 
-/* ================= DOM CACHE ================= */
-const totalLicenses   = document.getElementById("totalLicenses");
-const activeLicenses  = document.getElementById("activeLicenses");
-const expiredLicenses = document.getElementById("expiredLicenses");
-const licenseList     = document.getElementById("licenseList");
-
-/* ================= LICENSES ================= */
-async function loadLicenses() {
-  try {
-    const res = await fetch(`${API_BASE}/licenses`);
-    if (!res.ok) throw new Error("NETWORK");
-
-    const data = await res.json();
-    if (!data.success || !Array.isArray(data.licenses)) {
-      throw new Error("INVALID_RESPONSE");
-    }
-
-    const licenses = data.licenses;
-    const now = Date.now();
-
-    // === SAFE UI UPDATE ===
-    if (totalLicenses)   totalLicenses.textContent = licenses.length;
-    if (activeLicenses)  activeLicenses.textContent = licenses.filter(
-      l => !l.revoked && (l.expiresAt === null || l.expiresAt > now)
-    ).length;
-    if (expiredLicenses) expiredLicenses.textContent = licenses.filter(
-      l => l.expiresAt !== null && l.expiresAt <= now
-    ).length;
-
-    // === EMPTY STATE ===
-    if (!licenses.length) {
-      if (licenseList) {
-        licenseList.innerHTML =
-          `<p style="opacity:.6;text-align:center">No licenses yet</p>`;
-      }
-      return;
-    }
-
-    // === RENDER LIST ===
-    licenseList.innerHTML = (await Promise.all(
-      licenses.map(async l => {
-        let badge = "active";
-        if (l.revoked) badge = "revoked";
-        else if (l.expiresAt === null) badge = "unlimited";
-        else if (l.expiresAt <= now) badge = "expired";
-
-        const creatorName = await getUserName(l.createdBy);
-
-        return `
-          <div class="license-item">
-            <b>${l.mapName}</b>
-            <span class="badge ${badge}">${badge.toUpperCase()}</span>
-
-            <p>ID License: ${l.licenseId}</p>
-            <p>Name User: ${creatorName}</p>
-            <p>Game ID: ${l.gameId}</p>
-            <p>Place ID: ${l.placeId}</p>
-            <p>Expires: ${
-              l.expiresAt
-                ? new Date(l.expiresAt).toLocaleDateString()
-                : "♾️ Unlimited"
-            }</p>
-
-            ${l.revoked ? `
-              <p style="color:#ef4444">
-                🔥 Revoked by:
-                <b>${await getUserName(l.revokedBy)}</b>
-                ${l.revokedByRole}
-              </p>
-              <p style="font-style:italic">
-                Reason: "${l.revokedReason}"
-              </p>
-
-              ${currentRole === "owner" ? `
-                <button class="btn btn-warning btn-sm"
-                  onclick="undoRevoke('${l.licenseId}')">
-                  Undo Revoke
-                </button>
-              ` : ""}
-            `
-            : `
-            ${!l.revoked && canRevoke(l) ? `
-              <button class="btn btn-danger btn-sm"
-                onclick="revokeLicense('${l.licenseId}')">
-                Revoke
-              </button>
-            ` : ""}
-            `}
-
-          </div>
-        `;
-      })
-    )).join("");
-
-  } catch (err) {
-    console.error("LOAD LICENSE ERROR:", err);
-    showNotification("Failed load licenses", "error");
-  }
-}
-
-// ================= VERIFY =================
+/* ================= TEST CONNECTION (VERIFY) ================= */
 async function testConnection() {
   const licenseId = prompt("Masukkan License ID");
   if (!licenseId) return;
@@ -409,76 +243,42 @@ async function testConnection() {
   }
 
   try {
-    const res = await fetch(
-      `${API_BASE}/verify-license?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`
-    );
-
+    const res = await fetch(`${API_BASE}/verify-license.js?licenseId=${licenseId}&universeId=${universeId}&placeId=${placeId}`);
     const data = await res.json();
 
-    // === LOG VERIFY (VALID / INVALID) ===
-    const token = await currentUser.getIdToken();
-
-    await fetch(`${API_BASE}/logs`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({
-        licenseId,
-        action: "TEST_CONNECTION",
-        valid: data.valid === true
-      })
-    });
-
-    if (!data.valid) {
-      throw new Error(data.reason || "INVALID");
+    const testResult = document.getElementById("testResult");
+    if (data.valid) {
+      testResult.innerHTML = `<div style="background:#10b981;color:white;padding:12px;border-radius:8px">✅ VALID<br>Map Name: ${data.mapName}<br>Game ID: ${data.gameId}</div>`;
+      showNotification("License valid!", "success");
+    } else {
+      testResult.innerHTML = `<div style="background:#ef4444;color:white;padding:12px;border-radius:8px">❌ INVALID<br>${data.reason || "License not valid"}</div>`;
+      showNotification(data.reason || "Invalid license", "error");
     }
-
-    testResult.innerHTML = `
-    <div style="background:#10b981;color:white;padding:12px;border-radius:8px">
-    ✅ VALID<br>
-    Map Name: ${data.mapName}<br>
-    Game ID: ${data.gameId}<br>
-    Universe ID: ${data.universeId}
-    </div>`;
   } catch {
-    testResult.innerHTML = `
-    <div style="background:#ef4444;color:white;padding:12px;border-radius:8px">
-    ❌ INVALID
-    </div>`;
+    document.getElementById("testResult").innerHTML = `<div style="background:#ef4444;color:white;padding:12px;border-radius:8px">❌ CONNECTION ERROR</div>`;
   }
 }
 
-/* ================= REVOKE ================= */
+/* ================= REVOKE LICENSE ================= */
 async function revokeLicense(licenseId) {
-  // ⚠️ CEK VERIFIKASI EMAIL SEBELUM REVOKE
   if (!isEmailVerified) {
     showNotification("⚠️ Verifikasi email dulu untuk melakukan revoke", "warning");
     return;
   }
 
   const reason = prompt("Alasan revoke (wajib):");
-  if (!reason || reason.trim().length < 3)
-    return showNotification("Alasan wajib diisi", "error");
-
+  if (!reason || reason.trim().length < 3) return showNotification("Alasan wajib diisi (min 3 karakter)", "error");
   if (!confirm("Revoke license ini?")) return;
 
   try {
     const token = await currentUser.getIdToken();
-
-    const res = await fetch(`${API_BASE}/revoke-license`, {
+    const res = await fetch(`${API_BASE}/revoke-license.js`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({ licenseId, reason })
     });
-
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
-
     showNotification("License revoked");
     loadLicenses();
     refreshLogs();
@@ -487,91 +287,58 @@ async function revokeLicense(licenseId) {
   }
 }
 
+/* ================= UNDO REVOKE ================= */
 async function undoRevoke(licenseId) {
-  if (currentRole !== "owner") {
-    return showNotification("Owner only", "error");
-  }
-
-  if (!confirm("Undo revoke license?")) return;
+  if (currentRole !== "owner") return showNotification("Only owner can undo revoke", "error");
+  if (!confirm("Undo revoke license ini?")) return;
 
   try {
     const token = await currentUser.getIdToken();
-
-    const res = await fetch(`${API_BASE}/undo-revoke-license`, {
+    const res = await fetch(`${API_BASE}/undo-revoke-license.js`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({ licenseId })
     });
-
     const data = await res.json();
     if (!data.success) throw new Error();
-
     showNotification("License restored");
     loadLicenses();
     refreshLogs();
-
   } catch {
     showNotification("Undo revoke failed", "error");
   }
 }
 
-/* ================= LOGS ================= */
+/* ================= REFRESH LOGS ================= */
 async function refreshLogs() {
   try {
     const token = await currentUser.getIdToken();
-
-    const res = await fetch(`${API_BASE}/logs`, {
-      headers: {
-        Authorization: "Bearer " + token
-      }
+    const res = await fetch(`${API_BASE}/logs.js`, {
+      headers: { Authorization: "Bearer " + token }
     });
-
     const data = await res.json();
     if (!data.success) throw new Error();
 
-    logs = data.logs || [];
+    const logContainer = document.getElementById("logContainer");
+    if (!data.logs?.length) {
+      logContainer.innerHTML = '<div class="empty-state">No logs yet</div>';
+      return;
+    }
 
-    logContainer.innerHTML = logs.map(l => {
-      if (l.type === "revoke") {
-        return `
-          <div class="log-entry error">
-            [${new Date(l.time).toLocaleTimeString()}]
-            🔥 REVOKE —
-            ${l.licenseId}<br>
-            by ${(l.revokedByRole || "unknown").toUpperCase()}
-            — "${l.reason || "-"}"
-          </div>
-        `;
-      }
-
-      if (l.type === "undo_revoke") {
-        return `
-          <div class="log-entry success">
-            [${new Date(l.time).toLocaleTimeString()}]
-            ♻️ UNDO REVOKE —
-            ${l.licenseId} restored by OWNER
-          </div>
-        `;
-      }
-
-      return `
-        <div class="log-entry">
-          [${new Date(l.time).toLocaleTimeString()}]
-          ${l.licenseId}
-        </div>
-      `;
-    }).join("");
-
+    logContainer.innerHTML = data.logs.map(l => `
+      <div class="log-entry ${l.type === 'revoke' ? 'error' : (l.type === 'undo_revoke' ? 'success' : 'info')}">
+        [${new Date(l.time).toLocaleTimeString()}] 
+        ${l.type === 'revoke' ? '🔥 REVOKE' : (l.type === 'undo_revoke' ? '♻️ UNDO REVOKE' : '📝 ' + l.action)} 
+        — ${l.licenseId}
+        ${l.reason ? `<br>Reason: "${l.reason}"` : ""}
+      </div>
+    `).join("");
   } catch (err) {
-    console.error("LOG ERROR:", err);
-    showNotification("Failed load logs", "error");
+    console.error(err);
   }
 }
 
-/* ================= GLOBAL ================= */
+/* ================= GLOBAL FUNCTIONS ================= */
 window.loadLicenses = loadLicenses;
 window.testConnection = testConnection;
 window.refreshLogs = refreshLogs;

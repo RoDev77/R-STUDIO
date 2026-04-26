@@ -1,76 +1,58 @@
-import { getFirestore, getAuth } from "./lib/firebase.js";
+// undo-revoke-license.js
+const admin = require('firebase-admin');
 
-export default async function handler(req, res) {
-  // ===== CORS =====
-  res.setHeader("Access-Control-Allow-Origin", "https://rstudiolab.online");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-
-  // ✅ FIX UTAMA DI SINI
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
-    const authHeader = req.headers.authorization || "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "NO_TOKEN" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, error: 'No token provided' });
     }
 
-    const auth = getAuth();
-    const decoded = await auth.verifyIdToken(
-      authHeader.replace("Bearer ", "")
-    );
+    const token = authHeader.split(' ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
 
-    const db = getFirestore();
+    // Check if user is owner
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    const userRole = userDoc.data()?.role;
 
-    // === OWNER ONLY ===
-    const userSnap = await db.collection("users").doc(decoded.uid).get();
-    if (!userSnap.exists || userSnap.data().role !== "owner") {
-      return res.status(403).json({ error: "OWNER_ONLY" });
+    if (userRole !== 'owner') {
+      return res.status(403).json({ success: false, error: 'Only owner can undo revoke' });
     }
 
     const { licenseId } = req.body;
     if (!licenseId) {
-      return res.status(400).json({ error: "LICENSE_ID_REQUIRED" });
+      return res.status(400).json({ success: false, error: 'License ID required' });
     }
 
-    const ref = db.collection("licenses").doc(licenseId);
-    const snap = await ref.get();
-
-    if (!snap.exists) {
-      return res.status(404).json({ error: "LICENSE_NOT_FOUND" });
+    const licenseDoc = await admin.firestore().collection('licenses').doc(licenseId).get();
+    if (!licenseDoc.exists) {
+      return res.status(404).json({ success: false, error: 'License not found' });
     }
 
-    // === UNDO REVOKE ===
-    await ref.update({
+    await admin.firestore().collection('licenses').doc(licenseId).update({
       revoked: false,
-      revokedAt: null,
+      revokedReason: null,
       revokedBy: null,
       revokedByRole: null,
-      revokedReason: null,
+      revokedAt: null
     });
 
-    // === LOG ===
-    await db.collection("connection_logs").add({
-      type: "undo_revoke",
+    await admin.firestore().collection('logs').add({
       licenseId,
-      userId: decoded.uid,
-      role: "owner",
+      action: 'UNDO_REVOKE',
+      type: 'undo_revoke',
       time: Date.now(),
+      userId
     });
 
-    return res.json({ success: true });
-
-  } catch (err) {
-    console.error("UNDO ERROR:", err);
-    return res.status(500).json({ error: "SERVER_ERROR" });
+    res.status(200).json({ success: true, message: 'Revoke undone' });
+  } catch (error) {
+    console.error('Undo revoke error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
-}
+};
