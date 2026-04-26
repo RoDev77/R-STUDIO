@@ -5,205 +5,526 @@
   <title>404 — Halaman Tidak Ditemukan | R Studio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="icon" type="image/png" href="/images/RSLogo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne+Mono&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #060610;
-      --surface: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.08);
-      --accent: #6366f1;
-      --accent2: #8b5cf6;
-      --cyan: #00d4ff;
-      --red: #ef4444;
-      --text: #f1f5f9;
-      --muted: #64748b;
+      --bg: #03030a;
+      --surface: rgba(255,255,255,0.035);
+      --surface2: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.14);
+      --accent: #5d4fff;
+      --accent2: #9b59f5;
+      --red: #ff3c3c;
+      --red2: #ff6b35;
+      --cyan: #00f5d4;
+      --text: #f0f0ff;
+      --muted: #5a5a7a;
+      --muted2: #8888aa;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
 
     body {
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
       padding: 24px;
       overflow: hidden;
+      position: relative;
+      cursor: none;
     }
 
-    /* BG */
-    .bg-canvas { position: fixed; inset: 0; z-index: 0; }
-    .bg-grid {
-      position: absolute; inset: 0;
+    /* Custom cursor */
+    #cursor {
+      position: fixed;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      mix-blend-mode: screen;
+    }
+    #cursor-ring {
+      position: fixed;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(93,79,255,0.45);
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: left 0.1s ease-out, top 0.1s ease-out, width 0.2s, height 0.2s, border-color 0.2s;
+    }
+
+    /* Canvas */
+    #cvs { position: fixed; inset: 0; z-index: 0; }
+
+    /* Atmosphere */
+    .atmo { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .atmo::before {
+      content: '';
+      position: absolute;
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(93,79,255,0.11) 0%, transparent 65%);
+      top: -250px; left: -250px;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+    .atmo::after {
+      content: '';
+      position: absolute;
+      width: 650px; height: 650px;
+      background: radial-gradient(circle, rgba(255,60,60,0.09) 0%, transparent 65%);
+      bottom: -180px; right: -130px;
+      animation: drift 12s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(35px,-28px) scale(1.1); }
+    }
+
+    /* Scanlines */
+    .scanlines {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+    }
+
+    /* Grid */
+    .grid-bg {
+      position: fixed; inset: 0; z-index: 0;
       background-image:
-        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
-      background-size: 50px 50px;
-    }
-    .blob {
-      position: absolute; border-radius: 50%;
-      filter: blur(90px); opacity: 0.15;
-      animation: blobFloat 10s ease-in-out infinite;
-    }
-    .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, #ef4444, transparent); top: -150px; left: -150px; }
-    .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, #6366f1, transparent); bottom: -100px; right: -100px; animation-delay: -5s; }
-    @keyframes blobFloat {
-      0%, 100% { transform: translate(0,0); }
-      50% { transform: translate(20px,-15px); }
+        linear-gradient(rgba(93,79,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93,79,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 0%, transparent 100%);
     }
 
-    /* CONTENT */
-    .content {
-      position: relative; z-index: 2;
-      max-width: 480px; width: 100%;
+    /* Floating code fragments */
+    .frag {
+      position: fixed;
+      font-family: 'Syne Mono', monospace;
+      font-size: 10px;
+      color: rgba(93,79,255,0.16);
+      pointer-events: none;
+      z-index: 2;
+      white-space: nowrap;
+      animation: fragFloat linear infinite;
+    }
+    @keyframes fragFloat {
+      from { transform: translateY(110vh); opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      to   { transform: translateY(-20vh); opacity: 0; }
+    }
+
+    /* Layout */
+    .wrapper {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 520px;
+      text-align: center;
     }
 
     /* Logo */
-    .logo-wrap {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      margin-bottom: 32px;
-      animation: fadeIn 0.5s ease both;
+    .logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-bottom: 44px;
+      opacity: 0;
+      animation: rise 0.7s 0.1s cubic-bezier(.16,1,.3,1) forwards;
     }
-    .logo-img { width: 30px; height: 30px; border-radius: 8px; overflow: hidden; }
-    .logo-img img { width: 100%; height: 100%; object-fit: cover; }
-    .logo-name {
-      font-family: 'Oxanium', sans-serif;
-      font-size: 14px; font-weight: 800; letter-spacing: 2px;
+    .logo-mark {
+      width: 32px; height: 32px;
+      border-radius: 9px;
+      overflow: hidden;
+      border: 1px solid rgba(93,79,255,0.35);
+      box-shadow: 0 0 20px rgba(93,79,255,0.3);
+      flex-shrink: 0;
     }
-
-    /* 404 Number */
-    .error-num {
-      font-family: 'Oxanium', sans-serif;
-      font-size: clamp(5rem, 18vw, 9rem);
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -4px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #ef4444, #f97316);
-      background-clip: text; -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: fadeIn 0.5s 0.1s ease both, glitch 4s 1s infinite;
-      position: relative;
+    .logo-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 13px;
+      letter-spacing: 3px; color: var(--muted2);
     }
 
-    /* Glitch effect */
-    @keyframes glitch {
-      0%, 92%, 100% { transform: translate(0); }
-      93% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
-      94% { transform: translate(3px, -1px); }
-      95% { transform: translate(0); filter: none; }
-      96% { transform: translate(2px, 2px); filter: hue-rotate(180deg); }
-      97% { transform: translate(0); filter: none; }
+    /* Error number */
+    .error-wrap {
+      position: relative; margin-bottom: 6px;
+      opacity: 0;
+      animation: rise 0.7s 0.18s cubic-bezier(.16,1,.3,1) forwards;
+      perspective: 600px;
+    }
+    .num-tilt {
+      display: inline-block;
+      transform-style: preserve-3d;
+      transition: transform 0.08s linear;
+    }
+    .num {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(6rem, 22vw, 11rem);
+      font-weight: 800; line-height: 0.88; letter-spacing: -6px;
+      position: relative; display: inline-block;
+      background: linear-gradient(160deg, #ffffff 0%, rgba(255,255,255,0.28) 100%);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .num::before, .num::after {
+      content: '404';
+      position: absolute; inset: 0;
+      font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit;
+    }
+    .num::before {
+      background: linear-gradient(160deg, var(--red), var(--red2));
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: glitch-a 5s 1.8s infinite;
+      clip-path: polygon(0 12%, 100% 12%, 100% 38%, 0 38%);
+    }
+    .num::after {
+      background: linear-gradient(160deg, var(--cyan), #00b4ff);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: glitch-b 5s 1.8s infinite;
+      clip-path: polygon(0 58%, 100% 58%, 100% 74%, 0 74%);
+    }
+    @keyframes glitch-a {
+      0%,91%,100% { transform: none; opacity: 0; }
+      92% { transform: translate(-5px,2px); opacity: 1; }
+      93% { transform: translate(4px,-1px); opacity: 1; }
+      94% { transform: translate(-2px,3px); opacity: 0.8; }
+      95% { transform: none; opacity: 0; }
+      97% { transform: translate(-3px,-2px); opacity: 0.5; }
+      98% { transform: none; opacity: 0; }
+    }
+    @keyframes glitch-b {
+      0%,91%,100% { transform: none; opacity: 0; }
+      92% { transform: translate(6px,-3px); opacity: 1; }
+      93% { transform: translate(-4px,2px); opacity: 1; }
+      94% { transform: translate(2px,-1px); opacity: 0.8; }
+      95% { transform: none; opacity: 0; }
+      97% { transform: translate(4px,2px); opacity: 0.5; }
+      98% { transform: none; opacity: 0; }
     }
 
-    .error-tag {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px; border-radius: 999px;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.25);
-      font-size: 10px; font-weight: 700;
-      color: #f87171; letter-spacing: 1.5px; text-transform: uppercase;
-      margin-bottom: 16px;
-      animation: fadeIn 0.5s 0.2s ease both;
+    /* Sweep line over 404 */
+    .scan-sweep {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,245,212,0.55), transparent);
+      animation: sweep 3.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes sweep {
+      0%   { top: 0%; opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
     }
 
+    /* Status pill */
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,60,60,0.22);
+      background: rgba(255,60,60,0.07);
+      font-family: 'Syne Mono', monospace;
+      font-size: 10px; letter-spacing: 1.5px; color: #ff7a7a;
+      margin-bottom: 18px;
+      opacity: 0;
+      animation: rise 0.7s 0.28s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .pill-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--red); box-shadow: 0 0 8px var(--red);
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.35; transform: scale(0.65); }
+    }
+
+    /* Heading */
     h1 {
-      font-family: 'Oxanium', sans-serif;
-      font-size: clamp(1.3rem, 4vw, 1.8rem);
-      font-weight: 800; margin-bottom: 10px;
-      animation: fadeIn 0.5s 0.25s ease both;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 1.9rem); font-weight: 800;
+      margin-bottom: 10px;
+      opacity: 0;
+      animation: rise 0.7s 0.34s cubic-bezier(.16,1,.3,1) forwards;
     }
-
     .subtitle {
-      color: var(--muted); font-size: 0.88rem; line-height: 1.6;
-      max-width: 340px; margin: 0 auto 28px;
-      animation: fadeIn 0.5s 0.3s ease both;
+      color: var(--muted2); font-size: 0.875rem; line-height: 1.75;
+      max-width: 360px; margin: 0 auto 26px;
+      opacity: 0;
+      animation: rise 0.7s 0.4s cubic-bezier(.16,1,.3,1) forwards;
     }
 
-    /* URL display */
-    .url-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 12px; color: var(--muted);
-      font-family: monospace;
-      margin-bottom: 28px;
-      word-break: break-all;
-      animation: fadeIn 0.5s 0.35s ease both;
+    /* Terminal */
+    .terminal {
+      background: rgba(0,0,0,0.45);
+      border: 1px solid var(--border2); border-radius: 14px;
+      overflow: hidden; margin-bottom: 28px;
+      opacity: 0;
+      animation: rise 0.7s 0.46s cubic-bezier(.16,1,.3,1) forwards;
     }
+    .terminal-bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 14px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .terminal-label {
+      font-family: 'Syne Mono', monospace; font-size: 10px;
+      color: var(--muted); margin-left: auto; letter-spacing: 0.5px;
+    }
+    .terminal-body {
+      padding: 14px 16px;
+      font-family: 'Syne Mono', monospace; font-size: 11px; line-height: 1.7; text-align: left;
+    }
+    .t-line { display: flex; gap: 10px; align-items: flex-start; }
+    .t-prompt { color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+    .t-error  { color: #ff7070; }
+    .t-url    { color: var(--muted2); word-break: break-all; }
+    .t-cursor {
+      display: inline-block; width: 6px; height: 11px;
+      background: var(--accent); vertical-align: middle; margin-left: 1px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
     /* Buttons */
     .cta-wrap {
-      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
-      animation: fadeIn 0.5s 0.4s ease both;
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+      opacity: 0;
+      animation: rise 0.7s 0.52s cubic-bezier(.16,1,.3,1) forwards;
     }
     .btn {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 11px 20px; border-radius: 11px;
-      font-weight: 700; font-size: 13px;
-      text-decoration: none; transition: all 0.25s;
-      font-family: 'DM Sans', sans-serif; cursor: pointer; border: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 12px;
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px;
+      cursor: none; text-decoration: none; border: none;
+      transition: transform 0.22s cubic-bezier(.16,1,.3,1), box-shadow 0.22s;
+      position: relative; overflow: hidden;
     }
-    .btn-home {
+    .btn::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,0.08); opacity: 0; transition: opacity 0.2s;
+    }
+    .btn:hover::after { opacity: 1; }
+    .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white; box-shadow: 0 0 24px rgba(99,102,241,0.25);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(93,79,255,0.32), inset 0 1px 0 rgba(255,255,255,0.12);
     }
-    .btn-home:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(99,102,241,0.4); }
-    .btn-back {
-      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(93,79,255,0.48), inset 0 1px 0 rgba(255,255,255,0.12); }
+    .btn-primary:active { transform: translateY(-1px); }
+    .btn-ghost {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2);
     }
-    .btn-back:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .btn-ghost:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); }
+    .btn-ghost:active { transform: translateY(-1px); }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Corners */
+    .corner {
+      position: fixed; width: 36px; height: 36px;
+      pointer-events: none; z-index: 5;
+      animation: cornerPulse 4s ease-in-out infinite alternate;
+    }
+    @keyframes cornerPulse { from { opacity: 0.1; } to { opacity: 0.22; } }
+    .corner-tl { top: 20px; left: 20px; border-top: 1.5px solid var(--text); border-left: 1.5px solid var(--text); }
+    .corner-tr { top: 20px; right: 20px; border-top: 1.5px solid var(--text); border-right: 1.5px solid var(--text); }
+    .corner-bl { bottom: 20px; left: 20px; border-bottom: 1.5px solid var(--text); border-left: 1.5px solid var(--text); }
+    .corner-br { bottom: 20px; right: 20px; border-bottom: 1.5px solid var(--text); border-right: 1.5px solid var(--text); }
+
+    /* Side labels */
+    .side-text {
+      position: fixed; writing-mode: vertical-rl;
+      font-family: 'Syne Mono', monospace; font-size: 9px;
+      letter-spacing: 3px; color: var(--muted); opacity: 0.3;
+      pointer-events: none; z-index: 5;
+    }
+    .side-left  { left: 18px; top: 50%; transform: translateY(-50%) rotate(180deg); }
+    .side-right { right: 18px; top: 50%; transform: translateY(-50%); }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .side-text, .corner, #cursor, #cursor-ring { display: none; }
+      body { cursor: default; }
+      .logo { margin-bottom: 28px; }
     }
   </style>
 </head>
 <body>
 
-<div class="bg-canvas">
-  <div class="bg-grid"></div>
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-</div>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
 
-<div class="content">
+<canvas id="cvs"></canvas>
+<div class="atmo"></div>
+<div class="grid-bg"></div>
+<div class="scanlines"></div>
 
-  <div class="logo-wrap">
-    <div class="logo-img"><img src="/images/RSLogo.png" alt="RS"></div>
-    <span class="logo-name">R STUDIO</span>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+<div class="side-text side-left">ERROR · NOT FOUND · 404</div>
+<div class="side-text side-right">R STUDIO · SYSTEM</div>
+
+<div class="wrapper">
+
+  <div class="logo">
+    <div class="logo-mark">
+      <img src="/images/RSLogo.png" alt="R Studio Logo">
+    </div>
+    <span class="logo-text">R STUDIO</span>
   </div>
 
-  <div class="error-num">404</div>
+  <div class="error-wrap">
+    <div class="num-tilt" id="numTilt">
+      <div class="num">404</div>
+    </div>
+    <div class="scan-sweep"></div>
+  </div>
 
-  <div class="error-tag">Halaman Tidak Ditemukan</div>
+  <div class="pill">
+    <div class="pill-dot"></div>
+    HALAMAN TIDAK DITEMUKAN
+  </div>
 
-  <h1>Oops! Salah Jalan 👀</h1>
+  <h1>Oops! Salah Jalan</h1>
 
   <p class="subtitle">
     Halaman yang kamu cari tidak ada atau sudah dipindahkan.
     Cek kembali URL-nya atau kembali ke halaman utama.
   </p>
 
-  <div class="url-box" id="urlBox"></div>
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="terminal-label">system · bash</span>
+    </div>
+    <div class="terminal-body">
+      <div class="t-line">
+        <span class="t-prompt">~/rstudio $</span>
+        <span class="t-url" id="urlLine"></span><span class="t-cursor" id="tCursor"></span>
+      </div>
+      <div class="t-line" id="errLine" style="margin-top:6px;opacity:0;transition:opacity 0.4s;">
+        <span class="t-prompt">→</span>
+        <span class="t-error">Error 404: resource not found</span>
+      </div>
+    </div>
+  </div>
 
   <div class="cta-wrap">
-    <a href="/index.html" class="btn btn-home">🏠 Ke Home</a>
-    <button class="btn btn-back" onclick="history.back()">← Kembali</button>
+    <a href="/index.html" class="btn btn-primary">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Ke Home
+    </a>
+    <button class="btn btn-ghost" onclick="history.back()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </button>
   </div>
 
 </div>
 
 <script>
-  document.getElementById("urlBox").textContent = "❌  " + window.location.href;
+/* Cursor */
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = -100, my = -100;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  ring.style.left = mx + 'px'; ring.style.top = my + 'px';
+});
+
+/* Parallax tilt on 404 */
+const numTilt = document.getElementById('numTilt');
+document.addEventListener('mousemove', e => {
+  const rx = ((e.clientY / window.innerHeight) - 0.5) * 14;
+  const ry = ((e.clientX / window.innerWidth) - 0.5) * -18;
+  numTilt.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+});
+
+/* Floating code fragments */
+['GET /undefined HTTP/1.1','Status: 404','→ null','path not found','[]','{}',
+ 'catch(err){}','return undefined','throw new Error(404)','console.log(404)',
+ '!route','resolve(null)','--lost--','fetch failed'].forEach(txt => {
+  const el = document.createElement('div');
+  el.className = 'frag';
+  el.textContent = txt;
+  el.style.left = (4 + Math.random() * 92) + 'vw';
+  el.style.animationDuration = (18 + Math.random() * 24) + 's';
+  el.style.animationDelay = (Math.random() * 22) + 's';
+  document.body.appendChild(el);
+});
+
+/* Particles */
+(function(){
+  const cvs = document.getElementById('cvs');
+  const ctx = cvs.getContext('2d');
+  let W, H;
+  const resize = () => { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight; };
+  resize();
+  window.addEventListener('resize', resize);
+  const COLS = ['93,79,255','155,89,245','255,60,60','0,245,212'];
+  const pts = Array.from({length:80}, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vx: (Math.random()-.5)*.3,
+    vy: (Math.random()-.5)*.3,
+    r: Math.random()*1.4+.4,
+    a: Math.random()*.4+.1,
+    c: COLS[Math.floor(Math.random()*COLS.length)]
+  }));
+  const draw = () => {
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${p.c},${p.a})`; ctx.fill();
+    });
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const a=pts[i],b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<130){
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(93,79,255,${(1-d/130)*.1})`; ctx.lineWidth=.5; ctx.stroke();
+      }
+    }
+    requestAnimationFrame(draw);
+  };
+  draw();
+})();
+
+/* Typewriter terminal */
+(function(){
+  const urlEl = document.getElementById('urlLine');
+  const curEl = document.getElementById('tCursor');
+  const errEl = document.getElementById('errLine');
+  const txt = window.location.href;
+  let i = 0;
+  const type = () => {
+    urlEl.textContent = txt.slice(0, i++);
+    if(i <= txt.length) setTimeout(type, 20 + Math.random()*18);
+    else { curEl.style.display='none'; setTimeout(()=>{ errEl.style.opacity='1'; }, 320); }
+  };
+  setTimeout(type, 700);
+})();
 </script>
 
 </body>
