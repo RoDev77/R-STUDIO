@@ -187,8 +187,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <img src="../images/RSLogo.png" alt="R Studio Lab Logo" style="width:48px;height:48px;object-fit:contain;border-radius:10px;flex-shrink:0">
       <div>
         <div class="header-title">R STUDIO LAB — Gate.io</div>
-        <div class="header-sub">Ikuti langkahnya dan selesaikan semua tugasnya.</div>
-        <div class="header-sub">Event Ended</div>
+        <div class="header-sub">Name Event: ETH-320 CandyDrop </div>
+        <div class="header-sub">Deskripsi Event: Ikuti langkahnya dan selesaikan semua tugasnya.</div>
+        <div class="header-sub">Event Ends: 20-05-2026 || 21.00</div>
       </div>
     </div>
   </div>
@@ -202,7 +203,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       • <strong>User ID Gate.io</strong> — sebagai bukti akun terdaftar<br>
       • <strong>Deposit Address USDT (Plasma)</strong> — untuk pengiriman saldo<br>
       • <strong>Screenshot KYC</strong> — bukti verifikasi identitas di Gate.io<br>
-      • <strong>Screenshot volume $500</strong> — bukti task trading selesai<br><br>
+      • <strong>Screenshot volume $1000</strong> — bukti task trading selesai<br><br>
       Data ini dikirim langsung ke <strong>Admin</strong>. Kamu akan diminta untuk <strong>menyetujui secara eksplisit</strong> sebelum pengiriman bukti.<br>
       <strong>KALO ADA YANG GA NGERTI, TANYAKAN KEPADA ADMIN</strong>
     </div>
@@ -210,8 +211,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
   <div class="ref-banner">
     <span class="ref-label">🔗 Link Referral</span>
-    <span class="ref-link">COMING SOON..</span>
-    <button class="btn-ref" onclick="window.open('','_blank')">Buka ↗</button>
+    <span class="ref-link">https://www.gate.com/candy-drop/detail/ETH-320?ref=VFFFVGPCVG&ref_type=123&utm_cmp=WtpFZQuM</span>
+    <button class="btn-ref" onclick="window.open('https://www.gate.com/candy-drop/detail/ETH-320?ref=VFFFVGPCVG&ref_type=123&utm_cmp=WtpFZQuM','_blank')">Buka ↗</button>
   </div>
 
   <div class="status-row">
@@ -267,7 +268,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 </div>
 <script>
-const REF = "";
+const REF = "https://www.gate.com/candy-drop/detail/ETH-320?ref=VFFFVGPCVG&ref_type=123&utm_cmp=WtpFZQuM";
 const WEBHOOK = 'https://discord.com/api/webhooks/1493398267260702751/r40FqdKgj-tIsJPlcO1oIdE4AeIReRg3CxH9pM7H5x3nBfH7rX-d7_rTEwNVihh2VtRO';
 
 let userFb = '', userGateId = '', userDepositAddress = '';
@@ -311,7 +312,7 @@ const tasks = [
   { text:"KYC selesai — kembali ke halaman Home Gate.io", warn:null, btn:"Sudah di Home ✓", style:"btn-gray", action:"done" },
   { text:"Masuk ke menu Earn", warn:null, btn:"Sudah di Earn ✓", style:"btn-gray", action:"done" },
   { text:"Klik Launch", warn:null, btn:"Sudah Klik Launch ✓", style:"btn-gray", action:"done" },
-  { text:"Pilih Futures → pilih opsi UP → klik Participate di UP", warn:"⏳ Jangan melakukan apapun ketika belum participate!", btn:"Sudah Participate ✓", style:"btn-gray", action:"done" },
+  { text:"Pilih Futures → pilih opsi ETH → klik Participate di ETH", warn:"⏳ Jangan melakukan apapun ketika belum participate!", btn:"Sudah Participate ✓", style:"btn-gray", action:"done" },
   { text:"Jika 'First Futures' belum eligible, tunggu 2–3 jam", warn:"⏳ Jangan melakukan apapun ketika belum eligible!", btn:"Mulai Timer Tunggu ⏱", style:"btn-blue", action:"timer" },
   // === LANGKAH 17: Input Deposit Address ===
   {
@@ -320,17 +321,17 @@ const tasks = [
     action: "input_address"
   },
   { text:"Tunggu & terima deposit $1.5 yang dikirim ke akun kamu", warn:"⏳ Sabar menunggu", btn:"Sudah Terima $1.5 ✓", style:"btn-gray", action:"done" },
-  { text:"Lakukan transaksi Futures pertama di token UP dengan leverage maksimum (20×)", warn:null, btn:"Sudah Trading ✓", style:"btn-gray", action:"done" },
-  { text:"Close → Open → Close lagi, ulangi sebanyak 13 kali sampai volume trading $500", warn:"⚠ Jangan berhenti sebelum $500", btn:"Volume $500 Tercapai ✓", style:"btn-gray", action:"done" },
-  { text:"Cek volume: Earn → Launch → UP → scroll → 'Daily Trading Check-In Prize Pool'", warn:null, btn:"Sudah Cek ✓", style:"btn-gray", action:"done" },
-  // === LANGKAH 22: Upload bukti $500 ===
+  { text:"Lakukan transaksi Futures pertama di token XRP dengan leverage maksimum (100x)", warn:null, btn:"Sudah Trading ✓", style:"btn-gray", action:"done" },
+  { text:"Close → Open → Close lagi, ulangi sebanyak 26 kali sampai volume trading $1000", warn:"⚠ Jangan berhenti sebelum $1000", btn:"Volume $1000 Tercapai ✓", style:"btn-gray", action:"done" },
+  { text:"Cek volume: Earn → Launch → ETH → scroll → 'Daily Trading Check-In Prize Pool'", warn:null, btn:"Sudah Cek ✓", style:"btn-gray", action:"done" },
+  // === LANGKAH 22: Upload bukti $1000 ===
   {
-    text: "Screenshot halaman Prize Pool yang sudah muncul sebagai bukti volume $500 tercapai, lalu upload di sini. Screenshot ini akan dikirim ke Admin.",
-    warn: "📸 Screenshot harus menampilkan Prize Pool aktif dan volume $500 tercapai.",
+    text: "Screenshot halaman Prize Pool yang sudah muncul sebagai bukti volume $1000 tercapai, lalu upload di sini. Screenshot ini akan dikirim ke Admin.",
+    warn: "📸 Screenshot harus menampilkan Prize Pool aktif dan volume $1000 tercapai.",
     action: "upload_500",
-    discordLabel: "💰 Bukti Volume $500 Gate.io"
+    discordLabel: "💰 Bukti Volume $1000 Gate.io"
   },
-  { text:"Prize Pool muncul = konfirmasi $500 tercapai. berhasil!", warn:"✅ Jika belum muncul, tunggu sebentar", btn:"🎉 Klaim Reward — Selesai!", style:"btn-green", action:"finish" }
+  { text:"Prize Pool muncul = konfirmasi $1000 tercapai. berhasil!", warn:"✅ Jika belum muncul, tunggu sebentar", btn:"🎉 Klaim Reward — Selesai!", style:"btn-green", action:"finish" }
 ];
 
 let current = 0, cancelled = false, timerRunning = false, timerInterval = null, timerSec = 0;
@@ -487,9 +488,9 @@ function buildFbFooter(i){
       '</div>' +
     '</div>' +
 
-    /* '<button class="btn-action btn-green" style="width:100%;margin-top:12px" onclick="submitFb('+i+')">Simpan & Lanjut ✓</button>' +
-    '<div class="upload-result" id="fb-result-'+i+'"></div>' + */
-    '<button class="btn-action btn-red" style="width:100%;margin-top:12px" onclick="submitFb">Ended</button>' +
+    '<button class="btn-action btn-green" style="width:100%;margin-top:12px" onclick="submitFb('+i+')">Simpan & Lanjut ✓</button>' +
+    '<div class="upload-result" id="fb-result-'+i+'"></div>' + 
+    /* '<button class="btn-action btn-red" style="width:100%;margin-top:12px" onclick="submitFb">Ended</button>' + */
   '</div>';
 }
 
@@ -504,8 +505,8 @@ function submitFb(i){
     resEl.textContent = '⚠ Wajib isi minimal satu akun sosial media (Instagram / Facebook / X / WhatsApp).';
     resEl.className = 'upload-result err'; return;
   }
-  if(waVal && waVal.length < 8){
-    resEl.textContent = '⚠ Nomor WhatsApp tidak valid (minimal 8 digit).';
+  if(waVal && waVal.length < 10){
+    resEl.textContent = '⚠ Nomor WhatsApp tidak valid (minimal 10 digit).';
     resEl.className = 'upload-result err'; return;
   }
 
@@ -519,7 +520,7 @@ function buildIdFooter(i){
     '<div class="field-wrap">' +
       '<div class="field-label">🔢 Masukkan User ID Gate.io kamu</div>' +
       '<div class="field-row">' +
-        '<input class="field-input mono" id="id-field-'+i+'" type="text" inputmode="numeric" placeholder="Contoh: 12345678" maxlength="20" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
+        '<input class="field-input mono" id="id-field-'+i+'" type="text" inputmode="numeric" placeholder="Contoh: 12345678" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
         '<button class="btn-action btn-green" onclick="submitId('+i+')">Simpan & Lanjut ✓</button>' +
       '</div>' +
       '<div class="field-hint">User ID adalah deretan angka di bawah nama profil kamu di halaman Profile Gate.io.</div>' +
@@ -531,8 +532,8 @@ function buildIdFooter(i){
 function submitId(i){
   var val = document.getElementById('id-field-'+i).value.trim();
   var resEl = document.getElementById('id-result-'+i);
-  if(!val || val.length < 4){
-    resEl.textContent = '⚠ Masukkan User ID yang valid (minimal 4 angka).';
+  if(!val || val.length < 8){
+    resEl.textContent = '⚠ Masukkan User ID yang valid (minimal 8 angka).';
     resEl.className = 'upload-result err'; return;
   }
   userGateId = val;
@@ -599,8 +600,8 @@ async function submitAddress(i){
   var cb    = document.getElementById('addr-cb-'+i);
   var btn   = document.getElementById('addr-send-btn-'+i);
   var resEl = document.getElementById('addr-result-'+i);
-  if(!val || val.length < 6){
-    resEl.textContent = '⚠ Masukkan deposit address yang valid.';
+  if(!val || val.length < 42){
+    resEl.textContent = '⚠ Masukkan 42 karakter deposit address yang valid.';
     resEl.className = 'upload-result err'; return;
   }
   if(!cb || !cb.checked){
@@ -667,9 +668,9 @@ function buildVolumeExample(){
       '<text x="22" y="46" font-size="15" fill="#fff" font-weight="bold" font-family="sans-serif">Your Trading Volume</text>' +
       '<circle cx="274" cy="40" r="18" fill="#1d9e75"/>' +
       '<text x="274" y="45" font-size="14" fill="#fff" font-weight="bold" font-family="sans-serif" text-anchor="middle">₮</text>' +
-      '<text x="300" y="46" font-size="15" fill="#fff" font-weight="bold" font-family="sans-serif">500.00</text>' +
+      '<text x="300" y="46" font-size="15" fill="#fff" font-weight="bold" font-family="sans-serif">1000</text>' +
     '</svg>' +
-    '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6">Screenshot harus menampilkan <strong style="color:#27500a">Your Trading Volume</strong> dengan nilai <strong style="color:#27500a">500 USDT atau lebih</strong>.</div>' +
+    '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6">Screenshot harus menampilkan <strong style="color:#27500a">Your Trading Volume</strong> dengan nilai <strong style="color:#27500a">1000 USDT atau lebih</strong>.</div>' +
   '</div>';
 }
 
@@ -808,7 +809,7 @@ function renderAll(){
       else if(t.action === 'input_id' && userGateId) details = '<div class="done-detail">ID: '+userGateId+'</div>';
       else if(t.action === 'input_address' && userDepositAddress) details = '<div class="done-detail" style="word-break:break-all;max-width:100%">📬 '+userDepositAddress.substring(0,18)+'…</div>';
       else if(t.action === 'upload_kyc') details = '<div class="done-detail">📸 KYC terkirim ✓</div>';
-      else if(t.action === 'upload_500') details = '<div class="done-detail">💰 Bukti $500 terkirim ✓</div>';
+      else if(t.action === 'upload_500') details = '<div class="done-detail">💰 Bukti $1000 terkirim ✓</div>';
       footer = '<div class="task-footer"><span class="done-label">✓ Selesai</span>'+details+'</div>';
     }
 
