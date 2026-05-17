@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R STUDIO LAB — Airdrop Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0e14;
+  --surface: #13141d;
+  --surface2: #1a1c28;
+  --border: #252736;
+  --border2: #2f3245;
+  --text: #e8eaf2;
+  --muted: #6b6f8a;
+  --accent: #1eff9c;
+  --accent2: #7b61ff;
+  --accent3: #ff6b35;
+  --accent4: #ffd93d;
+  --gate: #2ecc71;
+  --toko: #e74c3c;
+  --binance: #f0b90b;
+  --bybit: #f7a600;
+  --okx: #fff;
+  --kucoin: #23af91;
+  --danger: #ff4757;
+  --blue: #4895ef;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ── GLOW BLOBS ── */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+.blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(30,255,156,0.07) 0%, transparent 70%); top: -150px; left: -100px; }
+.blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(123,97,255,0.07) 0%, transparent 70%); bottom: 0; right: -100px; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  padding: 0 1.5rem;
+  background: rgba(13,14,20,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 1rem;
+  height: 58px;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .03em;
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-logo-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+.nav-badge {
+  margin-left: auto;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(30,255,156,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(30,255,156,0.25);
+  font-family: 'Space Mono', monospace;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  padding: 3.5rem 1.5rem 2rem;
+  text-align: center;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1rem;
+  background: rgba(30,255,156,0.08);
+  border: 1px solid rgba(30,255,156,0.2);
+  padding: 4px 12px; border-radius: 20px;
+}
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 6vw, 52px);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: .75rem;
+  background: linear-gradient(135deg, #fff 0%, #a0a8c8 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-title span {
+  background: linear-gradient(135deg, var(--accent) 0%, #00c9ff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 480px; margin: 0 auto 1.5rem;
+}
+.hero-stats {
+  display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+}
+.stat-item {
+  text-align: center;
+}
+.stat-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 22px; font-weight: 700; color: var(--accent);
+  display: block;
+}
+.stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+/* ── FILTER ── */
+.filter-bar {
+  position: relative; z-index: 1;
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 0 1.5rem 1.25rem;
+  align-items: center;
+}
+.filter-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-right: 4px; }
+.filter-btn {
+  padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border2);
+  background: var(--surface); color: var(--muted);
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); color: #0d0e14; border-color: var(--accent); }
+.filter-search {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 6px 12px;
+}
+.filter-search input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-size: 13px; width: 150px;
+  font-family: 'DM Sans', sans-serif;
+}
+.filter-search input::placeholder { color: var(--muted); }
+.filter-search span { color: var(--muted); font-size: 14px; }
+
+/* ── GRID ── */
+.main { position: relative; z-index: 1; padding: 0 1.5rem 4rem; }
+.section-title {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  margin-bottom: 2rem;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  cursor: pointer;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border2);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.card.featured {
+  border-color: rgba(30,255,156,0.3);
+  background: linear-gradient(135deg, #13141d 0%, #151822 100%);
+}
+.card.featured::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.card.coming-soon { opacity: .55; pointer-events: none; }
+.card.ended { opacity: .4; }
+
+.card-top {
+  padding: 1rem 1rem .75rem;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.platform-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.platform-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.platform-icon .placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+.card-meta { flex: 1; min-width: 0; }
+.card-platform {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--muted); margin-bottom: 2px;
+}
+.card-name {
+  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+  color: var(--text); line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-tag { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.status-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+  text-transform: uppercase; font-family: 'Space Mono', monospace;
+}
+.status-live { background: rgba(30,255,156,0.12); color: var(--accent); border: 1px solid rgba(30,255,156,0.25); }
+.status-hot { background: rgba(255,107,53,0.15); color: var(--accent3); border: 1px solid rgba(255,107,53,0.3); }
+.status-soon { background: rgba(123,97,255,0.15); color: var(--accent2); border: 1px solid rgba(123,97,255,0.3); }
+.status-ended { background: rgba(107,111,138,0.15); color: var(--muted); border: 1px solid var(--border2); }
+.status-verify { background: rgba(72,149,239,0.15); color: var(--blue); border: 1px solid rgba(72,149,239,0.3); }
+
+.card-body {
+  padding: 0 1rem .75rem;
+  flex: 1;
+}
+.card-desc {
+  font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: .75rem;
+}
+.card-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.chip {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 5px;
+  border: 1px solid var(--border2); color: var(--muted); background: var(--surface2);
+  white-space: nowrap;
+}
+.chip.green { color: var(--accent); border-color: rgba(30,255,156,0.2); background: rgba(30,255,156,0.07); }
+.chip.purple { color: var(--accent2); border-color: rgba(123,97,255,0.2); background: rgba(123,97,255,0.07); }
+.chip.orange { color: var(--accent3); border-color: rgba(255,107,53,0.2); background: rgba(255,107,53,0.07); }
+.chip.yellow { color: var(--accent4); border-color: rgba(255,217,61,0.2); background: rgba(255,217,61,0.07); }
+.chip.blue { color: var(--blue); border-color: rgba(72,149,239,0.2); background: rgba(72,149,239,0.07); }
+
+.card-footer {
+  padding: .75rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.reward-label { font-size: 11px; color: var(--muted); flex: 1; }
+.reward-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; font-weight: 700;
+  color: var(--accent4);
+}
+.deadline { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+.btn-card {
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer;
+  font-size: 12px; font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .2s;
+  text-decoration: none; display: inline-block;
+}
+.btn-go { background: var(--accent); color: #0d0e14; }
+.btn-go:hover { background: #00e68a; }
+.btn-soon { background: var(--surface2); color: var(--muted); cursor: default; }
+.btn-ended { background: var(--surface2); color: var(--muted); cursor: default; }
+.btn-open { background: rgba(30,255,156,0.1); color: var(--accent); border: 1px solid rgba(30,255,156,0.25); }
+.btn-open:hover { background: rgba(30,255,156,0.2); }
+
+/* ── TICKER MARQUEE ── */
+.ticker {
+  position: relative; z-index: 1;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.ticker-inner {
+  display: flex; gap: 2.5rem;
+  animation: scroll-left 30s linear infinite;
+  white-space: nowrap; width: max-content;
+}
+@keyframes scroll-left { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker-item {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted); text-transform: uppercase;
+}
+.ticker-item .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  position: relative; z-index: 1;
+  margin: 0 1.5rem 2rem;
+  background: rgba(255, 71, 87, 0.08);
+  border: 1px solid rgba(255, 71, 87, 0.2);
+  border-radius: var(--radius-sm);
+  padding: .75rem 1rem;
+  font-size: 11px; color: rgba(255,71,87,0.7); line-height: 1.6;
+}
+.disclaimer strong { color: var(--danger); }
+
+/* ── PLATFORM LEGEND ── */
+.legend {
+  position: relative; z-index: 1;
+  padding: 0 1.5rem 1.5rem;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.legend-lbl { font-size: 11px; color: var(--muted); margin-right: 4px; font-weight: 600; }
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--muted);
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 3rem 1rem; display: none;
+}
+.empty-state.show { display: block; }
+.empty-emoji { font-size: 40px; margin-bottom: .5rem; }
+.empty-txt { font-size: 14px; color: var(--muted); }
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.9);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal.show {
+  display: flex;
+}
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+}
+.modal-close {
+  position: sticky;
+  top: 0;
+  right: 0;
+  float: right;
+  background: var(--surface2);
+  border: none;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 0 var(--radius) 0 var(--radius-sm);
+  z-index: 10;
+}
+.modal-close:hover { background: var(--danger); }
+.modal-body {
+  padding: 0;
+  clear: both;
+}
+.modal-body iframe {
+  width: 100%;
+  height: 80vh;
+  border: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+@media (max-width: 600px) {
+  .filter-search { display: none; }
+  .hero { padding: 2.5rem 1rem 1.5rem; }
+  .filter-bar, .main, .legend, .disclaimer { padding-left: 1rem; padding-right: 1rem; }
+  .grid { grid-template-columns: 1fr; }
+  .hero-stats { gap: 1rem; }
+  .modal-content { max-width: 100%; margin: 0.5rem; }
+  .modal-body iframe { height: 70vh; }
+}
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="airdrops.html" class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    RODROPZ
+  </a>
+  <span class="nav-badge" id="live-count">● 2 LIVE</span>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker-inner">
+    <span class="ticker-item"><span class="dot"></span>Gate.io — ETH-320 CandyDrop</span>
+    <span class="ticker-item"><span class="dot"></span>Tokocrypto — New User Reward</span>
+    <span class="ticker-item"><span class="dot"></span>KuCoin — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>Binance — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>OKX — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>Bybit — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>Gate.io — ETH-320 CandyDrop</span>
+    <span class="ticker-item"><span class="dot"></span>Tokocrypto — New User Reward</span>
+    <span class="ticker-item"><span class="dot"></span>KuCoin — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>Binance — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>OKX — Coming Soon</span>
+    <span class="ticker-item"><span class="dot"></span>Bybit — Coming Soon</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">🚀 RODROPZ</div>
+  <h1 class="hero-title">Airdrop<br><span>Hub</span></h1>
+  <p class="hero-sub">Kumpulan event airdrop & reward terkurasi dari RODROPZ. Selesaikan task, kumpulkan reward, cairkan ke bank anda.</p>
+  <div class="hero-stats">
+    <div class="stat-item"><span class="stat-num" id="stat-live">2</span><span class="stat-lbl">Live Now</span></div>
+    <div class="stat-item"><span class="stat-num" id="stat-total">6</span><span class="stat-lbl">Total Event</span></div>
+    <div class="stat-item"><span class="stat-num">R</span><span class="stat-lbl">RODROPZ</span></div>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="filter-bar">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">Semua</button>
+  <button class="filter-btn" data-filter="live" onclick="setFilter(this,'live')">🟢 Live</button>
+  <button class="filter-btn" data-filter="soon" onclick="setFilter(this,'soon')">🟣 Segera</button>
+  <button class="filter-btn" data-filter="ended" onclick="setFilter(this,'ended')">⭘ Selesai</button>
+  <div class="filter-search">
+    <span>🔍</span>
+    <input type="text" placeholder="Cari event..." oninput="searchCards(this.value)">
+  </div>
+</div>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  ⚠️ <strong>Disclaimer:</strong> Selalu lakukan riset mandiri sebelum berpartisipasi. RODROPZ hanya memfasilitasi event — hasil reward bergantung pada penyelesaian task secara lengkap. Delay bisa sampai 5 jam, harap bersabar.
+</div>
+
+<!-- MAIN GRID -->
+<div class="main">
+  <div class="section-title">Event Aktif & Tersedia</div>
+  <div class="grid" id="card-grid"></div>
+  <div class="empty-state" id="empty-state">
+    <div class="empty-emoji">🔭</div>
+    <div class="empty-txt">Tidak ada event yang cocok.</div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <span class="legend-lbl">Platform:</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span>Gate.io</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#e74c3c"></span>Tokocrypto</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#f0b90b"></span>Binance</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#f7a600"></span>Bybit</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#23af91"></span>KuCoin</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#aaa"></span>OKX</span>
+</div>
+
+<!-- MODAL for Embed -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-body" id="modal-body">
+      <iframe id="task-iframe" title="Task Iframe"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Embed base URLs */
+const EMBED_BASE = {
+  gateio: "/airdrops/gateio.html",
+  tokocrypto: "/airdrops/tokocrypto.html"
+};
+
+/* ───────────────────────────────────────────────
+   DATA EVENTS — tambah / edit di sini
+   iconType: "image" atau "text"
+   iconSrc: path ke gambar (jika iconType="image")
+   iconText: teks alternatif (jika iconType="text" atau gambar tidak ada)
+─────────────────────────────────────────────── */
+const events = [
+  {
+    id: 1,
+    platform: "Gate.io",
+    platformColor: "#2ecc71",
+    iconType: "image",
+    iconSrc: "images/gateio.jpg",  // Ganti dengan path gambar custom Anda
+    iconText: "G",
+    name: "ETH-320 CandyDrop",
+    tag: "Bagi yang belum pernah daftar",
+    status: "hot",
+    desc: "Daftar akun, KYC, trading Futures ETH volume $1000. Reward akan segera dikirim.",
+    chips: ["KYC Wajib", "Futures", "$1 Deposit", "Vol $1000", "Plasma USDT"],
+    chipStyles: ["green", "purple", "yellow", "orange", "blue"],
+    reward: "Rp. 20.000",
+    deadline: "20 Mei 2026 • 18:00",
+    featured: true,
+    embedId: "gateio"
+  },
+  {
+    id: 2,
+    platform: "Tokocrypto",
+    platformColor: "#e74c3c",
+    iconType: "image",
+    iconSrc: "images/tokocrypto.png",  // Ganti dengan path gambar custom Anda
+    iconText: "T",
+    name: "Tokocrypto New User",
+    tag: "Bagi yang belum pernah daftar",
+    status: "hot",
+    desc: "Daftar akun, KYC, deposit 110K IDR, beli USDT 105K, konversi USDT ke IDR. Reward akan segera dikirim.",
+    chips: ["KYC Wajib", "Deposit 110K", "Beli USDT 105K", "Convert", "IDR"],
+    chipStyles: ["green", "orange", "purple", "yellow", "blue"],
+    reward: "Rp. 20.000",
+    deadline: "Unlimited",
+    featured: true,
+    embedId: "tokocrypto"
+  },
+  {
+    id: 3,
+    platform: "Binance",
+    platformColor: "#f0b90b",
+    iconType: "image",
+    iconSrc: "images/binance.png",
+    iconText: "B",
+    name: "Coming Soon Event",
+    tag: "Bagi yang belum pernah daftar",
+    status: "soon",
+    desc: "Event menarik lainnya akan segera hadir. Pantau terus update dari RODROPZ.",
+    chips: ["Coming Soon", "Stay Tuned"],
+    chipStyles: ["blue", "orange", "yellow"],
+    reward: "TBD",
+    deadline: "Segera",
+    featured: false,
+    embedId: null
+  },
+  {
+    id: 4,
+    platform: "KuCoin",
+    platformColor: "#23af91",
+    iconType: "image",
+    iconSrc: "images/kucoin.png",
+    iconText: "K",
+    name: "Coming Soon Event",
+    tag: "Bagi yang belum pernah daftar",
+    status: "soon",
+    desc: "Event menarik lainnya akan segera hadir. Pantau terus update dari RODROPZ.",
+    chips: ["Coming Soon", "Stay Tuned"],
+    chipStyles: ["green", "blue", "purple"],
+    reward: "TBD",
+    deadline: "Segera",
+    featured: false,
+    embedId: null
+  },
+  {
+    id: 5,
+    platform: "OKX",
+    platformColor: "#aaaaaa",
+    iconType: "image",
+    iconSrc: "images/okx.png",
+    iconText: "O",
+    name: "Coming Soon Event",
+    tag: "Bagi yang belum pernah daftar",
+    status: "soon",
+    desc: "Event menarik lainnya akan segera hadir. Pantau terus update dari RODROPZ.",
+    chips: ["Coming Soon", "Stay Tuned"],
+    chipStyles: ["purple", "blue", "green"],
+    reward: "TBD",
+    deadline: "Segera",
+    featured: false,
+    embedId: null
+  },
+  {
+    id: 6,
+    platform: "Bybit",
+    platformColor: "#f7a600",
+    iconType: "image",
+    iconSrc: "images/bybit.png",
+    iconText: "BY",
+    name: "Coming Soon Event",
+    tag: "Bagi yang belum pernah daftar",
+    status: "soon",
+    desc: "Event menarik lainnya akan segera hadir. Pantau terus update dari RODROPZ.",
+    chips: ["Coming Soon", "Stay Tuned"],
+    chipStyles: ["yellow", "purple", "orange"],
+    reward: "TBD",
+    deadline: "Segera",
+    featured: false,
+    embedId: null
+  },
+  {
+    id: 7,
+    platform: "Gate.io",
+    platformColor: "#2ecc71",
+    iconType: "image",
+    iconText: "G",
+    iconSrc: "images/gateio.jpg",  // Ganti dengan path gambar custom Anda
+    name: "Coming Soon Event",
+    tag: "Bagi yang belum pernah daftar",
+    status: "soon",
+    desc: "Event menarik lainnya akan segera hadir. Pantau terus update dari RODROPZ.",
+    chips: ["Coming Soon", "Stay Tuned"],
+    chipStyles: ["purple", "blue"],
+    reward: "TBD",
+    deadline: "Segera",
+    featured: false,
+    embedId: null
+  }
+];
+
+/* ── STATUS CONFIG ── */
+const statusCfg = {
+  live:   { label: "LIVE",    cls: "status-live",   btn: "Buka Task →", btnCls: "btn-go" },
+  hot:    { label: "🔥 HOT",  cls: "status-hot",    btn: "Buka Task →", btnCls: "btn-open" },
+  soon:   { label: "SEGERA",  cls: "status-soon",   btn: "Belum Buka",  btnCls: "btn-soon" },
+  ended:  { label: "SELESAI", cls: "status-ended",  btn: "Berakhir",    btnCls: "btn-ended" },
+  verify: { label: "VERIFY",  cls: "status-verify", btn: "Buka Task →", btnCls: "btn-open" }
+};
+
+function openModal(embedId) {
+  if (!embedId || !EMBED_BASE[embedId]) {
+    console.warn("Embed not found for:", embedId);
+    return;
+  }
+  const modal = document.getElementById('modal');
+  const iframe = document.getElementById('task-iframe');
+  iframe.src = EMBED_BASE[embedId];
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  const modal = document.getElementById('modal');
+  const iframe = document.getElementById('task-iframe');
+  iframe.src = '';
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* Fungsi untuk generate icon berdasarkan tipe */
+function getPlatformIconHTML(ev) {
+  if (ev.iconType === 'image' && ev.iconSrc) {
+    // Coba load gambar, jika gagal fallback ke placeholder
+    return `<img src="${ev.iconSrc}" alt="${ev.platform}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="placeholder" style="display:none; background:${ev.platformColor}22; color:${ev.platformColor};">${ev.iconText}</div>`;
+  } else {
+    return `<div class="placeholder" style="background:${ev.platformColor}22; color:${ev.platformColor};">${ev.iconText}</div>`;
+  }
+}
+
+/* ── RENDER ── */
+function renderCards(filter='all', search=''){
+  const grid = document.getElementById('card-grid');
+  const empty = document.getElementById('empty-state');
+  grid.innerHTML = '';
+
+  let visible = 0;
+  events.forEach(ev => {
+    // Filter logic: jika filter 'live', tampilkan status 'live' ATAU 'hot'
+    let matchesFilter = false;
+    if (filter === 'all') {
+      matchesFilter = true;
+    } else if (filter === 'live') {
+      matchesFilter = (ev.status === 'live' || ev.status === 'hot');
+    } else {
+      matchesFilter = (ev.status === filter);
+    }
+    
+    if (!matchesFilter) return;
+    if(search && !ev.name.toLowerCase().includes(search.toLowerCase()) &&
+       !ev.platform.toLowerCase().includes(search.toLowerCase())) return;
+    visible++;
+
+    const s = statusCfg[ev.status] || statusCfg.soon;
+    const chips = ev.chips.map((c,j) =>
+      `<span class="chip ${ev.chipStyles[j]||''}">${c}</span>`
+    ).join('');
+    // Event bisa diklik jika status live, hot, atau verify DAN memiliki embedId
+    const isClickable = (ev.status === 'live' || ev.status === 'hot' || ev.status === 'verify') && ev.embedId;
+    const cardClick = isClickable ? `onclick="openModal('${ev.embedId}')"` : '';
+    const iconHTML = getPlatformIconHTML(ev);
+
+    const card = document.createElement('div');
+    card.className = `card${ev.featured?' featured':''}${ev.status==='ended'?' ended':''}`;
+    card.setAttribute('data-status', ev.status);
+    card.setAttribute('data-platform', ev.platform);
+    if(cardClick) card.setAttribute('onclick', `openModal('${ev.embedId}')`);
+    card.style.cursor = isClickable ? 'pointer' : 'default';
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="platform-icon" style="background:${ev.platformColor}22;">
+          ${iconHTML}
+        </div>
+        <div class="card-meta">
+          <div class="card-platform" style="color:${ev.platformColor}">${ev.platform}</div>
+          <div class="card-name">${ev.name}</div>
+          <div class="card-tag">${ev.tag}</div>
+        </div>
+        <span class="status-badge ${s.cls}">${s.label}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-desc">${ev.desc}</div>
+        <div class="card-chips">${chips}</div>
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="reward-label">Estimasi Reward</div>
+          <div class="reward-val">${ev.reward}</div>
+          <div class="deadline">⏰ ${ev.deadline}</div>
+        </div>
+        <button class="btn-card ${s.btnCls}" ${isClickable ? `onclick="event.stopPropagation();openModal('${ev.embedId}')"` : ''}>${s.btn}</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  empty.classList.toggle('show', visible === 0);
+
+  // Update stats — hitung event dengan status live ATAU hot
+  const activeCount = events.filter(e => e.status === 'live' || e.status === 'hot').length;
+  document.getElementById('live-count').textContent = `● ${activeCount} LIVE`;
+  document.getElementById('stat-live').textContent = activeCount;
+  document.getElementById('stat-total').textContent = events.length;
+}
+
+let curFilter = 'all', curSearch = '';
+
+function setFilter(btn, f){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  curFilter = f;
+  renderCards(curFilter, curSearch);
+}
+
+function searchCards(val){
+  curSearch = val;
+  renderCards(curFilter, curSearch);
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+});
+
+renderCards();
+</script>
+</body>
+</html>

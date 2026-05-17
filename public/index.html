@@ -2,32 +2,23 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <!-- Title yang menarik (60 karakter maksimal) -->
   <title>R STUDIO LAB - Belajar Roblox Studio Development Indonesia</title>
-  <!-- Meta Description (160 karakter maksimal, muncul di bawah judul) -->
-  <meta name="description" content="Platform belajar Roblox Studio terlengkap. Dapatkan tutorial gratis, asset eksklusif, script premium, dan komunitas developer Roblox Indonesia.">
-  <!-- Meta Keywords (opsional) -->
-  <meta name="keywords" content="Roblox Studio, belajar Roblox, tutorial Roblox, developer Roblox, asset Roblox, script Roblox">
-  <!-- Author -->
+  <meta name="description" content="Platform belajar Roblox Studio terlengkap. Dapatkan tutorial gratis, asset eksklusif, script premium, dan ikuti airdrop event dari berbagai platform crypto terpercaya.">
+  <meta name="keywords" content="Roblox Studio, belajar Roblox, tutorial Roblox, developer Roblox, asset Roblox, script Roblox, airdrop, crypto airdrop">
   <meta name="author" content="R STUDIO LAB">
-  <!-- Google agar mengindex halaman -->
   <meta name="robots" content="index, follow">
-  <!-- Open Graph (untuk tampilan di sosial media & Google) -->
-  <meta property="og:title" content="R STUDIO LAB - Belajar Roblox Studio Development">
-  <meta property="og:description" content="Tutorial gratis, asset eksklusif, dan komunitas untuk developer Roblox Indonesia.">
+  <meta property="og:title" content="R STUDIO LAB - Belajar Roblox Studio + Airdrop Hub">
+  <meta property="og:description" content="Tutorial gratis, asset eksklusif, dan event airdrop untuk komunitas R Studio Lab.">
   <meta property="og:image" content="https://www.rstudiolab.online/images/RSLogo.png">
   <meta property="og:url" content="https://www.rstudiolab.online">
   <meta property="og:type" content="website">
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="R STUDIO LAB - Belajar Roblox Studio">
-  <meta name="twitter:description" content="Platform belajar Roblox Studio terlengkap di Indonesia">
-  <!-- Canonical URL (biar tidak dianggap duplicate content) -->
+  <meta name="twitter:title" content="R STUDIO LAB - Roblox Studio + Airdrop">
+  <meta name="twitter:description" content="Belajar Roblox Studio dan ikuti event airdrop crypto">
   <link rel="icon" type="image/png" href="/images/RSLogo.png">
   <link rel="canonical" href="https://www.rstudiolab.online/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="R STUDIO LAB adalah platform belajar Roblox Studio Development. Dapatkan akses ke tutorial, asset gratis, dan konten eksklusif untuk developer Roblox.">
-  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -75,14 +66,7 @@
       font-family: 'Oxanium', monospace;
     }
 
-    .logo-icon img { width: 100%; height: 100%; object-fit: cover; }
-    .nav-name {
-      font-family: 'Oxanium', sans-serif;
-      font-weight: 800; font-size: 16px;
-      letter-spacing: 1px;
-      color: var(--text);
-    }
-
+    .logo-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
     .logo-text {
       font-family: 'Oxanium', sans-serif;
       font-weight: 700;
@@ -324,6 +308,195 @@
       line-height: 1.6;
     }
 
+    /* Airdrop Section */
+    .airdrop-section {
+      max-width: 1100px;
+      margin: 80px auto;
+      padding: 0 24px;
+    }
+
+    .airdrop-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .airdrop-header h2 {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .airdrop-header p {
+      color: #8a8aa0;
+      font-size: 14px;
+    }
+
+    .airdrop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .airdrop-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+
+    .airdrop-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,212,255,0.4);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    }
+
+    .airdrop-card-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .airdrop-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'Space Mono', monospace;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .airdrop-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .airdrop-info {
+      flex: 1;
+    }
+
+    .airdrop-platform {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .airdrop-name {
+      font-family: 'Oxanium', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .airdrop-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .badge-hot { background: rgba(255,107,53,0.15); color: #ff6b35; border: 1px solid rgba(255,107,53,0.3); }
+    .badge-live { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+    .badge-soon { background: rgba(123,97,255,0.15); color: #a78bfa; border: 1px solid rgba(123,97,255,0.3); }
+
+    .airdrop-card-body {
+      padding: 16px 20px;
+    }
+
+    .airdrop-desc {
+      font-size: 12px;
+      color: #8a8aa0;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .airdrop-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #a0a0b0;
+    }
+
+    .chip.green { color: #1eff9c; border-color: rgba(30,255,156,0.2); background: rgba(30,255,156,0.07); }
+    .chip.purple { color: #a78bfa; border-color: rgba(123,97,255,0.2); background: rgba(123,97,255,0.07); }
+    .chip.yellow { color: #ffd93d; border-color: rgba(255,217,61,0.2); background: rgba(255,217,61,0.07); }
+    .chip.orange { color: #ff6b35; border-color: rgba(255,107,53,0.2); background: rgba(255,107,53,0.07); }
+    .chip.blue { color: #4895ef; border-color: rgba(72,149,239,0.2); background: rgba(72,149,239,0.07); }
+
+    .airdrop-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .airdrop-reward {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffd93d;
+    }
+
+    .airdrop-reward-label {
+      font-size: 10px;
+      color: #8a8aa0;
+      display: block;
+    }
+
+    .airdrop-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      color: #a78bfa;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .airdrop-btn:hover {
+      background: rgba(99,102,241,0.3);
+    }
+
+    .airdrop-disclaimer {
+      text-align: center;
+      margin-top: 32px;
+      padding: 16px;
+      background: rgba(255,71,87,0.08);
+      border: 1px solid rgba(255,71,87,0.2);
+      border-radius: 12px;
+      font-size: 11px;
+      color: #ff6b6b;
+    }
+
     /* CTA Section */
     .cta {
       text-align: center;
@@ -341,6 +514,30 @@
     .cta p {
       color: #8a8aa0;
       margin-bottom: 32px;
+    }
+
+    /* View All Button */
+    .view-all {
+      text-align: center;
+      margin-top: 32px;
+    }
+
+    .btn-view-all {
+      display: inline-block;
+      padding: 12px 32px;
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 40px;
+      color: #a78bfa;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-view-all:hover {
+      background: rgba(99,102,241,0.3);
+      transform: translateY(-2px);
     }
 
     /* Responsive */
@@ -384,6 +581,10 @@
         grid-template-columns: 1fr;
       }
       
+      .airdrop-grid {
+        grid-template-columns: 1fr;
+      }
+      
       .buttons {
         gap: 12px;
       }
@@ -404,12 +605,13 @@
 <!-- Navbar -->
 <nav class="navbar">
   <div class="logo">
-    <div class="logo-icon"><img src="./images/RSLogo.png"></div>
+    <div class="logo-icon"><img src="./images/RSLogo.png" alt="R Studio Lab Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='R'"></div>
     <span class="logo-text">R STUDIO</span>
   </div>
   <div class="nav-links">
     <a href="#features">Fitur</a>
-    <a href="#">Komunitas</a>
+    <a href="#airdrop">Airdrop</a>
+    <a href="https://www.roblox.com/communities/13174452">Komunitas</a>
     <a href="login.html" class="btn-login">Masuk →</a>
   </div>
 </nav>
@@ -418,15 +620,16 @@
 <section class="hero">
   <div class="badge">
     <div class="badge-dot"></div>
-    Platform Roblox Studio Indonesia
+    Platform Roblox Studio Indonesia + Airdrop Hub
   </div>
   
   <h1>
-    Belajar <span class="gradient">Roblox Studio</span>
+    Belajar <span class="gradient">Roblox Studio</span><br>
+    & Ikuti <span class="gradient">Airdrop</span>
   </h1>
   
   <p class="subtitle">
-    Tutorial, asset gratis, dan konten eksklusif untuk developer Roblox.
+    Tutorial, asset gratis, dan event airdrop dari berbagai platform crypto terpercaya.
     Tingkatkan skill kamu bersama komunitas R Studio Lab.
   </p>
   
@@ -482,8 +685,28 @@
     <div class="card">
       <div class="card-icon">🛒</div>
       <h3>R STORE</h3>
-      <p>Temukan koleksi script dan tools terbaik untuk game Roblox kamu.</p>
+      <p>Dapatkan Robux dengan harga terbaik, proses cepat, dan aman 100%. Langsung masuk ke akun Roblox Anda dalam hitungan detik.</p>
     </div>
+  </div>
+</section>
+
+<!-- Airdrop Section -->
+<section class="airdrop-section" id="airdrop">
+  <div class="airdrop-header">
+    <h2>🎁 Event Airdrop Aktif</h2>
+    <p>Ikuti event airdrop dari berbagai platform crypto terpercaya. Dapatkan reward menarik!</p>
+  </div>
+  
+  <div class="airdrop-grid" id="airdrop-grid">
+    <!-- Airdrop cards akan diisi oleh JavaScript -->
+  </div>
+  
+  <div class="view-all">
+    <a href="airdrops.html" class="btn-view-all">🔗 Lihat Semua Event Airdrop →</a>
+  </div>
+  
+  <div class="airdrop-disclaimer">
+    ⚠️ <strong>Disclaimer:</strong> Selalu lakukan riset mandiri sebelum berpartisipasi. R Studio Lab hanya memfasilitasi event — hasil reward bergantung pada penyelesaian task secara lengkap. Delay bisa sampai 5 jam, harap bersabar.
   </div>
 </section>
 
@@ -497,5 +720,138 @@
   </div>
 </section>
 
+<script>
+// Data Airdrop Events (SEMUA LANGSUNG KE airdrops.html)
+const airdropEvents = [
+  {
+    id: 1,
+    platform: "Gate.io",
+    platformColor: "#2ecc71",
+    iconType: "image",
+    iconSrc: "images/gateio.jpg",
+    iconText: "G",
+    name: "ETH-320 CandyDrop",
+    tag: "Bagi yang belum pernah daftar",
+    status: "hot",
+    desc: "Daftar akun, KYC, trading Futures ETH volume $1000. Reward akan segera dikirim.",
+    chips: ["KYC Wajib", "Futures", "$1 Deposit", "Vol $1000", "Plasma USDT"],
+    chipStyles: ["green", "purple", "yellow", "orange", "blue"],
+    reward: "Rp. 20.000",
+    deadline: "20 Mei 2026 • 18:00",
+    featured: true,
+    href: "airdrops.html"
+  },
+  {
+    id: 2,
+    platform: "Tokocrypto",
+    platformColor: "#e74c3c",
+    iconType: "image",
+    iconSrc: "images/tokocrypto.png",
+    iconText: "T",
+    name: "Tokocrypto New User",
+    tag: "Bagi yang belum pernah daftar",
+    status: "hot",
+    desc: "Daftar akun, KYC, deposit 110K IDR, beli USDT 105K, konversi USDT ke IDR. Reward akan segera dikirim.",
+    chips: ["KYC Wajib", "Deposit 110K", "Beli USDT 105K", "Convert", "IDR"],
+    chipStyles: ["green", "orange", "purple", "yellow", "blue"],
+    reward: "Rp. 20.000",
+    deadline: "Unlimited",
+    featured: true,
+    href: "airdrops.html"
+  },
+  {
+    id: 3,
+    platform: "Binance",
+    platformColor: "#f0b90b",
+    iconType: "image",
+    iconSrc: "images/binance.png",
+    iconText: "B",
+    name: "Coming Soon Event",
+    tag: "Bagi yang belum pernah daftar",
+    status: "soon",
+    desc: "Event menarik lainnya akan segera hadir. Pantau terus update dari R Studio Lab.",
+    chips: ["Coming Soon", "Stay Tuned"],
+    chipStyles: ["blue", "orange", "yellow"],
+    reward: "TBD",
+    deadline: "Segera",
+    featured: false,
+    href: "airdrops.html"
+  }
+];
+
+// Fungsi untuk mendapatkan class badge berdasarkan status
+function getBadgeClass(status) {
+  if (status === 'hot') return 'badge-hot';
+  if (status === 'live') return 'badge-live';
+  return 'badge-soon';
+}
+
+// Fungsi untuk mendapatkan label badge
+function getBadgeLabel(status) {
+  if (status === 'hot') return '🔥 HOT';
+  if (status === 'live') return 'LIVE';
+  return 'SEGERA';
+}
+
+// Fungsi untuk mendapatkan icon HTML
+function getIconHTML(ev) {
+  if (ev.iconType === 'image' && ev.iconSrc) {
+    return `<img src="${ev.iconSrc}" alt="${ev.platform}" onerror="this.style.display='none'; this.parentElement.style.background='${ev.platformColor}22'; this.parentElement.style.color='${ev.platformColor}'; this.parentElement.innerHTML='${ev.iconText}'">`;
+  } else {
+    return `<div style="background:${ev.platformColor}22; color:${ev.platformColor}; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${ev.iconText}</div>`;
+  }
+}
+
+// Render airdrop cards
+function renderAirdrops() {
+  const grid = document.getElementById('airdrop-grid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  
+  airdropEvents.forEach(ev => {
+    const chips = ev.chips.map((chip, idx) => {
+      const styleClass = ev.chipStyles[idx] || '';
+      return `<span class="chip ${styleClass}">${chip}</span>`;
+    }).join('');
+    const badgeClass = getBadgeClass(ev.status);
+    const badgeLabel = getBadgeLabel(ev.status);
+    const iconHTML = getIconHTML(ev);
+    
+    const card = document.createElement('a');
+    card.href = ev.href;
+    card.className = 'airdrop-card';
+    
+    card.innerHTML = `
+      <div class="airdrop-card-header">
+        <div class="airdrop-icon">
+          ${iconHTML}
+        </div>
+        <div class="airdrop-info">
+          <div class="airdrop-platform" style="color: ${ev.platformColor}">${ev.platform}</div>
+          <div class="airdrop-name">${ev.name}</div>
+        </div>
+        <span class="airdrop-badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      <div class="airdrop-card-body">
+        <div class="airdrop-desc">${ev.desc}</div>
+        <div class="airdrop-chips">${chips}</div>
+      </div>
+      <div class="airdrop-footer">
+        <div>
+          <span class="airdrop-reward-label">Estimasi Reward</span>
+          <div class="airdrop-reward">${ev.reward}</div>
+        </div>
+        <span class="airdrop-btn">Lihat Event →</span>
+      </div>
+    `;
+    
+    grid.appendChild(card);
+  });
+}
+
+// Jalankan render saat halaman siap
+document.addEventListener('DOMContentLoaded', renderAirdrops);
+</script>
 </body>
 </html>

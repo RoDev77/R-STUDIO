@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R STUDIO LAB - Tokocrypto</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#e74c3c;--red-dark:#a93226;--red-light:#fdf0ee;--red-mid:#f5b7b1;
+  --blue:#2563eb;--blue-light:#e6f1fb;--blue-mid:#b5d4f4;
+  --yellow:#fbbf24;--yellow-light:#fffbe6;
+  --green:#1d9e75;--green-dark:#0a5c40;--green-light:#eaf3de;--green-mid:#9fe1cb;
+  --cancel:#e24b4a;--cancel-light:#fcebeb;--cancel-mid:#f7c1c1;
+  --bg:#f4f3ee;--card:#fff;--border:#e0ddd4;
+  --text:#1a1a1a;--muted:#888;--subtle:#f0ede8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1rem}
+.wrap{max-width:680px;margin:0 auto;padding-bottom:3rem}
+
+.header{background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:16px;padding:1.5rem;margin-bottom:1rem;color:#fff;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07)}
+.header::after{content:'';position:absolute;bottom:-20px;left:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05)}
+.header-title{font-size:20px;font-weight:700;margin-bottom:4px;position:relative}
+.header-sub{font-size:13px;opacity:0.85;position:relative}
+
+.disclosure{background:#fff3cd;border:2px solid var(--yellow);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.disclosure-title{font-size:13px;font-weight:700;color:#856404;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.disclosure-body{font-size:12px;color:#6d5106;line-height:1.7}
+.disclosure-body strong{color:#856404}
+
+.ref-banner{background:var(--card);border:1.5px solid var(--red);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ref-label{font-size:12px;font-weight:700;color:var(--red-dark);flex-shrink:0}
+.ref-link{font-size:11px;color:var(--blue);word-break:break-all;flex:1;font-family:'Space Mono',monospace}
+.btn-ref{padding:6px 14px;background:var(--red);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:.15s}
+.btn-ref:hover{background:var(--red-dark)}
+
+.status-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.badge{font-size:12px;padding:4px 11px;border-radius:20px;font-weight:600}
+.badge-pending{background:#faeeda;color:#633806}
+.badge-active{background:var(--blue-light);color:#0c447c}
+.badge-done{background:var(--green-light);color:#27500a}
+.badge-cancel{background:var(--cancel-light);color:#791f1f}
+.sep{font-size:12px;color:#ccc}
+
+.prog-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.prog-top{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
+.prog-bar{height:10px;background:var(--subtle);border-radius:5px;overflow:hidden}
+.prog-fill{height:100%;background:var(--red);border-radius:5px;transition:width .5s}
+
+.timer-box{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;align-items:center;gap:12px;display:none}
+.timer-box.visible{display:flex}
+.timer-num{font-size:24px;font-weight:700;color:#0c447c;font-family:'Space Mono',monospace;letter-spacing:.02em}
+
+.rules{background:var(--yellow-light);border:1px solid var(--yellow);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.rules-title{font-size:13px;font-weight:700;color:#856404;margin-bottom:8px}
+.rules-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.rules-list li{font-size:12px;color:#6d5106;display:flex;gap:6px;line-height:1.5}
+
+.tasks{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.task{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .3s}
+.task.locked{opacity:.38;pointer-events:none}
+.task.active{border-color:#e74c3c;box-shadow:0 0 0 3px rgba(231,76,60,.12)}
+.task.done-task{border-color:var(--green-mid);background:#f6fdf9}
+.task.cancelled-task{border-color:var(--cancel-mid);background:#fff5f5;opacity:.5;pointer-events:none}
+.task-head{display:flex;align-items:flex-start;gap:10px;padding:.85rem 1rem}
+.task-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.icon-locked{background:var(--subtle);color:#bbb}
+.icon-active{background:#fdf0ee;color:var(--red-dark)}
+.icon-done{background:var(--green);color:#fff}
+.icon-cancel{background:var(--cancel);color:#fff}
+.task-body{flex:1}
+.task-num{font-size:10px;font-weight:700;color:#bbb;letter-spacing:.06em;text-transform:uppercase}
+.task-text{font-size:14px;color:var(--text);line-height:1.5;margin-top:2px}
+.task-warn{font-size:11px;color:#993c1d;background:#faeeda;padding:3px 8px;border-radius:4px;margin-top:6px;display:inline-block;line-height:1.5}
+.task-footer{padding:0 1rem .85rem;display:flex;flex-direction:column;gap:8px}
+
+.field-wrap{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:11px;font-weight:700;color:var(--red-dark)}
+.field-row{display:flex;gap:8px}
+.field-input{flex:1;padding:8px 12px;border:1.5px solid var(--red-mid);border-radius:7px;font-size:14px;color:var(--text);outline:none;background:#fff;font-family:'DM Sans',sans-serif}
+.field-input:focus{border-color:var(--red)}
+.field-hint{font-size:10px;color:var(--muted);line-height:1.5}
+.field-input.mono{font-family:'Space Mono',monospace;letter-spacing:.03em}
+.field-input.numeric-only{font-family:'Space Mono',monospace;letter-spacing:.05em}
+
+.socmed-grid{display:flex;flex-direction:column;gap:10px}
+.socmed-field{display:flex;align-items:center;gap:8px;background:#f8f9fc;border:1.5px solid #dce3f0;border-radius:9px;padding:8px 12px;transition:border-color .2s}
+.socmed-field:focus-within{border-color:var(--red);background:#fff}
+.socmed-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.socmed-prefix{font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.socmed-input{flex:1;border:none;outline:none;font-size:13px;color:var(--text);background:transparent;font-family:'DM Sans',sans-serif;min-width:0}
+.socmed-input::placeholder{color:#bbb}
+.socmed-required-note{font-size:11px;color:#856404;background:#fffbe6;border:1px solid var(--yellow);border-radius:6px;padding:6px 10px;line-height:1.5}
+
+/* BANK / EWALLET FIELDS */
+.bank-fields-grid{
+  background:#f8f9fc;
+  border-radius:10px;
+  padding:12px;
+  margin-top:12px;
+  border:1px solid #dce3f0;
+}
+.bank-field-item{
+  margin-bottom:12px;
+}
+.bank-field-item:last-child{
+  margin-bottom:0;
+}
+.bank-field-item label{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  color:var(--red-dark);
+  margin-bottom:6px;
+}
+.bank-field-item select, .bank-field-item input{
+  width:100%;
+  padding:8px 12px;
+  border:1.5px solid var(--red-mid);
+  border-radius:7px;
+  font-size:13px;
+  font-family:'DM Sans',sans-serif;
+  outline:none;
+  transition:all .2s;
+  background:#fff;
+}
+.bank-field-item select:focus, .bank-field-item input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(231,76,60,.1);
+}
+.bank-field-item .field-hint{
+  margin-top:4px;
+  font-size:10px;
+  color:var(--muted);
+}
+.bank-field-item input.numeric-only{
+  font-family:'Space Mono',monospace;
+  letter-spacing:.05em;
+}
+
+/* QRIS UPLOAD AREA */
+.qris-upload-area{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px dashed var(--red-mid);
+  display:none;
+}
+.qris-upload-area.visible{
+  display:block;
+}
+.qris-upload-area .upload-area{
+  border:1.5px dashed var(--red-mid);
+  border-radius:8px;
+  padding:1rem;
+  text-align:center;
+  cursor:pointer;
+  background:var(--red-light);
+  transition:all .2s;
+}
+.qris-upload-area .upload-area:hover{
+  border-color:var(--red);
+  background:#fce4e1;
+}
+.qris-upload-area .upload-area.dragging{
+  border-color:var(--red);
+  background:#fce4e1;
+}
+.qris-upload-area .upload-area input{
+  display:none;
+}
+.qris-upload-area .upload-hint{
+  font-size:12px;
+  color:var(--red-dark);
+  line-height:1.5;
+}
+.qris-upload-area .upload-preview{
+  max-width:100%;
+  max-height:150px;
+  border-radius:6px;
+  margin-top:8px;
+  display:none;
+  object-fit:contain;
+}
+.qris-note{
+  font-size:10px;
+  color:#856404;
+  background:#fffbe6;
+  padding:6px 10px;
+  border-radius:6px;
+  margin-top:6px;
+  text-align:center;
+}
+
+.consent-box{background:#fff8e1;border:1.5px solid var(--yellow);border-radius:8px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px}
+.consent-box input[type=checkbox]{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--red);cursor:pointer}
+.consent-text{font-size:12px;color:#6d5106;line-height:1.6}
+.consent-text strong{color:#856404}
+
+.upload-area{border:1.5px dashed var(--red-mid);border-radius:8px;padding:1rem;text-align:center;cursor:pointer;background:var(--red-light);transition:all .2s}
+.upload-area:hover{border-color:var(--red);background:#fce4e1}
+.upload-area.dragging{border-color:var(--red);background:#fce4e1}
+.upload-area input{display:none}
+.upload-hint{font-size:12px;color:var(--red-dark);line-height:1.5}
+.upload-preview{max-width:100%;max-height:200px;border-radius:6px;margin-top:8px;display:none;object-fit:contain}
+.upload-send{padding:7px 18px;background:var(--red);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;display:none;width:100%;transition:.15s}
+.upload-send:hover{background:var(--red-dark)}
+.upload-send:disabled{background:var(--red-mid);cursor:not-allowed}
+.upload-result{font-size:12px;padding:4px 10px;border-radius:5px;display:none;text-align:center}
+.upload-result.ok{background:var(--green-light);color:#27500a;display:block}
+.upload-result.err{background:var(--cancel-light);color:#791f1f;display:block}
+
+.btn-action{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;width:fit-content}
+.btn-action:active{transform:scale(.97)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:var(--red-dark)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#0a5c40}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#1d4ed8}
+.btn-gray{background:var(--subtle);color:#444;border:1px solid var(--border)}
+.btn-gray:hover{background:#e8e6e0}
+.done-label{font-size:12px;color:var(--green);font-weight:600}
+.done-detail{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;background:var(--blue-light);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:2px}
+.done-detail-block{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+
+.info-row{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:8px;padding:8px 12px;font-size:11px;color:#0c447c;line-height:1.6;margin-bottom:8px}
+.info-row strong{font-family:'Space Mono',monospace}
+
+.step-box{background:#fdf0ee;border:1.5px solid var(--red-mid);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--red-dark);line-height:1.8;margin-bottom:6px}
+.step-box strong{color:var(--red-dark);font-weight:700}
+.step-box .arrow{color:var(--red);font-weight:700;margin:0 3px}
+
+.bot-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.btn-reset{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;font-weight:500;transition:.15s}
+.btn-reset:hover{background:var(--cancel-mid)}
+
+.result-box{display:none;border-radius:12px;padding:1.5rem;border:1px solid;text-align:center;margin-bottom:1rem}
+.result-box.show{display:block}
+.result-success{background:var(--green-light);border-color:var(--green-mid);color:#27500a}
+.result-icon{font-size:38px;margin-bottom:8px}
+.result-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.result-desc{font-size:13px;line-height:1.6}
+
+@media(max-width:480px){.task-text{font-size:13px}.ref-link{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:12px;position:relative">
+      <img src="../images/RSLogo.png" alt="R Studio Lab Logo" style="width:48px;height:48px;object-fit:contain;border-radius:10px;flex-shrink:0">
+      <div>
+        <div class="header-title">R STUDIO LAB — Tokocrypto</div>
+        <div class="header-sub">Nama Event: Tokocrypto Pengguna Baru</div>
+        <div class="header-sub">Deskripsi Event: Ikuti setiap langkah dengan teliti.</div>
+        <div class="header-sub">Event Ends: Unlimited</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclosure">
+    <div class="disclosure-title">🔔 Informasi Penting — Transparansi Data</div>
+    <div class="disclosure-body">
+      R STUDIO LAB akan meminta kamu mengirimkan beberapa data untuk keperluan <strong>verifikasi partisipasi</strong>:<br>
+      • <strong>Minimal Umur:</strong> 18+<br>
+      • <strong>Akun Sosial Media</strong> (Instagram / Facebook / X / WhatsApp) — minimal satu wajib diisi<br>
+      • <strong>Metode Penerimaan Reward</strong> (Bank/E-Wallet) — pilih salah satu dari BANK JAGO, SEABANK, BANK SAQU, NEOBANK, DANA, GOPAY, SHOPEEPAY, atau QRIS<br>
+      • <strong>Screenshot Beli USDT</strong> — bukti transaksi SPOT berhasil<br>
+      • <strong>Screenshot Konversi Berhasil</strong> — bukti convert USDT ke IDR selesai<br><br>
+      Data ini dikirim langsung ke <strong>Admin</strong>. Kamu akan diminta <strong>menyetujui secara eksplisit</strong> sebelum pengiriman bukti.<br>
+      <strong>KALO ADA YANG GA NGERTI, TANYAKAN KEPADA ADMIN</strong>
+    </div>
+  </div>
+
+  <div class="ref-banner">
+    <span class="ref-label">🔗 Link Referral</span>
+    <span class="ref-link" id="ref-link-text">https://www.tokocrypto.com/app?scope=register&ref=F5T7TIW9</span>
+    <button class="btn-ref" onclick="window.open(REF,'_blank')">Buka ↗</button>
+  </div>
+
+  <div class="status-row">
+    <span class="badge badge-pending" id="status-badge">Belum Mulai</span>
+    <span class="badge badge-active" id="task-count">0 / 18 Task</span>
+    <span class="sep">|</span>
+    <span style="font-size:12px;color:var(--muted)" id="step-label">Mulai dari langkah 1</span>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-top"><span>Progress</span><span id="pct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="timer-box" id="timer-box">
+    <span style="font-size:22px">⏱</span>
+    <div>
+      <div style="font-size:10px;color:#0c447c;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Waktu Tunggu</div>
+      <div class="timer-num" id="timer-num">00:00:00</div>
+    </div>
+    <div style="margin-left:auto;font-size:11px;color:#185fa5;line-height:1.6;text-align:right">delay bisa<br>sampai ~2 jam</div>
+  </div>
+
+  <div class="rules">
+    <div class="rules-title">⚠️ Syarat & Ketentuan — WAJIB BACA</div>
+    <ul class="rules-list">
+      <li>⏳ <span>Bersabar — delay bisa sampai 2 jam</span></li>
+      <li>🚫 <span>Tidak buru-buru</span></li>
+      <li>✅ <span>Selesaikan Semua task, tidak selesai = reward tidak dapat</span></li>
+    </ul>
+  </div>
+
+  <div class="tasks" id="tasks-wrap"></div>
+
+  <div class="result-box result-success" id="result-success">
+    <div class="result-icon">🎉</div>
+    <div class="result-title">Berhasil!</div>
+    <div class="result-desc">Semua task telah diselesaikan. Reward akan dikirimkan ke rekening bank kamu melalui rekber. Tunggu konfirmasi maksimal 2×24 jam.</div>
+  </div>
+
+  <div class="bot-actions">
+    <button class="btn-reset" onclick="resetAll()">↺ Reset Ulang</button>
+  </div>
+
+</div>
+
+<script>
+const REF = 'https://www.tokocrypto.com/app?scope=register&ref=F5T7TIW9';
+const WEBHOOK = 'https://discord.com/api/webhooks/1493398267260702751/r40FqdKgj-tIsJPlcO1oIdE4AeIReRg3CxH9pM7H5x3nBfH7rX-d7_rTEwNVihh2VtRO';
+
+let userFb = '';
+let userSocmed = { ig: '', fb: '', x: '', wa: '' };
+let userBank = { name: '', method: '', number: '' };
+
+const tasks = [
+  {
+    text: "Sebelum mulai, masukkan akun sosial media kamu untuk identifikasi pemilik dan data metode penerimaan reward. Wajib isi minimal satu sosial media & semua data penerimaan reward harus diisi.",
+    warn: "📋 Data sosial media & metode reward digunakan untuk verifikasi dan pengiriman reward — data ini akan dikirim ke Admin.",
+    action: "input_fb"
+  },
+  { text: "Buka link referral Tokocrypto dan daftar akun baru. Pastikan kode referral sudah terisi otomatis.", warn: "⚠ WAJIB daftar dari link referral — jika tidak ada referral, reward tidak valid!", btn: "Buka Link Referral ↗", style: "btn-red", action: "link", href: REF },
+  { text: "Download aplikasi Tokocrypto di HP kamu melalui Google Play Store.", warn: null, btn: "Download Tokocrypto ↗", style: "btn-blue", action: "link", href: "https://play.google.com/store/apps/details?id=com.toko.crypto" },
+  { text: "Login ke akun yang baru saja kamu daftarkan tadi. Pastikan sudah masuk dengan benar.", warn: null, btn: "Sudah Login ✓", style: "btn-gray", action: "done" },
+  { text: "Lakukan KYC (Verifikasi Identitas) di dalam aplikasi Tokocrypto hingga status Terverifikasi.", warn: "⏳ KYC bisa memakan waktu hingga 1 jam — aktifkan timer dan tunggu hingga selesai.", btn: "Mulai Timer KYC ⏱", style: "btn-blue", action: "timer" },
+  { text: "Deposit IDR sebesar Rp 110.000 ke akun Tokocrypto kamu melalui transfer bank / QRIS / metode lainnya.", warn: "⚠ Pastikan deposit sudah masuk dan saldo IDR kamu minimal Rp 105.000 sebelum lanjut.", btn: "Deposit Sudah Masuk ✓", style: "btn-gray", action: "done" },
+  { text: "Di halaman utama Tokocrypto, masuk ke menu Pertukaran (Exchange/Trade).", warn: null, btn: "Sudah di Pertukaran ✓", style: "btn-gray", action: "done" },
+  { text: "Di halaman Pertukaran, ketuk pasangan BTC/USDT lalu cari dan pilih pasangan USDT/IDR.", warn: null, action: "info", info: '<strong>BTC/USDT</strong> <span class="arrow">→</span> ketuk pasangan tersebut <span class="arrow">→</span> cari <strong>USDT/IDR</strong> <span class="arrow">→</span> pilih', btn: "Sudah Pilih USDT/IDR ✓", style: "btn-gray" },
+  { text: "Ubah mode order dari Limit menjadi Pasar (Market).", warn: null, action: "info", info: 'Ketuk tulisan <strong>Limit</strong> di atas form order <span class="arrow">→</span> pilih <strong>Pasar / Market</strong>', btn: "Sudah Pilih Pasar ✓", style: "btn-gray" },
+  { text: "Di kolom Total (IDR), masukkan nominal Rp 105.000 lalu tekan tombol Beli USDT.", warn: "⚠ Pastikan kolom yang diisi adalah Total (IDR), bukan jumlah USDT!", action: "info", info: 'Kolom <strong>Total (IDR)</strong> <span class="arrow">→</span> ketik <strong>105000</strong> <span class="arrow">→</span> tekan <strong>Beli USDT</strong>', btn: "Sudah Beli USDT ✓", style: "btn-gray" },
+  {
+    text: "Screenshot halaman konfirmasi transaksi Beli USDT yang berhasil, lalu upload di sini. Screenshot akan dikirim ke Admin.",
+    warn: "📸 Screenshot harus menampilkan: pasangan USDT/IDR, nominal, dan status BERHASIL / SELESAI.",
+    action: "upload",
+    discordLabel: "🟢 Bukti Beli USDT — Tokocrypto"
+  },
+  { text: "Sekarang pergi ke menu 0 FEE di Tokocrypto untuk melakukan konversi USDT ke IDR.", warn: null, btn: "Sudah di 0 FEE ✓", style: "btn-gray", action: "done" },
+  { text: "Pastikan arah konversi adalah dari USDT ke IDR.", warn: null, action: "info", info: 'Pilih <strong>USDT</strong> sebagai aset yang dikonversi <span class="arrow">→</span> pilih <strong>IDR</strong> sebagai tujuan', btn: "Sudah Pilih USDT → IDR ✓", style: "btn-gray" },
+  { text: "Tekan tombol Maks (MAX) untuk menggunakan seluruh saldo USDT yang kamu miliki.", warn: null, btn: "Sudah Tekan Maks ✓", style: "btn-gray", action: "done" },
+  { text: "Tekan tombol Pratinjau (Preview) dan pastikan detail konversi sudah benar sebelum konfirmasi.", warn: "⚠ Cek kembali jumlah dan arah konversi sebelum melanjutkan!", btn: "Sudah Pratinjau ✓", style: "btn-gray", action: "done" },
+  {
+    text: "Konfirmasi konversi dan lakukan hingga berhasil. Screenshot halaman hasil konversi USDT→IDR yang BERHASIL, lalu upload di sini.",
+    warn: "📸 Screenshot harus menampilkan status konversi BERHASIL / SELESAI dengan nominal yang jelas.",
+    action: "upload",
+    discordLabel: "💱 Bukti Konversi USDT→IDR — Tokocrypto"
+  },
+  { text: "Semua task selesai! Klik tombol di bawah untuk konfirmasi penyelesaian.", warn: "✅ Reward akan dikirim via rekber Agung ke rekening bank yang sudah kamu daftarkan.", btn: "🎉 Selesai — Klaim Reward!", style: "btn-red", action: "finish" }
+];
+
+let current = 0, cancelled = false, timerRunning = false, timerInterval = null, timerSec = 0;
+const SAVE_KEY = 'toko_tracker_v4';
+
+function saveProgress(){
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      current, cancelled, timerSec,
+      userFb, userSocmed, userBank
+    }));
+  } catch(e){}
+}
+
+function loadProgress(){
+  try {
+    var d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(!d) return;
+    current = d.current || 0;
+    cancelled = d.cancelled || false;
+    timerSec = d.timerSec || 0;
+    userFb = d.userFb || '';
+    userSocmed = d.userSocmed || { ig: '', fb: '', x: '', wa: '' };
+    userBank = d.userBank || { name: '', method: '', number: '' };
+  } catch(e){}
+}
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function startTimer(){
+  if(timerRunning) return;
+  timerRunning = true;
+  document.getElementById('timer-box').classList.add('visible');
+  timerInterval = setInterval(function(){
+    timerSec++;
+    var h=Math.floor(timerSec/3600), m=Math.floor((timerSec%3600)/60), s=timerSec%60;
+    document.getElementById('timer-num').textContent = pad(h)+':'+pad(m)+':'+pad(s);
+  },1000);
+}
+
+function stopTimer(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  timerRunning=false;
+  document.getElementById('timer-box').classList.remove('visible');
+}
+
+function buildDiscordMeta(){
+  var lines = '';
+  if(userSocmed.ig)  lines += '\n📸 **Instagram:** `@' + userSocmed.ig + '`';
+  if(userSocmed.fb)  lines += '\n👤 **Facebook:** `' + userSocmed.fb + '`';
+  if(userSocmed.x)   lines += '\n🐦 **X (Twitter):** `@' + userSocmed.x + '`';
+  if(userSocmed.wa)  lines += '\n📱 **WhatsApp:** `' + userSocmed.wa + '`';
+  if(userBank.name)  lines += '\n🏦 **Nama Penerima:** `' + userBank.name + '`';
+  if(userBank.method) lines += '\n🏛️ **Metode:** `' + userBank.method + '`';
+  if(userBank.number && userBank.method !== 'QRIS') lines += '\n🔢 **Nomor ID:** `' + userBank.number + '`';
+  if(userBank.method === 'QRIS') lines += '\n🖼️ **QRIS:** (gambar terpisah)';
+  return lines;
+}
+
+async function sendToDiscord(file, label, resultElId){
+  var resEl = document.getElementById(resultElId);
+  var msg = label + '\n📲 **Data Peserta Tokocrypto:**' + buildDiscordMeta();
+  try {
+    var fd = new FormData();
+    fd.append('payload_json', JSON.stringify({content: msg}));
+    fd.append('file', file, file.name);
+    var resp = await fetch(WEBHOOK, {method:'POST', body:fd});
+    if(resp.ok){
+      resEl.textContent = '✅ Screenshot berhasil dikirim ke Admin!';
+      resEl.className = 'upload-result ok';
+      return true;
+    } else {
+      resEl.textContent = '❌ Gagal kirim (status '+resp.status+'). Coba lagi.';
+      resEl.className = 'upload-result err';
+      return false;
+    }
+  } catch(e){
+    resEl.textContent = '❌ Error: ' + e.message;
+    resEl.className = 'upload-result err';
+    return false;
+  }
+}
+
+async function sendQrisToDiscord(file, resultElId){
+  var resEl = document.getElementById(resultElId);
+  var socmedLines = '';
+  if(userSocmed.ig)  socmedLines += '\n📸 Instagram: @' + userSocmed.ig;
+  if(userSocmed.fb)  socmedLines += '\n👤 Facebook: ' + userSocmed.fb;
+  if(userSocmed.x)   socmedLines += '\n🐦 X: @' + userSocmed.x;
+  if(userSocmed.wa)  socmedLines += '\n📱 WhatsApp: ' + userSocmed.wa;
+
+  var msg = '🖼️ **QRIS untuk Reward — Tokocrypto**' +
+    '\n📲 Sosial Media:' + socmedLines +
+    '\n🏦 Nama Penerima: `' + userBank.name + '`';
+  try {
+    var fd = new FormData();
+    fd.append('payload_json', JSON.stringify({content: msg}));
+    fd.append('file', file, file.name);
+    var resp = await fetch(WEBHOOK, {method:'POST', body:fd});
+    if(resp.ok){
+      resEl.textContent = '✅ QRIS berhasil dikirim ke Admin!';
+      resEl.className = 'upload-result ok';
+      return true;
+    } else {
+      resEl.textContent = '❌ Gagal kirim QRIS (status '+resp.status+')';
+      resEl.className = 'upload-result err';
+      return false;
+    }
+  } catch(e){
+    resEl.textContent = '❌ Error: ' + e.message;
+    resEl.className = 'upload-result err';
+    return false;
+  }
+}
+
+function onlyNumbers(inputId) {
+  var input = document.getElementById(inputId);
+  if(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+  }
+}
+
+function buildFbFooter(i){
+  return '<div class="task-footer">' +
+    '<div class="field-wrap">' +
+      '<div class="field-label" style="margin-bottom:6px">📲 Akun Sosial Media <span style="color:#e74c3c">*wajib isi minimal satu</span></div>' +
+      '<div class="socmed-required-note">⚠️ Isi <strong>minimal satu</strong> akun sosial media kamu. Boleh isi semua jika mau.</div>' +
+      '<div class="socmed-grid" style="margin-top:8px">' +
+
+        '<div class="socmed-field">' +
+          '<div class="socmed-icon ig"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ig-g" x1="0" y1="24" x2="24" y2="0"><stop stop-color="#F58529"/><stop offset="0.35" stop-color="#DD2A7B"/><stop offset="0.7" stop-color="#8134AF"/><stop offset="1" stop-color="#515BD4"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig-g)"/><rect x="6" y="6" width="12" height="12" rx="3.5" stroke="white" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="3" stroke="white" stroke-width="1.5" fill="none"/><circle cx="16.2" cy="7.8" r="0.9" fill="white"/></svg></div>' +
+          '<span class="socmed-prefix">@</span>' +
+          '<input class="socmed-input" id="ig-field-'+i+'" type="text" placeholder="username Instagram" maxlength="60" autocomplete="off">' +
+        '</div>' +
+
+        '<div class="socmed-field">' +
+          '<div class="socmed-icon fb"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#1877F2"/><path d="M15.5 8H13.5C13.2 8 13 8.2 13 8.5V10H15.5L15.1 12.5H13V19H10.5V12.5H9V10H10.5V8.5C10.5 6.6 11.8 5 13.7 5H15.5V8Z" fill="white"/></svg></div>' +
+          '<span class="socmed-prefix" style="font-size:11px">N</span>' +
+          '<input class="socmed-input" id="fbsoc-field-'+i+'" type="text" placeholder="Nama Facebook" maxlength="80" autocomplete="off">' +
+        '</div>' +
+
+        '<div class="socmed-field">' +
+          '<div class="socmed-icon x"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#000"/><path d="M17.5 5H19.8L14.8 10.7L20.7 19H16.1L12.5 14.3L8.3 19H6L11.4 12.9L5.7 5H10.4L13.7 9.3L17.5 5ZM16.8 17.6H18L9.7 6.4H8.4L16.8 17.6Z" fill="white"/></svg></div>' +
+          '<span class="socmed-prefix">@</span>' +
+          '<input class="socmed-input" id="x-field-'+i+'" type="text" placeholder="username X / Twitter" maxlength="60" autocomplete="off">' +
+        '</div>' +
+
+        '<div class="socmed-field">' +
+          '<div class="socmed-icon wa"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#25D366"/><path d="M12 4C7.6 4 4 7.6 4 12C4 13.5 4.4 14.9 5.1 16.1L4 20L8 18.9C9.2 19.6 10.6 20 12 20C16.4 20 20 16.4 20 12C20 7.6 16.4 4 12 4ZM15.9 14.9C15.7 15.4 14.8 15.9 14.4 15.9C14 15.9 13.6 16.1 11.7 15.3C9.4 14.3 8 11.9 7.9 11.8C7.8 11.7 7 10.6 7 9.5C7 8.4 7.6 7.9 7.8 7.6C8 7.4 8.3 7.3 8.5 7.3H9.1C9.3 7.3 9.5 7.3 9.7 7.8C9.9 8.3 10.4 9.4 10.4 9.5C10.5 9.6 10.5 9.7 10.4 9.8C10.3 9.9 10.3 10 10.2 10.1L9.8 10.5C9.7 10.6 9.6 10.7 9.7 10.9C9.8 11.1 10.3 11.9 11 12.5C11.9 13.2 12.6 13.5 12.8 13.6C13 13.7 13.1 13.6 13.2 13.5L13.7 12.9C13.8 12.7 13.9 12.8 14.1 12.8C14.3 12.9 15.3 13.4 15.5 13.5C15.7 13.6 15.9 13.7 15.9 13.9C16 14.1 16 14.5 15.9 14.9Z" fill="white"/></svg></div>' +
+          '<span class="socmed-prefix">+62</span>' +
+          '<input class="socmed-input mono" id="wa-field-'+i+'" type="tel" inputmode="numeric" placeholder="Nomor WhatsApp" maxlength="15" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
+        '</div>' +
+
+      '</div>' +
+      
+      '<div class="bank-fields-grid">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--red-dark);margin-bottom:8px">💰 Data Penerimaan Reward (Wajib Diisi)</div>' +
+        '<div class="bank-field-item">' +
+          '<label>Nama Sesuai Rekening/E-Wallet <span style="color:#e74c3c">*</span></label>' +
+          '<input type="text" id="bank-name-'+i+'" placeholder="Contoh: Ahmad Fauzi" maxlength="100" autocomplete="off">' +
+          '<div class="field-hint">Nama pemilik rekening atau akun e-wallet</div>' +
+        '</div>' +
+        '<div class="bank-field-item">' +
+          '<label>Pilih Metode <span style="color:#e74c3c">*</span></label>' +
+          '<select id="bank-method-'+i+'" onchange="onMethodChange('+i+')">' +
+            '<option value="">-- Pilih --</option>' +
+            '<option value="BANK JAGO">🏦 BANK JAGO</option>' +
+            '<option value="SEABANK">🏦 SEABANK</option>' +
+            '<option value="BANK SAQU">🏦 BANK SAQU</option>' +
+            '<option value="NEOBANK">🏦 NEOBANK</option>' +
+            '<option value="DANA">📱 DANA</option>' +
+            '<option value="GOPAY">📱 GOPAY</option>' +
+            '<option value="SHOPEEPAY">📱 SHOPEEPAY</option>' +
+            '<option value="QRIS">🖼️ QRIS (Upload Gambar)</option>' +
+          '</select>' +
+          '<div class="field-hint">Pilih bank atau e-wallet tujuan reward</div>' +
+        '</div>' +
+        '<div class="bank-field-item" id="number-field-'+i+'">' +
+          '<label id="number-label-'+i+'">Nomor Rekening/ID <span style="color:#e74c3c">*</span></label>' +
+          '<input class="numeric-only" type="text" id="bank-number-'+i+'" placeholder="Contoh: 1234567890" maxlength="30" autocomplete="off" oninput="onlyNumbers(\'bank-number-'+i+'\')">' +
+          '<div class="field-hint">⚠️ HANYA ANGKA yang diperbolehkan (tanpa spasi atau tanda hubung)</div>' +
+        '</div>' +
+        '<div class="qris-upload-area" id="qris-area-'+i+'">' +
+          '<div class="upload-area" id="qris-upload-area-'+i+'" onclick="document.getElementById(\'qris-file-'+i+'\').click()">' +
+            '<input type="file" id="qris-file-'+i+'" accept="image/*">' +
+            '<div class="upload-hint">🖼️ Klik atau drag & drop gambar QRIS di sini<br><span style="font-size:10px">(JPG / PNG / WEBP)</span></div>' +
+            '<img id="qris-preview-'+i+'" class="upload-preview" alt="preview QRIS">' +
+          '</div>' +
+          '<div class="qris-note">⚠️ Pastikan QRIS dapat dipindai dan atas nama yang sesuai</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<button class="btn-action btn-red" style="width:100%;margin-top:12px" onclick="submitFb('+i+')">Simpan & Lanjut ✓</button>' +
+    '<div class="upload-result" id="fb-result-'+i+'"></div>' +
+  '</div>';
+}
+
+function onMethodChange(i){
+  var method = document.getElementById('bank-method-'+i).value;
+  var numberField = document.getElementById('number-field-'+i);
+  var qrisArea = document.getElementById('qris-area-'+i);
+  var numberLabel = document.getElementById('number-label-'+i);
+  
+  if(method === 'QRIS'){
+    numberField.style.display = 'none';
+    qrisArea.classList.add('visible');
+  } else {
+    numberField.style.display = 'block';
+    qrisArea.classList.remove('visible');
+    if(method === 'DANA' || method === 'GOPAY' || method === 'SHOPEEPAY'){
+      numberLabel.innerHTML = 'Nomor HP E-Wallet <span style="color:#e74c3c">*</span>';
+      document.getElementById('bank-number-'+i).placeholder = 'Contoh: 81234567890';
+    } else {
+      numberLabel.innerHTML = 'Nomor Rekening <span style="color:#e74c3c">*</span>';
+      document.getElementById('bank-number-'+i).placeholder = 'Contoh: 1234567890';
+    }
+  }
+}
+
+function attachQrisListeners(i){
+  var fi = document.getElementById('qris-file-'+i);
+  var preview = document.getElementById('qris-preview-'+i);
+  if(!fi) return;
+  fi.addEventListener('change', function(){
+    if(!fi.files[0]) return;
+    preview.src = URL.createObjectURL(fi.files[0]);
+    preview.style.display = 'block';
+  });
+  var uploadArea = document.getElementById('qris-upload-area-'+i);
+  if(uploadArea){
+    uploadArea.addEventListener('dragover', function(e){ e.preventDefault(); uploadArea.classList.add('dragging'); });
+    uploadArea.addEventListener('dragleave', function(){ uploadArea.classList.remove('dragging'); });
+    uploadArea.addEventListener('drop', function(e){
+      e.preventDefault(); uploadArea.classList.remove('dragging');
+      var f = e.dataTransfer.files[0];
+      if(!f || !f.type.startsWith('image/')) return;
+      fi.files = e.dataTransfer.files;
+      preview.src = URL.createObjectURL(f);
+      preview.style.display = 'block';
+    });
+  }
+}
+
+async function submitFb(i){
+  var igVal    = document.getElementById('ig-field-'+i).value.trim();
+  var fbsocVal = document.getElementById('fbsoc-field-'+i).value.trim();
+  var xVal     = document.getElementById('x-field-'+i).value.trim();
+  var waVal    = document.getElementById('wa-field-'+i).value.trim();
+  
+  var bankName = document.getElementById('bank-name-'+i).value.trim();
+  var bankMethod = document.getElementById('bank-method-'+i).value;
+  var bankNumber = document.getElementById('bank-number-'+i).value.trim();
+  var qrisFile = document.getElementById('qris-file-'+i).files[0];
+  
+  var resEl = document.getElementById('fb-result-'+i);
+
+  if(!igVal && !fbsocVal && !xVal && !waVal){
+    resEl.textContent = '⚠ Wajib isi minimal satu akun sosial media (Instagram / Facebook / X / WhatsApp).';
+    resEl.className = 'upload-result err'; return;
+  }
+  if(waVal && waVal.length < 10){
+    resEl.textContent = '⚠ Nomor WhatsApp tidak valid (minimal 10 digit).';
+    resEl.className = 'upload-result err'; return;
+  }
+  
+  if(!bankName){
+    resEl.textContent = '⚠ Nama sesuai rekening/e-wallet wajib diisi.';
+    resEl.className = 'upload-result err'; return;
+  }
+  if(!bankMethod){
+    resEl.textContent = '⚠ Pilih metode bank/e-wallet terlebih dahulu.';
+    resEl.className = 'upload-result err'; return;
+  }
+  
+  if(bankMethod === 'QRIS'){
+    if(!qrisFile){
+      resEl.textContent = '⚠ Untuk metode QRIS, wajib upload gambar QRIS.';
+      resEl.className = 'upload-result err'; return;
+    }
+    bankNumber = 'QRIS (lihat gambar)';
+  } else {
+    if(!bankNumber){
+      resEl.textContent = '⚠ Nomor rekening/ID wajib diisi.';
+      resEl.className = 'upload-result err'; return;
+    }
+    if(!/^[0-9]+$/.test(bankNumber)){
+      resEl.textContent = '⚠ Nomor rekening/HP harus berupa ANGKA saja (tanpa spasi atau huruf).';
+      resEl.className = 'upload-result err'; return;
+    }
+    if((bankMethod === 'DANA' || bankMethod === 'GOPAY' || bankMethod === 'SHOPEEPAY') && bankNumber.length < 10){
+      resEl.textContent = '⚠ Nomor HP e-wallet tidak valid (minimal 10 digit).';
+      resEl.className = 'upload-result err'; return;
+    }
+    if((bankMethod !== 'DANA' && bankMethod !== 'GOPAY' && bankMethod !== 'SHOPEEPAY') && bankNumber.length < 5){
+      resEl.textContent = '⚠ Nomor rekening tidak valid (minimal 5 digit).';
+      resEl.className = 'upload-result err'; return;
+    }
+  }
+
+  userFb = fbsocVal || igVal || xVal || (waVal ? '+62'+waVal : '');
+  userSocmed = { ig: igVal, fb: fbsocVal, x: xVal, wa: waVal ? ('+62' + waVal) : '' };
+  userBank = { name: bankName, method: bankMethod, number: bankNumber };
+  
+  if(bankMethod === 'QRIS' && qrisFile){
+    var qrisOk = await sendQrisToDiscord(qrisFile, 'fb-result-'+i);
+    if(!qrisOk){
+      resEl.textContent = '❌ Gagal mengirim QRIS, coba lagi.';
+      resEl.className = 'upload-result err';
+      return;
+    }
+  }
+  
+  current++; saveProgress(); renderAll();
+}
+
+function buildUploadFooter(i, t){
+  var meta = '';
+  var lines = [];
+  if(userSocmed.ig)  lines.push('📸 IG: <strong>@'+userSocmed.ig+'</strong>');
+  if(userSocmed.fb)  lines.push('👤 FB: <strong>'+userSocmed.fb+'</strong>');
+  if(userSocmed.x)   lines.push('🐦 X: <strong>@'+userSocmed.x+'</strong>');
+  if(userSocmed.wa)  lines.push('📱 WA: <strong>'+userSocmed.wa+'</strong>');
+  if(userBank.name)  lines.push('👤 Nama: <strong>'+userBank.name+'</strong>');
+  if(userBank.method) lines.push('💰 Metode: <strong>'+userBank.method+'</strong>');
+  if(userBank.number && userBank.method !== 'QRIS') lines.push('🔢 Nomor: <strong>'+userBank.number+'</strong>');
+  if(lines.length){
+    meta = '<div class="info-row">📤 Data yang dikirim bersama screenshot ini:<br>' + lines.join('<br>') + '</div>';
+  }
+  return '<div class="task-footer">' +
+    meta +
+    '<div class="consent-box" id="consent-box-'+i+'">' +
+      '<input type="checkbox" id="consent-cb-'+i+'">' +
+      '<div class="consent-text">Saya <strong>setuju</strong> mengirimkan screenshot ini beserta data saya (sosial media, data bank/e-wallet) ke Admin untuk keperluan verifikasi.</div>' +
+    '</div>' +
+    '<div id="upload-panel-'+i+'">' +
+      '<div class="upload-area" id="upload-area-'+i+'" onclick="document.getElementById(\'file-input-'+i+'\').click()">' +
+        '<input type="file" id="file-input-'+i+'" accept="image/*">' +
+        '<div class="upload-hint">📸 Klik atau drag & drop screenshot di sini<br><span style="font-size:10px;color:var(--red-dark)">(JPG / PNG / WEBP)</span></div>' +
+        '<img id="preview-img-'+i+'" class="upload-preview" alt="preview">' +
+      '</div>' +
+      '<button class="upload-send" id="upload-send-'+i+'" onclick="doUpload('+i+')">Kirim ke Admin & Lanjut ✓</button>' +
+      '<div class="upload-result" id="upload-result-'+i+'"></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function attachUploadListeners(i){
+  var fi = document.getElementById('file-input-'+i);
+  var area = document.getElementById('upload-area-'+i);
+  var preview = document.getElementById('preview-img-'+i);
+  var sendBtn = document.getElementById('upload-send-'+i);
+  var cb = document.getElementById('consent-cb-'+i);
+  if(!fi) return;
+  fi.addEventListener('change', function(){
+    if(!fi.files[0]) return;
+    preview.src = URL.createObjectURL(fi.files[0]);
+    preview.style.display = 'block';
+    if(cb && cb.checked) sendBtn.style.display = 'block';
+  });
+  if(cb) cb.addEventListener('change', function(){
+    if(fi.files[0]) sendBtn.style.display = cb.checked ? 'block' : 'none';
+  });
+  area.addEventListener('dragover', function(e){ e.preventDefault(); area.classList.add('dragging'); });
+  area.addEventListener('dragleave', function(){ area.classList.remove('dragging'); });
+  area.addEventListener('drop', function(e){
+    e.preventDefault(); area.classList.remove('dragging');
+    var f = e.dataTransfer.files[0];
+    if(!f || !f.type.startsWith('image/')) return;
+    fi.files = e.dataTransfer.files;
+    preview.src = URL.createObjectURL(f);
+    preview.style.display = 'block';
+    if(cb && cb.checked) sendBtn.style.display = 'block';
+  });
+}
+
+async function doUpload(i){
+  var t = tasks[i];
+  var cb = document.getElementById('consent-cb-'+i);
+  var fi = document.getElementById('file-input-'+i);
+  var sendBtn = document.getElementById('upload-send-'+i);
+  var resEl = document.getElementById('upload-result-'+i);
+  if(!cb || !cb.checked){
+    resEl.textContent = '⚠ Centang persetujuan dulu sebelum mengirim.';
+    resEl.className = 'upload-result err'; return;
+  }
+  var file = fi && fi.files[0];
+  if(!file){
+    resEl.textContent = '⚠ Pilih screenshot dulu sebelum kirim.';
+    resEl.className = 'upload-result err'; return;
+  }
+  sendBtn.disabled = true; sendBtn.textContent = 'Mengirim...';
+  var ok = await sendToDiscord(file, t.discordLabel, 'upload-result-'+i);
+  if(ok){
+    sendBtn.textContent = 'Terkirim ✓';
+    setTimeout(function(){ stopTimer(); current++; saveProgress(); renderAll(); }, 1200);
+  } else {
+    sendBtn.disabled = false; sendBtn.textContent = 'Coba Lagi';
+  }
+}
+
+function renderAll(){
+  var wrap = document.getElementById('tasks-wrap');
+  wrap.innerHTML = '';
+  tasks.forEach(function(t, i){
+    var div = document.createElement('div');
+    var cls = 'task';
+    if(cancelled) cls += ' cancelled-task';
+    else if(i < current) cls += ' done-task';
+    else if(i === current) cls += ' active';
+    else cls += ' locked';
+    div.id = 'task-'+i; div.className = cls;
+
+    var iconCls = 'icon-locked', iconTxt = String(i+1);
+    if(cancelled){ iconCls='icon-cancel'; iconTxt='✕'; }
+    else if(i < current){ iconCls='icon-done'; iconTxt='✓'; }
+    else if(i === current) iconCls = 'icon-active';
+
+    var footer = '';
+    if(!cancelled && i === current){
+      if(t.action === 'input_fb') footer = buildFbFooter(i);
+      else if(t.action === 'upload') footer = buildUploadFooter(i, t);
+      else if(t.action === 'info'){
+        footer = '<div class="task-footer">' +
+          '<div class="step-box">' + t.info + '</div>' +
+          '<button class="btn-action '+t.style+'" onclick="handleAction('+i+')">'+t.btn+'</button>' +
+        '</div>';
+      } else {
+        footer = '<div class="task-footer"><button class="btn-action '+t.style+'" id="btn-task-'+i+'" onclick="handleAction('+i+')">'+t.btn+'</button></div>';
+      }
+    } else if(!cancelled && i < current){
+      var details = '';
+      if(t.action === 'input_fb'){
+        var socLines = [];
+        if(userSocmed.ig)  socLines.push('📸 @'+userSocmed.ig);
+        if(userSocmed.fb)  socLines.push('👤 '+userSocmed.fb);
+        if(userSocmed.x)   socLines.push('🐦 @'+userSocmed.x);
+        if(userSocmed.wa)  socLines.push('📱 '+userSocmed.wa);
+        details = '<div class="done-detail-block">' +
+          socLines.map(function(l){ return '<span class="done-detail">'+l+'</span>'; }).join('') +
+          '<span class="done-detail">💰 '+userBank.method+' a.n. '+userBank.name+(userBank.number && userBank.method!=='QRIS' ? ' ('+userBank.number+')' : '')+'</span>' +
+        '</div>';
+      } else if(t.action === 'upload'){
+        details = '<div class="done-detail">📸 Screenshot terkirim ✓</div>';
+      }
+      footer = '<div class="task-footer"><span class="done-label">✓ Selesai</span>'+details+'</div>';
+    }
+
+    div.innerHTML =
+      '<div class="task-head">' +
+        '<div class="task-icon '+iconCls+'">'+iconTxt+'</div>' +
+        '<div class="task-body">' +
+          '<div class="task-num">Langkah '+(i+1)+'</div>' +
+          '<div class="task-text">'+t.text+'</div>' +
+          (t.warn ? '<div class="task-warn">'+t.warn+'</div>' : '') +
+        '</div>' +
+      '</div>' + footer;
+    wrap.appendChild(div);
+
+    if(!cancelled && i === current && t.action === 'upload')
+      attachUploadListeners(i);
+    if(!cancelled && i === current && t.action === 'input_fb'){
+      setTimeout(function(){ attachQrisListeners(i); }, 100);
+    }
+  });
+
+  updateStats();
+  if(!cancelled && current < tasks.length){
+    setTimeout(function(){
+      var el = document.getElementById('task-'+current);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 150);
+  }
+}
+
+function handleAction(i){
+  var t = tasks[i];
+  if(t.action === 'link'){
+    window.open(t.href, '_blank');
+    setTimeout(function(){ current++; saveProgress(); renderAll(); }, 600);
+  } else if(t.action === 'done'){
+    current++; saveProgress(); renderAll();
+  } else if(t.action === 'timer'){
+    startTimer();
+    var btn = document.getElementById('btn-task-'+i);
+    if(btn){
+      btn.textContent = 'Selesai, Lanjut ✓';
+      btn.className = 'btn-action btn-red';
+      btn.onclick = function(){ stopTimer(); current++; saveProgress(); renderAll(); };
+    }
+  } else if(t.action === 'info'){
+    current++; saveProgress(); renderAll();
+  } else if(t.action === 'finish'){
+    current++; stopTimer(); saveProgress(); renderAll();
+    document.getElementById('result-success').classList.add('show');
+  }
+}
+
+function updateStats(){
+  var done = Math.min(current, tasks.length);
+  var pct = Math.round((done / tasks.length) * 100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('pct').textContent = pct+'%';
+  document.getElementById('task-count').textContent = done+' / '+tasks.length+' Task';
+  var sb = document.getElementById('status-badge'), sl = document.getElementById('step-label');
+  if(cancelled){ sb.textContent='DIBATALKAN'; sb.className='badge badge-cancel'; sl.textContent='Reward tidak jadi diterima'; }
+  else if(done >= tasks.length){ sb.textContent='SELESAI ✓'; sb.className='badge badge-done'; sl.textContent='Semua task selesai!'; }
+  else if(done === 0){ sb.textContent='Belum Mulai'; sb.className='badge badge-pending'; sl.textContent='Mulai dari langkah 1'; }
+  else{ sb.textContent='Sedang Berlangsung'; sb.className='badge badge-active'; sl.textContent='Langkah '+(done+1)+' dari '+tasks.length; }
+}
+
+function resetAll(){
+  current = 0; cancelled = false; timerSec = 0; userFb = '';
+  userSocmed = { ig: '', fb: '', x: '', wa: '' };
+  userBank = { name: '', method: '', number: '' };
+  stopTimer();
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  document.getElementById('timer-num').textContent = '00:00:00';
+  document.getElementById('result-success').classList.remove('show');
+  renderAll();
+}
+
+loadProgress();
+if(cancelled){
+  document.getElementById('result-success').classList.remove('show');
+} else if(current >= tasks.length){
+  document.getElementById('result-success').classList.add('show');
+}
+renderAll();
+</script>
+</body>
+</html>
